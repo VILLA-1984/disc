@@ -439,6 +439,8 @@ export function criarAvatar3D(spec) {
     const noBarco = Boolean(spec.noBarco) && !cadeira && !corrida && !moto && !taxi;
     // Nadando (cenario do rio): corpo deitado de bruços, bracos em crawl e pernas batendo. Sem apoios nem veiculo.
     const nadando = Boolean(spec.nadando) && !cadeira && !corrida && !moto && !taxi && !andador;
+    // Bombeando a alavanca de uma draisina: bracos alternando, no mesmo ritmo da alavanca (relogio do navegador).
+    const bombeando = Boolean(spec.bombeando) && noBarco;
     const sentado = cadeira || corrida || moto || taxi || noBarco;
     const balancos = [];
 
@@ -669,6 +671,14 @@ export function criarAvatar3D(spec) {
             pernas.forEach((p, i) => { p.rotation.x = Math.sin(tempoNado * 3 + i * Math.PI) * 0.35; });
             corpo.position.y = 0.04 + Math.sin(tempoNado * 0.5) * 0.02;
             corpo.rotation.z = Math.sin(tempoNado + 1) * 0.06; // o corpo gira um pouco a cada braçada
+
+            return;
+        }
+
+        if (bombeando) {
+            const oscilacao = Math.sin((performance.now() / 1000) * 4.4) * 0.35;
+            bracos[0].rotation.x = 0.95 - oscilacao;
+            bracos[1].rotation.x = 0.95 + oscilacao;
 
             return;
         }

@@ -52,6 +52,17 @@ export const CENARIOS = {
         motivo: 'Moto, táxi e cadeira de corrida não vão para a neve.',
         aceita: (mobilidade) => !['moto', 'taxi', 'cadeira-corrida'].includes(mobilidade),
     },
+    trilhos: {
+        nome: 'Trilhos',
+        descricao: 'Uma ferrovia no campo, com três vias, postes de telégrafo e colinas.',
+        verbo: 'viajar',
+        comeco: 'Começar a viagem',
+        fim: 'da linha',
+        acelerar: 'andar mais rápido',
+        percurso: 'pelos trilhos',
+        motivo: 'Moto e táxi não andam sobre trilhos.',
+        aceita: (mobilidade) => !['moto', 'taxi'].includes(mobilidade),
+    },
 };
 
 const SOBE_NO_BARCO = ['anda', 'bengala', 'andador', 'cadeira', 'cadeira-corrida'];
@@ -100,6 +111,30 @@ export const MEIOS = {
         base: 0.3,
         bracos: 0.95,
         textos: { verbo: 'pilotar', comeco: 'Começar a pilotar', acelerar: 'pilotar mais rápido' },
+    },
+    // Trilhos. O avatar vai sentado (os apoios ficam na plataforma): na cabine da locomotiva a vapor, ou na
+    // draisina, o carrinho de ferrovia de bombear, onde os bracos acompanham a alavanca.
+    locomotiva: {
+        cenario: 'trilhos',
+        nome: 'Locomotiva',
+        descricao: 'Na cabine de uma locomotiva a vapor, com fumaça saindo da chaminé. Os apoios ficam na plataforma.',
+        motivo: 'Moto e táxi não andam sobre trilhos.',
+        aceita: (mobilidade) => SOBE_NO_BARCO.includes(mobilidade),
+        semApoio: true,
+        base: 0.62,
+        bracos: 0.7,
+        textos: { comeco: 'Começar a viagem', acelerar: 'acelerar a locomotiva' },
+    },
+    draisina: {
+        cenario: 'trilhos',
+        nome: 'Draisina',
+        descricao: 'Num carrinho de ferrovia de bombear, empurrando a alavanca. Os apoios ficam na plataforma.',
+        motivo: 'Moto e táxi não andam sobre trilhos.',
+        aceita: (mobilidade) => SOBE_NO_BARCO.includes(mobilidade),
+        semApoio: true,
+        bombeando: true,
+        base: 0.5,
+        textos: { verbo: 'bombear', comeco: 'Começar a bombear', acelerar: 'bombear mais rápido' },
     },
     // Neve. Quem anda ou usa bengala ou andador esquia em pe (os apoios ficam na base da pista); quem usa cadeira
     // vai de sit-ski; o trenó serve a todos os que cabem na neve.
@@ -1448,6 +1483,303 @@ export function criarVeiculoNeve(meio) {
             pivos.forEach((p, i) => { p.rotation.x = Math.sin(tempo * 2.4 + i * Math.PI) * 0.28 * Math.min(1, ritmo + 0.2); });
             grupo.rotation.x = Math.sin(tempo * 9) * 0.006 * Math.min(1, ritmo);
             grupo.rotation.z = Math.sin(tempo * 1.1) * 0.015;
+        },
+    };
+}
+// --------------------------------------------------------------------------------------- trilhos
+
+/** Posicao das tres vias (a do meio e a principal; as laterais sao as pistas de escolha do jogo). */
+const VIAS = [-2.3, 0, 2.3];
+
+/**
+ * Ferrovia no campo: tres vias paralelas sobre brita e dormentes, campo verde dos dois lados, postes de
+ * telegrafo, arvores e colinas. Tudo que anda entra em `adicionarMovel`. O avatar anda na via do meio e passa
+ * para a da esquerda ou da direita a cada escolha, como num patio de manobras.
+ *
+ * @returns {{solo: THREE.Mesh, basePortao: () => THREE.Group}}
+ */
+export function construirTrilhos({ cena, lados, adicionarMovel, arvores, sorteio, periodo, zTras }) {
+    const solo = new THREE.Mesh(new THREE.BoxGeometry(9, 0.1, 420, 1, 1, 140), lambert(0x7b7f86)); // brita
+    solo.position.set(0, -0.05, -170);
+    cena.add(solo);
+
+    const campo = new THREE.Mesh(new THREE.BoxGeometry(140, 0.2, 420, 1, 1, 140), lambert(0x6bb06a));
+    campo.position.set(0, -0.16, -170);
+    cena.add(campo);
+
+    // Trilhos de aco, ao longo de toda a linha.
+    for (const via of VIAS) {
+        for (const lado of [-1, 1]) {
+            const trilho = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.1, 420, 1, 1, 140), lambert(0xb8c0c8));
+            trilho.position.set(via + lado * 0.72, 0.15, -170);
+            cena.add(trilho);
+        }
+    }
+
+    // Dormentes: uma fileira larga a cada metro, que passa e mostra a velocidade.
+    const dormenteGeo = new THREE.BoxGeometry(8.4, 0.1, 0.28);
+    const dormenteMat = new THREE.MeshLambertMaterial({ color: 0x6b4a2e });
+
+    for (let i = 0; i < periodo; i++) {
+        const dormente = new THREE.Mesh(dormenteGeo, dormenteMat);
+        dormente.position.set(0, 0.05, 0);
+        adicionarMovel(dormente, 0, zTras - i);
+    }
+
+    for (const lado of [-1, 1]) {
+        const grupoLado = lado < 0 ? lados.esquerdo : lados.direito;
+
+        // Postes de telegrafo com travessa e isoladores.
+        for (let i = 0; i < Math.round(periodo / 17.5); i++) {
+            const poste = new THREE.Group();
+            const mastro = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.11, 4.6, 8), lambert(0x6b4a2e));
+            mastro.position.y = 2.3;
+            const travessa = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.09, 0.09), lambert(0x6b4a2e));
+            travessa.position.y = 4.3;
+            poste.add(mastro, travessa);
+
+            for (const dx of [-0.45, 0.45]) {
+                const isolador = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), lambert(0xe9eef4));
+                isolador.position.set(dx, 4.42, 0);
+                poste.add(isolador);
+            }
+
+            poste.position.x = lado * 5.2;
+            adicionarMovel(poste, 0, zTras - i * 17.5 - 6, grupoLado);
+        }
+
+        // Arvores do campo.
+        for (let i = 0; i < Math.round(periodo / 9); i++) {
+            const arvore = new THREE.Group();
+            const altura = 1.6 + sorteio() * 1.4;
+            const tronco = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.2, altura, 8), lambert(0x6b4a2e));
+            tronco.position.y = altura / 2;
+            const copa = new THREE.Mesh(new THREE.SphereGeometry(1.2 + sorteio() * 0.7, 12, 10), lambert(i % 2 ? 0x2f8350 : 0x4aa35f));
+            copa.position.y = altura + 0.5;
+            arvore.add(tronco, copa);
+            arvore.position.x = lado * (7.5 + sorteio() * 12);
+            arvores.push(arvore);
+            adicionarMovel(arvore, 0, zTras - (i / Math.round(periodo / 9)) * periodo - sorteio() * 3, grupoLado);
+        }
+
+        // Colinas arredondadas ao fundo.
+        for (let i = 0; i < 5; i++) {
+            const colina = new THREE.Mesh(new THREE.SphereGeometry(14 + sorteio() * 10, 16, 12), lambert(i % 2 ? 0x5b9e63 : 0x6bb06a));
+            colina.scale.y = 0.45;
+            colina.position.set(lado * (45 + sorteio() * 60), -2, 0);
+            adicionarMovel(colina, 0, zTras - (i / 5) * periodo - sorteio() * 10, grupoLado);
+        }
+    }
+
+    // Em vez da faixa de pedestres: cones de sinalizacao de via sobre os dormentes, sob o portao.
+    function basePortao() {
+        const grupo = new THREE.Group();
+
+        for (let i = -4; i <= 4; i++) {
+            const cone = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.34, 10), lambert(0xf08a3c));
+            cone.position.set(i * 1.05, 0.27, 0);
+            const faixa = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.095, 0.06, 10), lambert(0xffffff));
+            faixa.position.set(i * 1.05, 0.28, 0);
+            grupo.add(cone, faixa);
+        }
+
+        return grupo;
+    }
+
+    return { solo, basePortao };
+}
+
+/** Roda de ferro com raios, de eixo x (gira para a frente, em -z). */
+function rodaDeFerro(raio, cor = 0x2b3a4f) {
+    const roda = new THREE.Group();
+    const aro = new THREE.Mesh(new THREE.CylinderGeometry(raio, raio, 0.1, 18), lambert(cor));
+    aro.rotation.z = Math.PI / 2;
+    roda.add(aro);
+
+    for (let i = 0; i < 3; i++) {
+        const raioDaRoda = new THREE.Mesh(new THREE.BoxGeometry(0.12, raio * 1.8, 0.05), lambert(0xb8c0c8));
+        raioDaRoda.rotation.x = (i * Math.PI) / 3;
+        roda.add(raioDaRoda);
+    }
+
+    return roda;
+}
+
+/**
+ * Veiculos dos trilhos (conves em y = 0, avatar no mesmo grupo):
+ *  - locomotiva a vapor: caldeira, chaminé com fumaça, cabine com teto, rodas motrizes e limpa-trilhos;
+ *  - draisina: carrinho de ferrovia com alavanca de bombear, que balança junto com os braços do avatar.
+ */
+export function criarVeiculoTrilho(meio, modo = '3d') {
+    const grupo = new THREE.Group();
+    const rodas = [];
+    const fumaca = [];
+    let alavanca = null;
+    let tempo = 0;
+
+    if (meio === 'draisina') {
+        const plataforma = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.1, 2.2), lambert(0xa9773f));
+        plataforma.position.set(0, -0.05, 0);
+        grupo.add(plataforma);
+
+        for (const lado of [-1, 1]) {
+            const viga = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.12, 2.4), lambert(0x4a5668));
+            viga.position.set(lado * 0.55, -0.16, 0);
+            grupo.add(viga);
+
+            for (const z of [-0.8, 0.8]) {
+                const roda = rodaDeFerro(0.24, 0xd6455a);
+                roda.position.set(lado * 0.72, -0.04, z);
+                grupo.add(roda);
+                rodas.push(roda);
+            }
+        }
+
+        const banco = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.08, 0.38), lambert(0x6b4a2e));
+        banco.position.set(0, 0.23, 0.05);
+        grupo.add(banco);
+
+        // Alavanca de bombear: um poste com uma barra que gira no topo; as maos do avatar ficam nas pontas.
+        const poste = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 0.9, 8), lambert(0x4a5668));
+        poste.position.set(0, 0.45, -0.5);
+        grupo.add(poste);
+
+        alavanca = new THREE.Group();
+        alavanca.position.set(0, 0.95, -0.5);
+        alavanca.add(new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.07, 0.07), lambert(0x59616b)));
+
+        for (const lado of [-1, 1]) {
+            const punho = new THREE.Mesh(new THREE.SphereGeometry(0.075, 8, 6), lambert(0x2b3a4f));
+            punho.position.set(lado * 0.65, 0, 0);
+            alavanca.add(punho);
+        }
+
+        grupo.add(alavanca);
+
+        // Lanterna na frente e bandeirinha atras, so de enfeite.
+        const lanterna = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.22, 0.2), lambert(0xf2b705));
+        lanterna.position.set(0, 0.11, -1.0);
+        const mastro = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.1, 6), lambert(0x59616b));
+        mastro.position.set(0.55, 0.55, 0.95);
+        const bandeira = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.01), lambert(0xd6455a));
+        bandeira.position.set(0.7, 1.0, 0.95);
+        grupo.add(lanterna, mastro, bandeira);
+    } else {
+        const preto = lambert(0x2b3a4f);
+        const latao = lambert(0xc9a227);
+
+        // Chassi e rodas: duas motrizes grandes, uma pequena na frente e outra atras.
+        const chassi = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.18, 4.6), lambert(0x4a5668));
+        chassi.position.set(0, -0.12, -0.9);
+        grupo.add(chassi);
+
+        [[-2.1, 0.42], [-1.1, 0.42], [-3.1, 0.26], [0.95, 0.3]].forEach(([z, raio]) => {
+            for (const lado of [-1, 1]) {
+                const roda = rodaDeFerro(raio, raio > 0.4 ? 0xd6455a : 0x2b3a4f);
+                roda.position.set(lado * 0.72, raio === 0.42 ? 0.02 : raio - 0.4, z);
+                grupo.add(roda);
+                rodas.push(roda);
+            }
+        });
+
+        // Caldeira com aros de latao, caixa de fumaca na frente e farol.
+        const caldeira = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 2.6, 18), preto);
+        caldeira.rotation.x = Math.PI / 2;
+        caldeira.position.set(0, 0.72, -1.9);
+        grupo.add(caldeira);
+
+        for (const z of [-0.9, -1.9, -2.7]) {
+            const aro = new THREE.Mesh(new THREE.CylinderGeometry(0.64, 0.64, 0.08, 18), latao);
+            aro.rotation.x = Math.PI / 2;
+            aro.position.set(0, 0.72, z);
+            grupo.add(aro);
+        }
+
+        const caixa = new THREE.Mesh(new THREE.CylinderGeometry(0.66, 0.66, 0.5, 18), lambert(0x59616b));
+        caixa.rotation.x = Math.PI / 2;
+        caixa.position.set(0, 0.72, -3.25);
+        const farol = new THREE.Mesh(new THREE.SphereGeometry(0.17, 10, 8), new THREE.MeshBasicMaterial({ color: 0xfff1b0 }));
+        farol.position.set(0, 0.74, -3.55);
+        grupo.add(caixa, farol);
+
+        const chamine = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.14, 0.7, 12), preto);
+        chamine.position.set(0, 1.62, -3.0);
+        const bocal = new THREE.Mesh(new THREE.CylinderGeometry(0.27, 0.2, 0.18, 12), latao);
+        bocal.position.set(0, 2.03, -3.0);
+        const domo = new THREE.Mesh(new THREE.SphereGeometry(0.24, 12, 8), latao);
+        domo.position.set(0, 1.4, -1.7);
+        grupo.add(chamine, bocal, domo);
+
+        // Limpa-trilhos (a "grade" na frente): uma cunha inclinada.
+        const grade = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.08, 0.8), lambert(0xd6455a));
+        grade.rotation.x = 0.6;
+        grade.position.set(0, -0.02, -3.85);
+        grupo.add(grade);
+
+        // Cabine: piso, paredes laterais baixas, colunas e teto (translucido na vista 3D, para nao tapar as placas).
+        const piso = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.06, 1.8), lambert(0x8a5a2b));
+        piso.position.set(0, -0.03, 0.3);
+        grupo.add(piso);
+
+        for (const lado of [-1, 1]) {
+            const parede = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.0, 1.6), lambert(0xd6455a));
+            parede.position.set(lado * 0.74, 0.5, 0.4);
+            grupo.add(parede);
+
+            for (const z of [-0.45, 1.2]) {
+                const coluna = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 2.2, 6), lambert(0x4a5668));
+                coluna.position.set(lado * 0.72, 1.1, z);
+                grupo.add(coluna);
+            }
+        }
+
+        const teto = new THREE.Mesh(
+            new THREE.BoxGeometry(1.7, 0.07, 1.95),
+            new THREE.MeshLambertMaterial({ color: 0x2b3a4f, transparent: true, opacity: modo === '3d' ? 0.3 : 0.95, depthWrite: false }),
+        );
+        teto.position.set(0, 2.22, 0.38);
+        grupo.add(teto);
+
+        const banco = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.1, 0.4), lambert(0x6b4a2e));
+        banco.position.set(0, 0.23, 0.05);
+        grupo.add(banco);
+
+        // Fumaca: bolas cinzentas que sobem da chaminé, vao para tras e somem.
+        const fumacaGeo = new THREE.SphereGeometry(0.3, 8, 6);
+
+        for (let i = 0; i < 9; i++) {
+            const bola = new THREE.Mesh(fumacaGeo, new THREE.MeshBasicMaterial({ color: 0xe3e7ec, transparent: true, opacity: 0, depthWrite: false }));
+            grupo.add(bola);
+            fumaca.push({ bola, idade: i / 9 });
+        }
+    }
+
+    return {
+        grupo,
+        atualizar(dt, ritmo) {
+            tempo += dt;
+            const giro = dt * (2 + Math.min(ritmo, 2) * 12);
+            rodas.forEach((roda) => { roda.rotation.x -= giro; });
+
+            if (alavanca) {
+                // Sincronizada com os bracos do avatar (mesma formula em avatars.js, pelo relogio do navegador).
+                alavanca.rotation.z = Math.sin((performance.now() / 1000) * 4.4) * 0.3;
+            }
+
+            for (const f of fumaca) {
+                f.idade += dt * (0.22 + Math.min(ritmo, 2) * 0.22);
+
+                if (f.idade > 1) {
+                    f.idade -= 1;
+                }
+
+                f.bola.position.set(Math.sin(f.idade * 5 + 1) * 0.15, 2.15 + f.idade * 2.6, -3.0 + f.idade * (1.2 + Math.min(ritmo, 2) * 2.4));
+                f.bola.scale.setScalar(0.5 + f.idade * 1.9);
+                f.bola.material.opacity = (1 - f.idade) * 0.7;
+            }
+
+            // Trepidacao leve sobre os trilhos quando anda.
+            grupo.position.y = Math.sin(tempo * 17) * 0.006 * Math.min(1, ritmo);
         },
     };
 }
