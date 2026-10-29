@@ -6,15 +6,27 @@ import * as THREE from 'three';
  * e `avatarCabe`: o criterio e o meio de locomocao do avatar (campo `mobilidade`).
  */
 export const CENARIOS = {
+    // Textos do jogo que dependem do cenario: o que a pessoa faz (verbo), o botao de comecar, onde termina,
+    // como acelerar e por onde segue.
     rua: {
         nome: 'Rua',
         descricao: 'Uma rua de cidade, com prédios e árvores.',
+        verbo: 'correr',
+        comeco: 'Começar a correr',
+        fim: 'da rua',
+        acelerar: 'correr mais rápido',
+        percurso: 'pela rua',
         motivo: '',
         aceita: () => true,
     },
     rio: {
         nome: 'Rio',
         descricao: 'Um rio com margens de mata, percorrido de barco.',
+        verbo: 'navegar',
+        comeco: 'Começar a navegar',
+        fim: 'do rio',
+        acelerar: 'navegar mais rápido',
+        percurso: 'pelo rio',
         motivo: 'Moto e táxi não vão de barco.',
         aceita: (mobilidade) => !['moto', 'taxi'].includes(mobilidade),
     },

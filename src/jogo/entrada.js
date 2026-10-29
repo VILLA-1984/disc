@@ -192,7 +192,9 @@ export function montar(raiz, api) {
         const instrucao = ciclo
             ? 'Em cada portão há uma palavra de um lado e "Deixar passar" do outro. Vá para o lado da palavra se ela combina com você'
             : 'Em cada portão, escolha a palavra que mais combina com você';
-        el('dica').textContent = `${instrucao}: ${comToque ? c.dicaToque : c.dica}.`;
+        const complemento = (comToque ? c.dicaToque : c.dica).replaceAll('correr mais rápido', CENARIOS[cenario].acelerar);
+        botaoTurbo.textContent = `Segure para ${CENARIOS[cenario].acelerar}`;
+        el('dica').textContent = `${instrucao}: ${complemento}.`;
     }
 
     // ------------------------------------------------------------------- ciclo
@@ -244,7 +246,7 @@ export function montar(raiz, api) {
             titulo: 'Escolha o seu avatar',
             largo: true,
             botao: 'Começar',
-            corpoHtml: `<p>Escolha quem vai correr na rua. Todos os avatares jogam do mesmo jeito; o nome é só um apelido.</p>
+            corpoHtml: `<p>Escolha quem vai participar. Todos os avatares jogam do mesmo jeito; o nome é só um apelido.</p>
                 <div class="avatares" role="radiogroup" aria-label="Avatar">${AVATARES.map((a) => `
                     <button type="button" class="avatar-op" role="radio" aria-checked="${a.id === avatarId}" data-id="${a.id}" ${avatarCabe(a, cenario) ? '' : 'disabled'}>
                         ${retratos.get(a.id) ? `<img src="${retratos.get(a.id)}" alt="">` : `<span class="avatar-ini" style="background:${a.roupa}">${a.nome[0]}</span>`}
@@ -259,9 +261,9 @@ export function montar(raiz, api) {
                         ${Object.entries(CENARIOS).map(([chave, c]) => `<label><input type="radio" name="cenario" value="${chave}" ${cenario === chave ? 'checked' : ''}> <span><strong>${c.nome}</strong><small>${c.descricao}</small></span></label>`).join('')}
                         <p class="cenario-aviso" aria-live="polite"></p>
                     </fieldset>
-                    <fieldset class="vistas"><legend>Como você quer ver a rua?</legend>
-                        <label><input type="radio" name="vista" value="3d" ${modo === '3d' ? 'checked' : ''}> <span><strong>Vista 3D</strong><small>o avatar corre para a frente, em direção ao topo da tela</small></span></label>
-                        <label><input type="radio" name="vista" value="lateral" ${modo === 'lateral' ? 'checked' : ''}> <span><strong>Vista lateral</strong><small>o avatar corre para o lado, como num jogo clássico</small></span></label>
+                    <fieldset class="vistas"><legend>Como você quer ver o cenário?</legend>
+                        <label><input type="radio" name="vista" value="3d" ${modo === '3d' ? 'checked' : ''}> <span><strong>Vista 3D</strong><small>o avatar avança para a frente, em direção ao topo da tela</small></span></label>
+                        <label><input type="radio" name="vista" value="lateral" ${modo === 'lateral' ? 'checked' : ''}> <span><strong>Vista lateral</strong><small>o avatar segue para o lado, como num jogo clássico</small></span></label>
                     </fieldset>
                 </div>`,
             aoRenderizar: (corpo) => {
@@ -340,8 +342,8 @@ export function montar(raiz, api) {
             titulo: indice === 0 ? 'Como você é' : 'Como esperam de você',
             corpoHtml: ciclo
                 ? `<p>${TEXTO_ETAPA_CICLO[indice]}</p><p>Você precisa pegar <strong>${escolhasPorEtapa} palavras</strong> no total. As que você deixar passar voltam mais tarde, até você completar as ${escolhasPorEtapa}.</p>`
-                : `<p>${TEXTO_ETAPA[indice]}</p><p>Corra pela rua e, em cada portão, escolha <strong>uma</strong> das duas palavras. A etapa termina quando você passar pelos <strong>${escolhasPorEtapa} portões</strong>.</p>`,
-            botao: 'Começar a correr',
+                : `<p>${TEXTO_ETAPA[indice]}</p><p>Siga ${CENARIOS[cenario].percurso} e, em cada portão, escolha <strong>uma</strong> das duas palavras. A etapa termina quando você passar pelos <strong>${escolhasPorEtapa} portões</strong>.</p>`,
+            botao: CENARIOS[cenario].comeco,
             aoClicar: () => {
                 fecharCartao();
 
@@ -452,7 +454,7 @@ export function montar(raiz, api) {
     function mostrarFim(mensagemErro = '') {
         mostrarCartao({
             sobretitulo: 'Fim da jornada',
-            titulo: 'Você chegou ao fim da rua!',
+            titulo: `Você chegou ao fim ${CENARIOS[cenario].fim}!`,
             corpoHtml: `<p>Suas escolhas viram um animal. Quer descobrir qual é o seu?</p>${mensagemErro ? `<p class="erro-jogo" role="alert">${escapar(mensagemErro)}</p>` : ''}`,
             botao: mensagemErro ? 'Tentar de novo' : 'Descobrir meu animal',
             aoClicar: (botao) => concluir(botao),
@@ -528,10 +530,10 @@ export function montar(raiz, api) {
             sobretitulo: 'Teste comportamental',
             titulo: 'Rua das Palavras',
             corpoHtml: `<p>${ciclo
-                    ? `Você vai correr por uma rua em duas etapas. Em cada portão aparece uma palavra de um lado e "Deixar passar" do outro: pegue a palavra se ela combina com você. Em cada etapa você pega ${escolhasPorEtapa} das ${Object.keys(ciclo.palavras).length} palavras, e as que você deixar passar voltam mais tarde. Não há resposta certa ou errada, e no fim você descobre o seu animal.`
-                    : 'Você vai correr por uma rua em duas etapas. Em cada portão aparecem duas palavras: escolha a que mais combina com você. Não há resposta certa ou errada, e no fim você descobre o seu animal.'}</p>
+                    ? `Você vai percorrer um cenário em duas etapas. Em cada portão aparece uma palavra de um lado e "Deixar passar" do outro: pegue a palavra se ela combina com você. Em cada etapa você pega ${escolhasPorEtapa} das ${Object.keys(ciclo.palavras).length} palavras, e as que você deixar passar voltam mais tarde. Não há resposta certa ou errada, e no fim você descobre o seu animal.`
+                    : 'Você vai percorrer um cenário em duas etapas. Em cada portão aparecem duas palavras: escolha a que mais combina com você. Não há resposta certa ou errada, e no fim você descobre o seu animal.'}</p>
                 <ul><li>Toque na placa, use as setas do teclado ou os botões abaixo do jogo.</li>
-                <li>O avatar espera por você: não há limite de tempo. Para correr mais rápido, segure ↑ (ou W) na vista 3D, ou → (ou D) na vista lateral.</li>
+                <li>O avatar espera por você: não há limite de tempo. Para acelerar, segure ↑ (ou W) na vista 3D, ou → (ou D) na vista lateral.</li>
                 <li>O jogo tem som. Você pode desligá-lo a qualquer momento no botão no canto da tela.</li>
                 <li>${ciclo ? `Você só passa para a etapa seguinte depois de pegar as ${escolhasPorEtapa} palavras.` : 'Você só passa para a etapa seguinte depois de completar todos os portões.'}</li></ul>`,
             botao: 'Vamos lá',
