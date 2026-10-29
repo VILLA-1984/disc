@@ -1,4 +1,4 @@
-# Rua das Palavras
+﻿# Rua das Palavras
 
 Jogo de escolhas do teste DISC do SENAC-MT, como projeto independente (Next.js). A pessoa informa nome e
 WhatsApp, joga as duas etapas, vê o animal do resultado e envia o resultado pelo WhatsApp.
@@ -72,7 +72,7 @@ Na tela do avatar a pessoa escolhe onde correr (`src/jogo/cenarios.js`) e, quand
 você quer ir?":
 
 - **Rua** (padrão).
-- **Rio**: barco a motor ou veleiro, de colete salva-vidas, com peixes que pulam.
+- **Rio**: barco a motor, veleiro, caiaque, moto aquática, boia de pato ou nado, de colete salva-vidas, com peixes que pulam. Em caiaque, moto aquática, boia, nado, asa delta e parapente o avatar vai sem cadeira, bengala ou andador (ficam na margem); a moto aquática também aceita quem já é de moto.
 - **Céu**: avião, jato, helicóptero, asa delta ou parapente, com nuvens, montanhas ao longe e pássaros.
 
 O cenário e o meio são só visuais; portões, ciclo de palavras e pontuação não mudam. `avatarCabe(spec, cenario, meio)` decide

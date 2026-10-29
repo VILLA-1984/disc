@@ -90,6 +90,17 @@ export const MEIOS = {
         bracos: 0.95,
         textos: { verbo: 'pilotar', comeco: 'Começar a pilotar', acelerar: 'pilotar mais rápido' },
     },
+    nado: {
+        cenario: 'rio',
+        nome: 'Nado',
+        descricao: 'Nadando crawl, de colete salva-vidas. Os apoios (cadeira, bengala, andador) ficam na margem.',
+        motivo: 'Moto e táxi não nadam.',
+        aceita: (mobilidade) => SOBE_NO_BARCO.includes(mobilidade),
+        semApoio: true,
+        nadando: true,
+        base: 0.02,
+        textos: { verbo: 'nadar', comeco: 'Começar a nadar', acelerar: 'nadar mais rápido' },
+    },
     'boia-pato': {
         cenario: 'rio',
         nome: 'Boia de pato',
@@ -402,6 +413,10 @@ export function criarBarco(meio = 'barco', modo = '3d') {
         return criarBoiaPato();
     }
 
+    if (meio === 'nado') {
+        return criarAguaDoNado();
+    }
+
     const veleiro = meio === 'veleiro';
     // Vista 3D (camera atras do avatar): vela mais baixa e translucida, para nao tapar as placas das palavras.
     const alturaVela = modo === '3d' ? 0.62 : 1;
@@ -712,6 +727,52 @@ function criarBoiaPato() {
             grupo.rotation.z = Math.sin(tempo * 1.3) * 0.05;
             grupo.rotation.x = Math.sin(tempo * 1.7 + 1) * 0.03;
             espuma(dt, ritmo);
+        },
+    };
+}
+
+/**
+ * Nado: nao ha veiculo, so a agua em volta de quem nada: espuma de pernas atras, ondas que saem do peito e
+ * aneis que abrem na agua a cada bracada.
+ */
+function criarAguaDoNado() {
+    const grupo = new THREE.Group();
+    const espuma = criarEspuma(grupo, 1.3, { quantidade: 10, comprimento: 3.4, tamanho: 1.6, forcaMax: 0.65 });
+
+    // Ondas que saem da cabeca e do peito, abrindo para os lados.
+    const ondas = [];
+    const ondaGeo = new THREE.RingGeometry(0.45, 0.58, 24);
+
+    for (let i = 0; i < 3; i++) {
+        const onda = new THREE.Mesh(ondaGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
+        onda.rotation.x = -Math.PI / 2;
+        onda.position.set(0, 0.0, -1.3);
+        grupo.add(onda);
+        ondas.push({ onda, idade: i / 3 });
+    }
+
+    let tempo = 0;
+
+    return {
+        grupo,
+        atualizar(dt, ritmo) {
+            tempo += dt;
+            espuma(dt, Math.max(0.4, ritmo)); // mesmo parado, as pernas batem e fazem um pouco de espuma
+
+            for (const o of ondas) {
+                o.idade += dt * (0.5 + Math.min(ritmo, 2) * 0.5);
+
+                if (o.idade > 1) {
+                    o.idade -= 1;
+                }
+
+                o.onda.scale.set(1 + o.idade * 2.2, 1 + o.idade * 1.4, 1);
+                o.onda.position.z = -1.3 - o.idade * 0.6;
+                o.onda.material.opacity = (1 - o.idade) * 0.5;
+            }
+
+            // A agua balanca um pouco a cada bracada (visto no grupo, so por causa da espuma e das ondas).
+            grupo.rotation.z = Math.sin(tempo * 1.6) * 0.02;
         },
     };
 }

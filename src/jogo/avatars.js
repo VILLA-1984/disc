@@ -437,6 +437,8 @@ export function criarAvatar3D(spec) {
     // No barco (cenario do rio) quem anda, usa bengala ou andador senta no banco; quem usa cadeira de rodas
     // continua na propria cadeira.
     const noBarco = Boolean(spec.noBarco) && !cadeira && !corrida && !moto && !taxi;
+    // Nadando (cenario do rio): corpo deitado de bruços, bracos em crawl e pernas batendo. Sem apoios nem veiculo.
+    const nadando = Boolean(spec.nadando) && !cadeira && !corrida && !moto && !taxi && !andador;
     const sentado = cadeira || corrida || moto || taxi || noBarco;
     const balancos = [];
 
@@ -641,6 +643,13 @@ export function criarAvatar3D(spec) {
 
     raiz.add(sombra);
 
+    if (nadando) {
+        // Deita o corpo: a cabeca aponta para a frente (-z), o rosto para a agua, e o centro do corpo fica sobre a origem.
+        corpo.rotation.x = -Math.PI / 2;
+        corpo.position.set(0, 0.04, 0.95);
+        sombra.visible = false;
+    }
+
     const escala = 0.86 * (spec.altura ?? 1);
     raiz.scale.setScalar(escala);
 
@@ -648,7 +657,22 @@ export function criarAvatar3D(spec) {
         obj.rotation[eixo] += (alvo - obj.rotation[eixo]) * 0.25;
     };
 
+    let tempoNado = 0;
+
     function animar(fase, ritmo) {
+        if (nadando) {
+            // Nao para nunca (quem espera o portao continua boiando e batendo as pernas); com o nado em andamento,
+            // as bracadas ficam mais rapidas.
+            tempoNado += 0.05 * (1 + Math.min(ritmo, 2) * 1.6);
+            // Crawl: cada braco sobe pelo ar, entra na agua a frente e puxa ate o quadril; um meio ciclo defasado do outro.
+            bracos.forEach((b, i) => { b.rotation.x = -(tempoNado + i * Math.PI); });
+            pernas.forEach((p, i) => { p.rotation.x = Math.sin(tempoNado * 3 + i * Math.PI) * 0.35; });
+            corpo.position.y = 0.04 + Math.sin(tempoNado * 0.5) * 0.02;
+            corpo.rotation.z = Math.sin(tempoNado + 1) * 0.06; // o corpo gira um pouco a cada braçada
+
+            return;
+        }
+
         const forca = Math.min(1, ritmo);
         const parado = ritmo < 0.04;
 

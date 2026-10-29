@@ -482,6 +482,7 @@ export function criarJogo3D(opcoes) {
     // pedem os bracos numa posicao (remo, guidao, comandos da vela).
     const tracosDoMeio = {
         ...(infoMeio.semApoio ? { mobilidade: 'anda' } : {}),
+        ...(infoMeio.nadando ? { nadando: true, noBarco: false } : {}), // deitado de bruços, sem banco
         ...(infoMeio.bracos !== undefined ? { anguloBracos: infoMeio.bracos } : {}),
     };
     const specAvatar = rio
@@ -503,7 +504,7 @@ export function criarJogo3D(opcoes) {
 
     // Som do meio de locomocao: motor no barco, aviao, jato e helicoptero; veleiro, asa delta e parapente
     // so tem o ar do turbo.
-    const semMotor = ['veleiro', 'caiaque', 'boia-pato', 'asa-delta', 'parapente'].includes(meioEscolhido);
+    const semMotor = ['veleiro', 'caiaque', 'boia-pato', 'nado', 'asa-delta', 'parapente'].includes(meioEscolhido);
     const somDoMeio = mundo ? (semMotor ? 'passos' : 'motor') : avatar.info.som;
     curvarObjeto(cena);
 
@@ -1204,7 +1205,7 @@ export function criarJogo3D(opcoes) {
         // Avatar: corrida, troca de pista e salto.
         fase += velocidade * dt * 1.05;
         // No barco ou no ar ninguem corre: o avatar fica sentado (ou pendurado) e quem se move e o veiculo.
-        avatar.animar(fase, mundo ? 0 : velocidade / velocidadeBase);
+        avatar.animar(fase, mundo && !infoMeio.nadando ? 0 : velocidade / velocidadeBase);
         barco?.atualizar(dt, velocidade / velocidadeBase);
         peixes?.atualizar(dt, dz);
         passaros?.atualizar(dt, dz);
