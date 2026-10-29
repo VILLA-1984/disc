@@ -291,6 +291,18 @@
 /* O botao principal do cartao fica visivel no fim da rolagem (o cartao do avatar e mais alto que a tela do celular). */
 .rua-app .cartao-conteudo button.principal { position: sticky; bottom: 0; box-shadow: 0 -12px 12px -6px #fff; }
 
+/*
+ * No celular, o cartao do avatar tem varias escolhas (avatar, cenario, meio, vista). Se o botao ficasse preso
+ * no rodape, a pessoa tocaria nele sem ter visto as ultimas opcoes: ali ele fica no fim do conteudo, depois
+ * de tudo, e um aviso no topo pede para rolar ate la.
+ */
+.rua-app .rolar-aviso { display: none; }
+
+@media (max-width: 640px) {
+    .rua-app .cartao-conteudo.largo button.principal { position: static; box-shadow: none; margin-top: 18px; }
+    .rua-app .rolar-aviso { display: block; margin: 0 0 8px; padding: 6px 10px; border-radius: 8px; background: #fff6ec; color: #8a4a12; font-size: 0.8rem; font-weight: 600; }
+}
+
 /* Celular em pe: a area do jogo ocupa a altura da tela, em vez de uma faixa 16:9 baixinha. */
 @media (max-width: 640px) and (orientation: portrait) {
     .rua-app #palco:not(.palco--relatorio) { aspect-ratio: auto; height: clamp(400px, calc(100svh - 360px), 640px); }

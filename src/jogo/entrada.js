@@ -248,6 +248,7 @@ export function montar(raiz, api) {
             largo: true,
             botao: 'Começar',
             corpoHtml: `<p>Escolha quem vai participar. Todos os avatares jogam do mesmo jeito; o nome é só um apelido.</p>
+                <p class="rolar-aviso">↓ Role até o fim: depois dos avatares há mais escolhas (cenário, meio e vista) e só então o botão Começar.</p>
                 <div class="avatares" role="radiogroup" aria-label="Avatar">${AVATARES.map((a) => `
                     <button type="button" class="avatar-op" role="radio" aria-checked="${a.id === avatarId}" data-id="${a.id}" ${avatarCabe(a, cenario, meio) ? '' : 'disabled'}>
                         ${retratos.get(a.id) ? `<img src="${retratos.get(a.id)}" alt="">` : `<span class="avatar-ini" style="background:${a.roupa}">${a.nome[0]}</span>`}
