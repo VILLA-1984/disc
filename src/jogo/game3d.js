@@ -474,12 +474,19 @@ export function criarJogo3D(opcoes) {
     // No rio e no ceu o avatar segue o mesmo, mas num veiculo (barco, veleiro, aviao, jato, helicoptero, asa
     // delta, parapente): no rio de colete salva-vidas, sentado no banco. O veiculo e filho do avatar: acompanha
     // troca de pista, inclinacao e salto; a escala inversa mantem o tamanho real.
-    const ALTURA_CONVES = 0.34;
     const meioEscolhido = opcoes.meio ?? (rio ? 'barco' : 'aviao');
-    const sentadoNoMeio = MEIOS[meioEscolhido]?.sentado !== false; // a asa delta pendura o avatar em pe
+    const infoMeio = MEIOS[meioEscolhido] ?? {};
+    const ALTURA_CONVES = infoMeio.base ?? 0.34;
+    const sentadoNoMeio = infoMeio.sentado !== false; // a asa delta pendura o avatar em pe
+    // Alguns meios levam o avatar sem apoios (a cadeira, a bengala e o andador ficam na margem), e outros
+    // pedem os bracos numa posicao (remo, guidao, comandos da vela).
+    const tracosDoMeio = {
+        ...(infoMeio.semApoio ? { mobilidade: 'anda' } : {}),
+        ...(infoMeio.bracos !== undefined ? { anguloBracos: infoMeio.bracos } : {}),
+    };
     const specAvatar = rio
-        ? { ...opcoes.avatar, colete: true, noBarco: true }
-        : (aereo ? { ...opcoes.avatar, noBarco: sentadoNoMeio } : opcoes.avatar);
+        ? { ...opcoes.avatar, colete: true, noBarco: true, ...tracosDoMeio }
+        : (aereo ? { ...opcoes.avatar, noBarco: sentadoNoMeio, ...tracosDoMeio } : opcoes.avatar);
     const avatar = criarAvatar3D(specAvatar);
     avatar.grupo.position.set(0, 0, 0);
     cena.add(avatar.grupo);
@@ -496,7 +503,7 @@ export function criarJogo3D(opcoes) {
 
     // Som do meio de locomocao: motor no barco, aviao, jato e helicoptero; veleiro, asa delta e parapente
     // so tem o ar do turbo.
-    const semMotor = ['veleiro', 'asa-delta', 'parapente'].includes(meioEscolhido);
+    const semMotor = ['veleiro', 'caiaque', 'boia-pato', 'asa-delta', 'parapente'].includes(meioEscolhido);
     const somDoMeio = mundo ? (semMotor ? 'passos' : 'motor') : avatar.info.som;
     curvarObjeto(cena);
 

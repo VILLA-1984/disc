@@ -604,8 +604,8 @@ export function criarAvatar3D(spec) {
         armacaoAndador = construirAndador(corpo);
     }
 
-    // Capacete de quem anda de moto: casco na cor escolhida e viseira escura.
-    if (moto) {
+    // Capacete de quem anda de moto (ou de moto aquatica): casco na cor escolhida e viseira escura.
+    if (moto || (noBarco && spec.capacete)) {
         const capacete = new THREE.Group();
         capacete.add(esfera(0.31, spec.capacete ?? '#ffffff'));
         const viseira = caixa(0.34, 0.12, 0.1, '#1a2230', 0, 0.02, -0.25);
@@ -625,7 +625,8 @@ export function criarAvatar3D(spec) {
     }
 
     // Maos nos apoios: guidao, volante e andador.
-    const posicaoBracos = moto ? 1.0 : taxi ? 0.85 : andador ? 0.6 : null;
+    // (spec.anguloBracos: veiculos do rio e do ceu, como remo, guidao de moto aquatica e comandos da vela.)
+    const posicaoBracos = moto ? 1.0 : taxi ? 0.85 : andador ? 0.6 : (typeof spec.anguloBracos === 'number' ? spec.anguloBracos : null);
 
     // Sombra simples no chao (evita mapa de sombras, que pesa em celulares).
     const sombra = new THREE.Mesh(new THREE.CircleGeometry(0.55, 20), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.2 }));

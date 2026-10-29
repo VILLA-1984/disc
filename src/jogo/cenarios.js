@@ -66,6 +66,40 @@ export const MEIOS = {
         aceita: (mobilidade) => SOBE_NO_BARCO.includes(mobilidade),
         textos: { verbo: 'velejar', comeco: 'Começar a velejar', acelerar: 'velejar mais rápido' },
     },
+    // `semApoio`: o avatar vai sem cadeira, bengala ou andador (ficam na margem), sentado no veiculo, sem perder
+    // roupa, cabelo, oculos e demais tracos. `base`: altura do convés sobre a agua. `bracos`: angulo dos bracos.
+    caiaque: {
+        cenario: 'rio',
+        nome: 'Caiaque',
+        descricao: 'Remando sentado num caiaque. Os apoios (cadeira, bengala, andador) ficam na margem.',
+        motivo: 'Moto e táxi não vão de caiaque.',
+        aceita: (mobilidade) => SOBE_NO_BARCO.includes(mobilidade),
+        semApoio: true,
+        base: 0.2,
+        bracos: 0.8,
+        textos: { verbo: 'remar', comeco: 'Começar a remar', acelerar: 'remar mais rápido' },
+    },
+    'moto-aquatica': {
+        cenario: 'rio',
+        nome: 'Moto aquática',
+        descricao: 'Pilotando uma moto aquática, de colete salva-vidas.',
+        motivo: 'A moto aquática é para quem anda, usa bengala ou já é de moto.',
+        aceita: (mobilidade) => ['anda', 'bengala', 'moto'].includes(mobilidade),
+        semApoio: true,
+        base: 0.3,
+        bracos: 0.95,
+        textos: { verbo: 'pilotar', comeco: 'Começar a pilotar', acelerar: 'pilotar mais rápido' },
+    },
+    'boia-pato': {
+        cenario: 'rio',
+        nome: 'Boia de pato',
+        descricao: 'Boiando sentado numa boia em forma de pato. Os apoios ficam na margem.',
+        motivo: 'A boia de pato é para quem anda ou usa bengala ou andador.',
+        aceita: (mobilidade) => ['anda', 'bengala', 'andador'].includes(mobilidade),
+        semApoio: true,
+        base: 0.04,
+        textos: { verbo: 'boiar', comeco: 'Começar a boiar', acelerar: 'boiar mais rápido' },
+    },
     // Ceu. `sentado: false` = o avatar fica pendurado em pe (asa delta); nos demais senta no veiculo.
     aviao: {
         cenario: 'ar',
@@ -97,6 +131,8 @@ export const MEIOS = {
         descricao: 'Pendurado sob uma asa triangular, planando.',
         motivo: 'Moto e táxi não voam.',
         sentado: false,
+        semApoio: true, // pendurado no arnes, sem cadeira, bengala ou andador
+        bracos: 2.7, // maos para cima, na barra de controle
         aceita: (mobilidade) => SOBE_NO_BARCO.includes(mobilidade),
         textos: {},
     },
@@ -105,6 +141,8 @@ export const MEIOS = {
         nome: 'Parapente',
         descricao: 'Sentado no arnês, sob uma grande vela.',
         motivo: 'Moto e táxi não voam.',
+        semApoio: true, // sentado no arnes, sem cadeira, bengala ou andador
+        bracos: 2.5, // maos para cima, nos comandos da vela
         aceita: (mobilidade) => SOBE_NO_BARCO.includes(mobilidade),
         textos: {},
     },
@@ -352,6 +390,18 @@ export function criarPeixes({ cena, sorteio }) {
  * @returns {{grupo: THREE.Group, atualizar: (dt: number, ritmo: number) => void}}
  */
 export function criarBarco(meio = 'barco', modo = '3d') {
+    if (meio === 'caiaque') {
+        return criarCaiaque();
+    }
+
+    if (meio === 'moto-aquatica') {
+        return criarMotoAquatica();
+    }
+
+    if (meio === 'boia-pato') {
+        return criarBoiaPato();
+    }
+
     const veleiro = meio === 'veleiro';
     // Vista 3D (camera atras do avatar): vela mais baixa e translucida, para nao tapar as placas das palavras.
     const alturaVela = modo === '3d' ? 0.62 : 1;
@@ -483,6 +533,185 @@ export function criarBarco(meio = 'barco', modo = '3d') {
                 e.espuma.scale.setScalar(0.6 + e.idade * 1.8);
                 e.espuma.material.opacity = (1 - e.idade) * 0.55 * forca;
             }
+        },
+    };
+}
+
+// ------------------------------------------------------------------------------------ meios do rio
+
+/** Casco extrudado a partir de uma forma vista de cima (proa em +y da forma = -z do mundo). Conves em y = 0. */
+function cascoDe(forma, profundidade, cor) {
+    const casco = new THREE.Mesh(new THREE.ExtrudeGeometry(forma, { depth: profundidade, bevelEnabled: false }), lambert(cor));
+    casco.rotation.x = -Math.PI / 2;
+    casco.position.y = -profundidade;
+
+    return casco;
+}
+
+/** Espuma atras do veiculo: bolhas que saem, crescem e somem, mais fortes com o ritmo. Devolve o atualizador. */
+function criarEspuma(grupo, zInicio, { quantidade = 9, comprimento = 4, tamanho = 1.8, forcaMax = 0.55 } = {}) {
+    const espumas = [];
+    const geometria = new THREE.CircleGeometry(0.5, 14);
+
+    for (let i = 0; i < quantidade; i++) {
+        const espuma = new THREE.Mesh(geometria, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false }));
+        espuma.rotation.x = -Math.PI / 2;
+        espuma.position.set(0, -0.2, zInicio + (i / quantidade) * comprimento);
+        espumas.push({ espuma, idade: i / quantidade });
+        grupo.add(espuma);
+    }
+
+    return (dt, ritmo) => {
+        for (const e of espumas) {
+            e.idade += dt * (0.25 + Math.min(ritmo, 2) * 0.35);
+
+            if (e.idade > 1) {
+                e.idade -= 1;
+            }
+
+            e.espuma.position.z = zInicio + e.idade * comprimento;
+            e.espuma.position.x = Math.sin(e.idade * 7 + e.espuma.id) * 0.25 * e.idade;
+            e.espuma.scale.setScalar(0.6 + e.idade * tamanho);
+            e.espuma.material.opacity = (1 - e.idade) * forcaMax * Math.min(1, ritmo);
+        }
+    };
+}
+
+/** Caiaque amarelo, estreito e fundo; o avatar rema sentado (pa dupla que alterna os lados). */
+function criarCaiaque() {
+    const grupo = new THREE.Group();
+    const forma = new THREE.Shape();
+    forma.moveTo(0, -1.7);
+    forma.quadraticCurveTo(0.34, -1.0, 0.32, 0);
+    forma.quadraticCurveTo(0.34, 1.0, 0, 1.9);
+    forma.quadraticCurveTo(-0.34, 1.0, -0.32, 0);
+    forma.quadraticCurveTo(-0.34, -1.0, 0, -1.7);
+    grupo.add(cascoDe(forma, 0.5, 0xf2b705));
+
+    const aro = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.12, 18, 1, true), new THREE.MeshLambertMaterial({ color: 0x2b3a4f, side: THREE.DoubleSide }));
+    aro.scale.z = 1.5;
+    aro.position.set(0, 0.04, 0);
+    grupo.add(aro);
+
+    const assento = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.4), lambert(0x2b3a4f));
+    assento.position.set(0, 0.23, 0.05);
+    grupo.add(assento);
+
+    // Pa dupla: haste e duas laminas, segurada na altura das maos.
+    const pa = new THREE.Group();
+    pa.position.set(0, 1.0, -0.5);
+    pa.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 2.6, 8), lambert(0x59616b)), { }));
+    pa.children[0].rotation.z = Math.PI / 2;
+
+    for (const lado of [-1, 1]) {
+        const lamina = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.03, 0.55), lambert(lado < 0 ? 0xd6455a : 0x1f6fb8));
+        lamina.position.set(lado * 1.3, 0, 0);
+        pa.add(lamina);
+    }
+
+    grupo.add(pa);
+    const espuma = criarEspuma(grupo, 1.9, { quantidade: 6, comprimento: 3, tamanho: 1.1, forcaMax: 0.4 });
+    let tempo = 0;
+
+    return {
+        grupo,
+        atualizar(dt, ritmo) {
+            tempo += dt;
+            // Cada remada mergulha uma lamina: a pa se inclina para um lado e depois para o outro.
+            pa.rotation.z = Math.sin(tempo * 3.2) * 0.5 * Math.min(1, ritmo + 0.25);
+            pa.rotation.y = Math.sin(tempo * 1.6) * 0.12;
+            espuma(dt, ritmo);
+        },
+    };
+}
+
+/** Moto aquatica vermelha e branca, com guidao e jato de agua atras. */
+function criarMotoAquatica() {
+    const grupo = new THREE.Group();
+    const forma = new THREE.Shape();
+    forma.moveTo(-0.45, -1.1);
+    forma.lineTo(0.45, -1.1);
+    forma.lineTo(0.45, 0.2);
+    forma.quadraticCurveTo(0.4, 0.95, 0, 1.55);
+    forma.quadraticCurveTo(-0.4, 0.95, -0.45, 0.2);
+    forma.lineTo(-0.45, -1.1);
+    grupo.add(cascoDe(forma, 0.5, 0xf2f6fb));
+
+    const faixa = new THREE.Mesh(new THREE.BoxGeometry(0.94, 0.06, 2.2), lambert(0xd6455a));
+    faixa.position.set(0, -0.05, -0.1);
+    grupo.add(faixa);
+
+    const capo = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.32, 0.8), lambert(0xd6455a));
+    capo.position.set(0, 0.14, -0.85);
+    grupo.add(capo);
+
+    const banco = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.1, 1.0), lambert(0x2b3a4f));
+    banco.position.set(0, 0.23, 0.35);
+    grupo.add(banco);
+
+    const coluna = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.5, 8), lambert(0x4a5668));
+    coluna.position.set(0, 0.5, -0.62);
+    const guidao = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.06, 0.06), lambert(0x2b3a4f));
+    guidao.position.set(0, 0.75, -0.62);
+    grupo.add(coluna, guidao);
+
+    const espuma = criarEspuma(grupo, 1.3, { quantidade: 12, comprimento: 5, tamanho: 2.4, forcaMax: 0.75 });
+    let tempo = 0;
+
+    return {
+        grupo,
+        atualizar(dt, ritmo) {
+            tempo += dt;
+            // A moto aquatica trepida nas ondas e inclina o nariz para cima quando acelera.
+            grupo.rotation.x = -0.04 * Math.min(ritmo, 2) + Math.sin(tempo * 5.5) * 0.012 * Math.min(1, ritmo);
+            espuma(dt, ritmo);
+        },
+    };
+}
+
+/** Boia de pato: argola amarela com cabeca, bico, asinhas e rabo; o avatar senta no buraco, de pernas na agua. */
+function criarBoiaPato() {
+    const grupo = new THREE.Group();
+    const amarelo = lambert(0xf6d12e);
+
+    const argola = new THREE.Mesh(new THREE.TorusGeometry(0.78, 0.3, 12, 28), amarelo);
+    argola.rotation.x = Math.PI / 2;
+    argola.position.y = 0.1;
+    grupo.add(argola);
+
+    const cabeca = new THREE.Mesh(new THREE.SphereGeometry(0.36, 14, 10), amarelo);
+    cabeca.position.set(0, 0.55, -1.0);
+    const bico = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.09, 0.28), lambert(0xf08a3c));
+    bico.position.set(0, 0.5, -1.36);
+    grupo.add(cabeca, bico);
+
+    for (const lado of [-1, 1]) {
+        const olho = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), new THREE.MeshBasicMaterial({ color: 0x111111 }));
+        olho.position.set(lado * 0.17, 0.65, -1.28);
+        grupo.add(olho);
+
+        const asa = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 8), amarelo);
+        asa.scale.set(0.35, 0.55, 1);
+        asa.position.set(lado * 0.98, 0.3, 0.1);
+        grupo.add(asa);
+    }
+
+    const rabo = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.45, 8), amarelo);
+    rabo.rotation.x = -0.9;
+    rabo.position.set(0, 0.5, 1.0);
+    grupo.add(rabo);
+
+    const espuma = criarEspuma(grupo, 1.1, { quantidade: 5, comprimento: 2.4, tamanho: 0.9, forcaMax: 0.3 });
+    let tempo = 0;
+
+    return {
+        grupo,
+        atualizar(dt, ritmo) {
+            tempo += dt;
+            // A boia balanca com a agua, de leve, nos dois eixos.
+            grupo.rotation.z = Math.sin(tempo * 1.3) * 0.05;
+            grupo.rotation.x = Math.sin(tempo * 1.7 + 1) * 0.03;
+            espuma(dt, ritmo);
         },
     };
 }
