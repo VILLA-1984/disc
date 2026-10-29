@@ -1,0 +1,11 @@
+node_modules/
+.next/
+next-env.d.ts
+*.tsbuildinfo
+
+# Dados das pessoas (nome e WhatsApp) e segredo de assinatura: nunca versionar.
+data/*.db
+data/*.db-*
+data/.segredo
+.env*.local
+e2e/capturas/
