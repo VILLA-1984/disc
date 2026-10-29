@@ -120,6 +120,38 @@ export function montar(raiz, api) {
         // sem localStorage: usa o avatar padrao
     }
 
+    // ------------------------------------------------------------ painel de totais
+    // So aparece quando quem monta o jogo oferece api.totais (aqui, o Next.js): quantas pessoas ja jogaram e quantas
+    // deram cada animal. Sao contadores, sem nome nem telefone. Se nao carregar, o painel simplesmente nao aparece.
+    let temporizadorTotais = null;
+
+    if (api.totais) {
+        const painelTotais = document.createElement('aside');
+        painelTotais.className = 'rua-totais';
+        painelTotais.setAttribute('aria-label', 'Quantas pessoas já jogaram');
+        painelTotais.hidden = true;
+        palco.appendChild(painelTotais);
+
+        const atualizarTotais = async () => {
+            try {
+                const dados = await api.totais();
+
+                if (destruido || !dados || !Array.isArray(dados.animais)) {
+                    return;
+                }
+
+                painelTotais.innerHTML = `<div class="rua-totais-topo"><span>Já jogaram</span><strong>${Number(dados.total)}</strong></div>`
+                    + `<ul>${dados.animais.map((a) => `<li><i style="background:${escapar(a.cor)}"></i><span>${escapar(a.nome)}</span><b>${Number(a.total)}</b></li>`).join('')}</ul>`;
+                painelTotais.hidden = false;
+            } catch {
+                // sem totais: nada a mostrar
+            }
+        };
+
+        atualizarTotais();
+        temporizadorTotais = setInterval(atualizarTotais, 30000);
+    }
+
     // ------------------------------------------------------------------- som
     function atualizarBotaoSom() {
         const mudo = estaMudo();
@@ -582,6 +614,7 @@ export function montar(raiz, api) {
     return {
         destruir() {
             destruido = true;
+            clearInterval(temporizadorTotais);
             jogo?.destruir();
             jogo = null;
             pararMusica();

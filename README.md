@@ -48,6 +48,18 @@ aparelhos entre si: teste antes com um celular, ou leve um roteador próprio.
 - O botão "Próxima pessoa", na tela final, volta à abertura para o próximo participante.
 - O endereço é calculado a cada abertura da página: se a rede mudar, recarregue a página para gerar outro QR.
 
+## Painel de totais
+
+No canto inferior esquerdo do jogo há um painel com **quantas pessoas já terminaram o jogo** e **quantas deram cada animal**
+(Tubarão, Águia, Gato, Lobo ou Equilibrado; no celular, só o total). Ele atualiza ao abrir o jogo e a cada 30 segundos.
+
+- Conta toda partida concluída, com ou sem cadastro. Os totais saem da tabela `partidas_contadas` (`codigo`, `animal`): para
+  cada partida guarda **só um código aleatório** (o `n` do token, que impede contar a mesma partida duas vezes) e o animal do
+  resultado. Nada identifica a pessoa. O animal é o mesmo do relatório (`resolverAnimais`).
+- `/api/concluir` conta a partida; uma falha do contador nunca atrapalha o resultado de quem jogou. `GET /api/totais` devolve
+  `{ total, animais: [{ chave, nome, cor, total }] }` (público, sem cache).
+- Só o Next.js tem o painel: o `entrada.js` o desenha quando recebe `api.totais`; o Laravel não passa essa função.
+
 ## Cadastro opcional
 
 Na abertura a pessoa escolhe se quer receber o resultado pelo WhatsApp: **"Sim"** pede nome e WhatsApp (guardados no

@@ -74,6 +74,35 @@
 .rua-app .rua-hud-bolas i.atual { border-color: var(--laranja); }
 @media (max-width: 640px) { .rua-app .rua-hud-bolas { display: none; } }
 
+/* Painel de totais (Next.js): quantas pessoas ja jogaram e quantas deram cada animal, no canto inferior esquerdo */
+.rua-app .rua-totais {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    z-index: 3;
+    width: 150px;
+    padding: 8px 10px;
+    border-radius: 12px;
+    background: rgba(13, 43, 78, 0.8);
+    color: #fff;
+    font-size: 0.76rem;
+    pointer-events: none;
+}
+.rua-app .rua-totais[hidden] { display: none; }
+.rua-app .rua-totais-topo { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 5px; font-weight: 700; }
+.rua-app .rua-totais-topo strong { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.rua-app .rua-totais ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.rua-app .rua-totais li { display: grid; grid-template-columns: 10px 1fr auto; align-items: center; gap: 6px; }
+.rua-app .rua-totais li i { width: 10px; height: 10px; border-radius: 50%; }
+.rua-app .rua-totais li b { font-variant-numeric: tabular-nums; }
+.rua-app #palco.palco--relatorio .rua-totais { display: none; }
+@media (max-width: 640px) {
+    /* No celular so o total, para o painel nao ocupar o jogo */
+    .rua-app .rua-totais { width: auto; padding: 5px 9px; }
+    .rua-app .rua-totais ul { display: none; }
+    .rua-app .rua-totais-topo { margin: 0; gap: 6px; }
+}
+
 .rua-app #som {
     position: absolute;
     right: 10px;

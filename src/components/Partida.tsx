@@ -134,6 +134,7 @@ export default function Partida({ qr }: { qr?: React.ReactNode }) {
             instancia = montar(raizJogo.current, {
                 etapas: etapas ?? undefined,
                 ciclo,
+                totais: () => fetch('/api/totais', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)),
                 concluir,
                 aoFinalizar: (resposta: Resultado) => {
                     setResultado(resposta);
@@ -226,8 +227,8 @@ export default function Partida({ qr }: { qr?: React.ReactNode }) {
                         {querReceber !== null && (
                             <p className="aviso-dados">
                                 {querReceber
-                                    ? 'Guardamos só o seu nome e o seu WhatsApp, para enviar o resultado. As suas escolhas no jogo não ficam gravadas.'
-                                    : 'Sem cadastro: não guardamos nome nem telefone, e as suas escolhas no jogo também não ficam gravadas. No fim você ainda pode pedir o resultado pelo WhatsApp.'}
+                                    ? 'Guardamos só o seu nome e o seu WhatsApp, para enviar o resultado. As suas escolhas no jogo não ficam gravadas. O painel do jogo conta só quantas pessoas jogaram e quantas deram cada animal, sem identificar ninguém.'
+                                    : 'Sem cadastro: não guardamos nome nem telefone, e as suas escolhas no jogo também não ficam gravadas. No fim você ainda pode pedir o resultado pelo WhatsApp. O painel do jogo conta só quantas pessoas jogaram e quantas deram cada animal, sem identificar ninguém.'}
                             </p>
                         )}
 

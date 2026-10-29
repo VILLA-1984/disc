@@ -10,7 +10,7 @@ import type { Rodada } from './gameRound';
  */
 
 /** r = portoes em pares; c = ciclo de palavras (uma por vez). Cada partida tem so um dos dois. */
-export type Carga = { p: number; r?: Rodada; c?: RodadaCiclo; e: number };
+export type Carga = { p: number; r?: Rodada; c?: RodadaCiclo; e: number; n?: string };
 
 const VALIDADE_MS = 6 * 60 * 60 * 1000;
 
@@ -55,9 +55,11 @@ function assinatura(corpo: string): Buffer {
 }
 
 export function assinar(participanteId: number, rodada: Rodada | RodadaCiclo, agora = Date.now()): string {
+    // `n`: codigo aleatorio da partida; o contador de partidas concluidas o usa para nunca contar a mesma duas vezes.
+    const n = randomBytes(9).toString('base64url');
     const carga: Carga = Array.isArray(rodada)
-        ? { p: participanteId, r: rodada, e: agora + VALIDADE_MS }
-        : { p: participanteId, c: rodada, e: agora + VALIDADE_MS };
+        ? { p: participanteId, r: rodada, e: agora + VALIDADE_MS, n }
+        : { p: participanteId, c: rodada, e: agora + VALIDADE_MS, n };
     const corpo = Buffer.from(JSON.stringify(carga), 'utf8').toString('base64url');
 
     return `${corpo}.${assinatura(corpo).toString('base64url')}`;

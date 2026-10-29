@@ -65,8 +65,54 @@ describe('banco turso (libSQL)', () => {
     });
 });
 
+describe('contador de partidas (sem dados pessoais)', () => {
+    async function conferir() {
+        const { lerTotais, registrarPartida } = await import('../src/server/db');
+        const antes = await lerTotais();
+
+        expect(await registrarPartida('codigo-a', 'tubarao')).toBe(true);
+        expect(await registrarPartida('codigo-a', 'tubarao')).toBe(false); // a mesma partida nao conta duas vezes
+        expect(await registrarPartida('codigo-b', 'gato')).toBe(true);
+        expect(await registrarPartida('codigo-c', 'equilibrado')).toBe(true);
+        expect(await registrarPartida('codigo-d', 'tubarao')).toBe(true);
+
+        const depois = await lerTotais();
+
+        expect(depois.total).toBe(antes.total + 4);
+        expect(depois.porAnimal.tubarao).toBe((antes.porAnimal.tubarao ?? 0) + 2);
+        expect(depois.porAnimal.gato).toBe((antes.porAnimal.gato ?? 0) + 1);
+        expect(depois.porAnimal.equilibrado).toBe((antes.porAnimal.equilibrado ?? 0) + 1);
+    }
+
+    it('conta cada partida uma vez e soma por animal (sqlite local)', async () => {
+        vi.resetModules();
+        await conferir();
+    });
+
+    it('faz o mesmo no turso (libSQL)', async () => {
+        vi.resetModules();
+        process.env.TURSO_DATABASE_URL = `file:${path.join(pasta, 'turso-contador.db').replaceAll('\\', '/')}`;
+
+        try {
+            await conferir();
+        } finally {
+            delete process.env.TURSO_DATABASE_URL;
+            vi.resetModules();
+        }
+    });
+});
+
 describe('token assinado', () => {
     const rodada = [[{ top: 1, bottom: 13 }], [{ top: 2, bottom: 14 }]];
+
+    it('cada partida tem o seu codigo aleatorio (usado pelo contador)', async () => {
+        const { assinar, verificar } = await import('../src/server/token');
+        const a = verificar(assinar(7, rodada));
+        const b = verificar(assinar(7, rodada));
+
+        expect(typeof a?.n).toBe('string');
+        expect(a?.n).not.toBe(b?.n);
+    });
 
     it('volta a carga quando valido', async () => {
         const { assinar, verificar } = await import('../src/server/token');

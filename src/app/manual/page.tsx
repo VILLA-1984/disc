@@ -178,6 +178,10 @@ const PERGUNTAS: { pergunta: string; resposta: React.ReactNode }[] = [
         resposta: 'Sim. O resultado não é gravado: aparece na tela e segue na mensagem do WhatsApp. Se a página for fechada antes do envio, é preciso jogar de novo.',
     },
     {
+        pergunta: 'O que é o quadro no canto esquerdo do jogo?',
+        resposta: 'É o painel de totais: mostra quantas pessoas já terminaram o jogo e quantas ficaram com cada animal (Tubarão, Águia, Gato, Lobo ou Equilibrado). São só contadores: não mostram nome nem telefone, e contam também quem jogou sem cadastro. No celular aparece só o total.',
+    },
+    {
         pergunta: 'Preciso informar nome e telefone para jogar?',
         resposta: 'Não. Na primeira tela, escolha “Não, só quero jogar”: nada pessoal é pedido nem guardado. Se mudar de ideia, a tela final deixa pedir o resultado pelo WhatsApp.',
     },
@@ -273,7 +277,8 @@ export default function Manual() {
             <div className="manual-bloco">
                 <h3>Dados guardados</h3>
                 <ul>
-                    <li>Ficam salvos apenas <strong>nome e WhatsApp</strong>, e só de quem escolhe receber o resultado, com as datas de cadastro e de correção. O banco é o <strong>Turso</strong> (nuvem; é o que o Vercel usa) ou um SQLite embutido no servidor (<code>data/participantes.db</code>, o modo da feira). Quem joga sem cadastro não deixa nenhum registro.</li>
+                    <li>Ficam salvos apenas <strong>nome e WhatsApp</strong>, e só de quem escolhe receber o resultado, com as datas de cadastro e de correção. O banco é o <strong>Turso</strong> (nuvem; é o que o Vercel usa) ou um SQLite embutido no servidor (<code>data/participantes.db</code>, o modo da feira). Quem joga sem cadastro não deixa nenhum registro de pessoa.</li>
+                    <li>O painel de totais do jogo usa um contador à parte: para cada partida concluída guarda só um <strong>código aleatório</strong> (para ela não contar duas vezes) e o <strong>animal</strong> do resultado, com ou sem cadastro. Nada disso identifica alguém. A lista pública está em <code>/api/totais</code>.</li>
                     <li>Para exportar os cadastros: <code>npm run exportar &gt; participantes.csv</code>.</li>
                     <li>São dados pessoais (LGPD). Defina quem acessa o arquivo, por quanto tempo ele é mantido e faça backup da pasta <code>data</code> se os cadastros importarem.</li>
                 </ul>

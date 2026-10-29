@@ -44,6 +44,17 @@ function urlDoTurso(): string | undefined {
     return process.env.TURSO_DATABASE_URL?.trim() || undefined;
 }
 
+/**
+ * Contador de partidas concluidas, SEM dados pessoais: so um codigo aleatorio da partida (para ela nunca contar
+ * duas vezes) e o animal do resultado. Os totais saem de uma contagem desta tabela, entao nao ha o que atualizar.
+ */
+const CRIAR_TABELA_PARTIDAS = `
+    CREATE TABLE IF NOT EXISTS partidas_contadas (
+        codigo TEXT PRIMARY KEY,
+        animal TEXT NOT NULL
+    )
+`;
+
 /** Turso (libSQL). O cliente e carregado so quando e preciso, para o modo local nao depender dele. */
 async function abrirTurso(url: string, token: string | undefined): Promise<Armazenamento> {
     const { createClient } = await import('@libsql/client');
@@ -97,6 +108,7 @@ function abrir(): Promise<Armazenamento> {
         const url = urlDoTurso();
         const armazenamento = url ? await abrirTurso(url, process.env.TURSO_AUTH_TOKEN?.trim()) : abrirLocal();
         await armazenamento.escrever(CRIAR_TABELA, []);
+        await armazenamento.escrever(CRIAR_TABELA_PARTIDAS, []);
 
         return armazenamento;
     })().catch((erro) => {
@@ -129,6 +141,31 @@ export async function atualizarWhatsapp(id: number, whatsapp: string): Promise<b
     );
 
     return alteradas > 0;
+}
+
+/**
+ * Conta uma partida concluida (com ou sem cadastro). O codigo vem do token da partida, entao reenviar o mesmo
+ * resultado nao conta de novo. Devolve true quando foi contada agora.
+ */
+export async function registrarPartida(codigo: string, animal: string): Promise<boolean> {
+    const { alteradas } = await (await abrir()).escrever('INSERT OR IGNORE INTO partidas_contadas (codigo, animal) VALUES (?, ?)', [codigo, animal]);
+
+    return alteradas > 0;
+}
+
+/** Quantas partidas foram concluidas e quantas deram cada animal (chave do animal -> total). */
+export async function lerTotais(): Promise<{ total: number; porAnimal: Record<string, number> }> {
+    const linhas = await (await abrir()).ler('SELECT animal, COUNT(*) AS n FROM partidas_contadas GROUP BY animal', []);
+    const porAnimal: Record<string, number> = {};
+    let total = 0;
+
+    for (const linha of linhas) {
+        const n = Number(linha.n);
+        porAnimal[String(linha.animal)] = n;
+        total += n;
+    }
+
+    return { total, porAnimal };
 }
 
 export async function buscarParticipante(id: number): Promise<Participante | undefined> {

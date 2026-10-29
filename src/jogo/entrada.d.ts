@@ -10,6 +10,8 @@ export type CicloDoJogo = {
 export type ApiDoJogo<Resposta> = {
     etapas?: EtapasDoJogo;
     ciclo?: CicloDoJogo | null;
+    /** Painel de totais (so o Next.js): quantas pessoas ja jogaram e quantas deram cada animal. */
+    totais?: () => Promise<{ total: number; animais: { chave: string; nome: string; cor: string; total: number }[] } | null>;
     concluir: (escolhas: unknown[]) => Promise<Resposta>;
     aoFinalizar: (resposta: Resposta) => void;
 };

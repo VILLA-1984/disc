@@ -30,6 +30,9 @@ await pagina.addInitScript(() => {
     window.open = (url) => { window.__abertos.push(url); return {}; };
 });
 
+// Totais do painel antes da partida (para conferir, no fim, que esta partida foi contada uma vez).
+const totais0 = await (await fetch(`${base}/api/totais`)).json();
+
 // ------------------------------------------------------------------ cadastro
 await pagina.goto(base);
 await pagina.getByRole('heading', { name: 'Rua das Palavras' }).waitFor();
@@ -58,6 +61,12 @@ await pagina.getByRole('button', { name: 'Continuar' }).click();
 const cartao = pagina.locator('#cartao.aberto');
 await cartao.waitFor({ timeout: 30000 });
 assert.match(await pagina.textContent('#cartao-titulo'), /Rua das Palavras/);
+
+// Painel de totais no canto do jogo: o total e uma linha por animal.
+await pagina.locator('.rua-totais').waitFor({ timeout: 15000 });
+assert.match(await pagina.textContent('.rua-totais'), /Já jogaram/);
+assert.equal(await pagina.locator('.rua-totais li').count(), 5, 'quatro animais e o equilibrado');
+await pagina.screenshot({ path: join(pasta, `e2e-painel-totais-${modo}.png`) });
 
 await pagina.click('#cartao-botao'); // Vamos la
 await cartao.waitFor();
@@ -163,6 +172,13 @@ await pagina.fill('#whatsapp-final', '659');
 await pagina.getByRole('button', { name: 'Enviar pelo WhatsApp' }).click();
 assert.ok(await pagina.getByText(/incompleto/).isVisible());
 assert.equal((await pagina.evaluate(() => window.__abertos)).length, 1, 'numero invalido nao pode abrir o WhatsApp');
+
+// A partida concluida foi contada uma unica vez: +1 no total e +1 em exatamente um animal.
+const totais1 = await (await fetch(`${base}/api/totais`)).json();
+assert.equal(totais1.total, totais0.total + 1, 'o total devia subir 1');
+const mudaram = totais1.animais.filter((a, i) => a.total !== totais0.animais[i].total);
+assert.equal(mudaram.length, 1, 'so um animal devia mudar');
+assert.equal(mudaram[0].total, totais0.animais.find((a) => a.chave === mudaram[0].chave).total + 1);
 
 assert.deepEqual(erros, [], `erros no navegador: ${erros.join(' | ')}`);
 await navegador.close();
