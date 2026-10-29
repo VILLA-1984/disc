@@ -7,6 +7,11 @@ next-env.d.ts
 data/*.db
 data/*.db-*
 data/.segredo
-.env*.local
+
+# Variaveis de ambiente (token do Turso, segredo de assinatura): nunca versionar. So o .env.example vai para o git.
+.env
+.env.*
+!.env.example
+.vercel/
 e2e/capturas/
 e2e/capturas-mobile*/

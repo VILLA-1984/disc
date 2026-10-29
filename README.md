@@ -81,7 +81,9 @@ quais avatares entram a partir do campo `mobilidade` (no rio e no céu, moto e t
 
 ## O que fica salvo
 
-Só **nome e WhatsApp** (SQLite embutido em `data/participantes.db`, criado sozinho) e as datas de cadastro e
+Só **nome e WhatsApp**, num de dois lugares: no **Turso** (nuvem; modo do Vercel) quando `TURSO_DATABASE_URL` está
+definida, ou no **SQLite embutido** em `data/participantes.db`, criado sozinho (modo da feira, no próprio computador;
+`RUA_BANCO_LOCAL=1` força este mesmo com as variáveis do Turso no `.env`). Guarda também as datas de cadastro e
 de correção. As escolhas e o resultado do jogo **não são gravados**: o resultado aparece na tela e vai na
 mensagem do WhatsApp.
 
@@ -103,10 +105,29 @@ mensagem do WhatsApp.
 O WhatsApp é aberto na conta de quem está usando o aparelho, com a conversa e a mensagem prontas: quem clica em
 Enviar é a pessoa (não há API de envio automático).
 
+## Deploy no Vercel (GitHub + Turso)
+
+O Vercel não tem disco permanente, então lá o cadastro vai para o **Turso** e o segredo de assinatura vem de variável de ambiente.
+
+1. Versione o projeto num repositório do GitHub (o `.env` fica fora do git; só o `.env.example` vai).
+2. No Vercel: **Add New → Project → Import Git Repository** e escolha o repositório. O Next.js é detectado sozinho
+   (build `next build`). A partir daí, **cada push na branch principal publica sozinho**, e as outras branches e pull
+   requests ganham um endereço de pré-visualização.
+3. Em **Settings → Environment Variables**, cadastre os mesmos valores do seu `.env` local:
+   `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN` e `RUA_SEGREDO` (o mesmo valor em todos os ambientes). Opcional:
+   `RUA_URL_PUBLICA` com o endereço do site, para o QR code. **Não** defina `RUA_BANCO_LOCAL`.
+4. Faça um novo deploy depois de cadastrar as variáveis. Para conferir, jogue uma partida e rode `npm run exportar`
+   (lê do Turso quando as variáveis estão no `.env`).
+
+Os dados são pessoais (LGPD) e ficam num serviço de nuvem fora do Brasil (o banco do Turso está na região indicada na
+URL). Defina quem acessa o banco e por quanto tempo os cadastros são mantidos.
+
 ## Configuração (variáveis de ambiente, todas opcionais)
 
 | Variável | Para quê |
 |---|---|
+| `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN` | Banco dos cadastros no Turso (obrigatórias no Vercel). Sem elas, usa o SQLite local. |
+| `RUA_BANCO_LOCAL` | `1` força o SQLite local mesmo com as variáveis do Turso (servidor da feira, sem depender da internet). |
 | `RUA_SEGREDO` | Segredo da assinatura do token. Sem ela, é gerado em `data/.segredo`. Em produção com mais de uma instância, defina a mesma em todas. |
 | `RUA_DADOS` | Pasta dos dados (padrão `./data`). |
 | `RUA_BANCO` | Caminho do arquivo SQLite (padrão `<RUA_DADOS>/participantes.db`). |

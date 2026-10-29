@@ -42,7 +42,16 @@ export async function POST(request: Request) {
         throw erro;
     }
 
-    const participanteId = criarParticipante(nome, whatsapp);
+    let participanteId: number;
+
+    try {
+        participanteId = await criarParticipante(nome, whatsapp);
+    } catch (erro) {
+        // Banco indisponivel (por exemplo, Turso fora do ar ou token errado): nao deixa a pessoa sem saber o que houve.
+        console.error('Falha ao gravar o cadastro:', erro);
+
+        return Response.json({ erro: 'Não foi possível gravar o seu cadastro agora. Tente de novo em instantes.' }, { status: 503 });
+    }
 
     if (ciclo) {
         const palavras = Object.fromEntries(PALAVRAS.map((p) => [p.id, p.word]));

@@ -18,7 +18,7 @@ export async function POST(request: Request) {
         return Response.json({ erro: problemaNoWhatsapp(informado) }, { status: 422 });
     }
 
-    if (!atualizarWhatsapp(carga.p, whatsapp)) {
+    if (!(await atualizarWhatsapp(carga.p, whatsapp))) {
         return Response.json({ erro: 'Cadastro não encontrado.' }, { status: 404 });
     }
 

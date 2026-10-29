@@ -35,8 +35,14 @@ function segredo(): Buffer {
     const arquivo = path.join(pastaDeDados(), '.segredo');
 
     if (!existsSync(arquivo)) {
-        mkdirSync(pastaDeDados(), { recursive: true });
-        writeFileSync(arquivo, randomBytes(32).toString('hex'), { mode: 0o600 });
+        try {
+            mkdirSync(pastaDeDados(), { recursive: true });
+            writeFileSync(arquivo, randomBytes(32).toString('hex'), { mode: 0o600 });
+        } catch {
+            // Hospedagem sem disco gravavel (Vercel): um segredo por instancia nao serve, porque o token de uma
+            // partida precisa ser aceito por qualquer instancia. Tem de vir da variavel de ambiente.
+            throw new Error('Defina a variável de ambiente RUA_SEGREDO: não há disco gravável para gerar o segredo de assinatura.');
+        }
     }
 
     segredoEmCache = Buffer.from(readFileSync(arquivo, 'utf8').trim(), 'utf8');
