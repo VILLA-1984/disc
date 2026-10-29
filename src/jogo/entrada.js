@@ -1,5 +1,6 @@
 import { AVATARES, CORES_ROUPA, gerarRetratos } from './avatars.js';
 import { alternarMudo, estaMudo, iniciarAudio, iniciarMusica, pararMusica, sons } from './audio.js';
+import { criarCiclo } from './ciclo.js';
 import { criarJogo3D } from './game3d.js';
 import { mostrarRelatorio } from './report.js';
 
@@ -18,6 +19,12 @@ const TEXTO_ETAPA = [
     'Pense em como você é naturalmente, no dia a dia. Em cada portão, escolha a palavra que mais combina com você.',
     'Agora pense em como você acredita que esperam que você seja no trabalho. Em cada portão, escolha a palavra que mais combina com essa expectativa.',
 ];
+// Modo ciclo (uma palavra por vez): a placa sem palavra diz "Deixar passar" e tem id 0.
+const TEXTO_ETAPA_CICLO = [
+    'Pense em como você é naturalmente, no dia a dia. As palavras vêm uma por vez: PEGUE as que mais combinam com você e deixe passar as outras.',
+    'Agora pense em como você acredita que esperam que você seja no trabalho. As palavras vêm uma por vez: PEGUE as que mais combinam com essa expectativa e deixe passar as outras.',
+];
+const PASSAR = { id: 0, word: 'Deixar passar' };
 const NOMES_CORES = ['Azul', 'Laranja', 'Verde', 'Roxo', 'Rosa', 'Marinho', 'Amarelo'];
 // rotulo: o que aparece no botao, igual a etiqueta da placa no jogo; tecla: dica so para quem tem teclado.
 const CONTROLES = {
@@ -77,8 +84,10 @@ function escapar(texto) {
  * @returns {{destruir: () => void}}
  */
 export function montar(raiz, api) {
-    const etapas = api.etapas;
-    const escolhasPorEtapa = etapas[0].length;
+    const ciclo = api.ciclo ?? null; // {escolher, etapas: ordens por etapa e volta, palavras: {id: texto}}
+    const etapas = api.etapas ?? [];
+    const totalEtapas = ciclo ? ciclo.etapas.length : etapas.length;
+    const escolhasPorEtapa = ciclo ? ciclo.escolher : etapas[0].length;
     const reduzirMovimento = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     raiz.innerHTML = ESTRUTURA;
@@ -99,6 +108,8 @@ export function montar(raiz, api) {
     let retratoAtual = '';
     let ultimoPasso = 0;
     let destruido = false;
+    let estadoCiclo = null;
+    let vezes = 0; // quantas palavras ja passaram na etapa: alterna o lado em que a proxima aparece
 
     try {
         avatarId = localStorage.getItem('rua_avatar') ?? avatarId;
@@ -176,7 +187,44 @@ export function montar(raiz, api) {
         botaoCima.querySelector('.tecla').textContent = c.cima.tecla;
         botaoBaixo.querySelector('.tecla').textContent = c.baixo.tecla;
         botaoTurbo.hidden = !comToque;
-        el('dica').textContent = `Em cada portão, escolha a palavra que mais combina com você: ${comToque ? c.dicaToque : c.dica}.`;
+        const instrucao = ciclo
+            ? 'Em cada portão há uma palavra de um lado e "Deixar passar" do outro. Vá para o lado da palavra se ela combina com você'
+            : 'Em cada portão, escolha a palavra que mais combina com você';
+        el('dica').textContent = `${instrucao}: ${comToque ? c.dicaToque : c.dica}.`;
+    }
+
+    // ------------------------------------------------------------------- ciclo
+    function prepararCiclo(indice) {
+        estadoCiclo = criarCiclo(ciclo.etapas[indice], ciclo.escolher);
+        vezes = 0;
+        progressoDoCiclo(indice);
+    }
+
+    function progressoDoCiclo(indice) {
+        estadoCiclo.proximo(); // avanca ate a proxima palavra (ou encerra e completa as automaticas)
+        const { escolhidas, volta } = estadoCiclo.estado();
+        const feitas = escolhidas.length;
+        const percentual = Math.round(((indice * ciclo.escolher + feitas) / (totalEtapas * ciclo.escolher)) * 100);
+
+        jogo?.definirProgresso({
+            feitas,
+            total: ciclo.escolher,
+            percentual,
+            texto: `Escolhidas ${feitas}/${ciclo.escolher} · volta ${volta} · ${percentual}%`,
+        });
+    }
+
+    function proximoPortao() {
+        const id = estadoCiclo.proximo();
+
+        if (id === null) {
+            return null;
+        }
+
+        const palavra = { id, word: ciclo.palavras[id] };
+
+        // As palavras alternam de lado: uma na esquerda (cima), a seguinte na direita (baixo).
+        return vezes % 2 === 0 ? { cima: palavra, baixo: PASSAR } : { cima: PASSAR, baixo: palavra };
     }
 
     // ------------------------------------------------------------------ avatar
@@ -255,12 +303,19 @@ export function montar(raiz, api) {
     // -------------------------------------------------------------------- jogo
     function apresentarEtapa(indice) {
         mostrarCartao({
-            sobretitulo: `Etapa ${indice + 1} de ${etapas.length}`,
+            sobretitulo: `Etapa ${indice + 1} de ${totalEtapas}`,
             titulo: indice === 0 ? 'Como você é' : 'Como esperam de você',
-            corpoHtml: `<p>${TEXTO_ETAPA[indice]}</p><p>Corra pela rua e, em cada portão, escolha <strong>uma</strong> das duas palavras. A etapa termina quando você passar pelos <strong>${escolhasPorEtapa} portões</strong>.</p>`,
+            corpoHtml: ciclo
+                ? `<p>${TEXTO_ETAPA_CICLO[indice]}</p><p>Você precisa pegar <strong>${escolhasPorEtapa} palavras</strong> no total. As que você deixar passar voltam mais tarde, até você completar as ${escolhasPorEtapa}.</p>`
+                : `<p>${TEXTO_ETAPA[indice]}</p><p>Corra pela rua e, em cada portão, escolha <strong>uma</strong> das duas palavras. A etapa termina quando você passar pelos <strong>${escolhasPorEtapa} portões</strong>.</p>`,
             botao: 'Começar a correr',
             aoClicar: () => {
                 fecharCartao();
+
+                if (ciclo) {
+                    prepararCiclo(indice);
+                }
+
                 jogo.iniciarEtapa(indice);
             },
         });
@@ -274,6 +329,7 @@ export function montar(raiz, api) {
         jogo = criarJogo3D({
             parent: el('jogo'),
             etapas,
+            proximoPortao: ciclo ? proximoPortao : undefined,
             avatar: spec,
             modo,
             rotulosEtapas: ROTULOS,
@@ -294,11 +350,32 @@ export function montar(raiz, api) {
                 botaoCima.disabled = false;
                 botaoBaixo.disabled = false;
                 const [nomeCima, nomeBaixo] = [CONTROLES[modo].cima.nome, CONTROLES[modo].baixo.nome];
+
+                if (ciclo) {
+                    const palavraEmCima = cima.id !== 0;
+                    anuncio.textContent = `Palavra: ${palavraEmCima ? cima.word : baixo.word}. Para pegar, vá para a ${palavraEmCima ? nomeCima : nomeBaixo}; para deixar passar, vá para a ${palavraEmCima ? nomeBaixo : nomeCima}.`;
+
+                    return;
+                }
+
                 anuncio.textContent = `Portão ${indice + 1} de ${total}. Opção da ${nomeCima}: ${cima.word}. Opção da ${nomeBaixo}: ${baixo.word}.`;
             },
             aoEscolher: (escolha) => {
                 sons.escolha();
                 travarBotoes();
+
+                if (ciclo) {
+                    // O servidor refaz o ciclo com estas decisoes: so se pegou ou nao (take), na ordem.
+                    const pegou = escolha.escolhida.id !== 0;
+                    estadoCiclo.registrar(pegou);
+                    vezes++;
+                    escolhas.push({ stage: escolha.etapa, take: pegou, ms: escolha.tempoMs });
+                    progressoDoCiclo(escolha.etapa);
+                    anuncio.textContent = pegou ? `Você pegou ${escolha.escolhida.word}.` : 'Você deixou a palavra passar.';
+
+                    return;
+                }
+
                 // So o lado e o tempo vao ao servidor: ele sabe quais palavras estavam em cada portao.
                 escolhas.push({
                     stage: escolha.etapa,
@@ -311,12 +388,15 @@ export function montar(raiz, api) {
             aoConcluirEtapa: ({ etapa }) => {
                 travarBotoes();
 
-                if (etapa + 1 < etapas.length) {
+                if (etapa + 1 < totalEtapas) {
                     sons.etapa();
+                    const automaticas = ciclo ? estadoCiclo.estado().automaticas.length : 0;
                     mostrarCartao({
                         sobretitulo: `Etapa ${etapa + 1} concluída`,
                         titulo: 'Muito bem!',
-                        corpoHtml: `<p>Você passou pelos ${escolhasPorEtapa} portões desta etapa.</p><p>Agora vem a etapa ${etapa + 2}, com outras combinações de palavras.</p>`,
+                        corpoHtml: ciclo
+                            ? `<p>Você completou as ${escolhasPorEtapa} palavras desta etapa.</p>${automaticas ? `<p>As últimas ${automaticas} entraram sozinhas, porque eram as únicas que faltavam.</p>` : ''}<p>Agora vem a etapa ${etapa + 2}, com as mesmas palavras, mas outra pergunta.</p>`
+                            : `<p>Você passou pelos ${escolhasPorEtapa} portões desta etapa.</p><p>Agora vem a etapa ${etapa + 2}, com outras combinações de palavras.</p>`,
                         botao: `Continuar para a etapa ${etapa + 2}`,
                         aoClicar: () => {
                             fecharCartao();
@@ -413,11 +493,13 @@ export function montar(raiz, api) {
         mostrarCartao({
             sobretitulo: 'Teste comportamental',
             titulo: 'Rua das Palavras',
-            corpoHtml: `<p>Você vai correr por uma rua em duas etapas. Em cada portão aparecem duas palavras: escolha a que mais combina com você. Não há resposta certa ou errada, e no fim você descobre o seu animal.</p>
+            corpoHtml: `<p>${ciclo
+                    ? `Você vai correr por uma rua em duas etapas. Em cada portão aparece uma palavra de um lado e "Deixar passar" do outro: pegue a palavra se ela combina com você. Em cada etapa você pega ${escolhasPorEtapa} das ${Object.keys(ciclo.palavras).length} palavras, e as que você deixar passar voltam mais tarde. Não há resposta certa ou errada, e no fim você descobre o seu animal.`
+                    : 'Você vai correr por uma rua em duas etapas. Em cada portão aparecem duas palavras: escolha a que mais combina com você. Não há resposta certa ou errada, e no fim você descobre o seu animal.'}</p>
                 <ul><li>Toque na placa, use as setas do teclado ou os botões abaixo do jogo.</li>
                 <li>O avatar espera por você: não há limite de tempo. Para correr mais rápido, segure ↑ (ou W) na vista 3D, ou → (ou D) na vista lateral.</li>
                 <li>O jogo tem som. Você pode desligá-lo a qualquer momento no botão no canto da tela.</li>
-                <li>Você só passa para a etapa seguinte depois de completar todos os portões.</li></ul>`,
+                <li>${ciclo ? `Você só passa para a etapa seguinte depois de pegar as ${escolhasPorEtapa} palavras.` : 'Você só passa para a etapa seguinte depois de completar todos os portões.'}</li></ul>`,
             botao: 'Vamos lá',
             aoClicar: () => {
                 iniciarMusica();

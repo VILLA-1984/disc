@@ -60,14 +60,61 @@ await cartao.waitFor();
 await pagina.check(`input[name="vista"][value="${modo}"]`);
 await pagina.click('#cartao-botao'); // Comecar (avatar)
 
+const PASSAR = 'Deixar passar';
+let emCiclo = false;
+
 for (let etapa = 0; etapa < 2; etapa++) {
     await cartao.waitFor({ timeout: 30000 });
     await pagina.click('#cartao-botao'); // Comecar a correr
 
-    for (let i = 0; i < 12; i++) {
-        await pagina.waitForFunction(() => !document.querySelector('#botao-cima').disabled, null, { timeout: 60000 });
-        await pagina.click(i % 2 === 0 ? '#botao-cima' : '#botao-baixo');
+    // Joga ate o cartao de fim de etapa abrir. Modo ciclo: pega 1 de cada 3 palavras (obriga a dar voltas);
+    // modo pares: alterna cima e baixo.
+    let apresentadas = 0;
+    let pegas = 0;
+
+    for (;;) {
+        await pagina.waitForFunction(
+            () => !document.querySelector('#botao-cima').disabled || document.querySelector('#cartao.aberto'),
+            null,
+            { timeout: 60000 },
+        );
+
+        if (await pagina.locator('#cartao.aberto').count()) {
+            break;
+        }
+
+        const [cima, baixo] = await pagina.evaluate(() => [
+            document.querySelector('#botao-cima strong').textContent.trim(),
+            document.querySelector('#botao-baixo strong').textContent.trim(),
+        ]);
+        let alvo;
+
+        if (cima === PASSAR || baixo === PASSAR) {
+            emCiclo = true;
+            const pegar = apresentadas % 3 === 0;
+            const botaoDaPalavra = cima === PASSAR ? '#botao-baixo' : '#botao-cima';
+            const botaoDeixar = cima === PASSAR ? '#botao-cima' : '#botao-baixo';
+            alvo = pegar ? botaoDaPalavra : botaoDeixar;
+            pegas += pegar ? 1 : 0;
+
+            if (apresentadas === 0 && etapa === 0) {
+                assert.ok(await pagina.locator('.rua-mapa.visivel').isVisible(), 'o minimapa devia aparecer');
+                await pagina.screenshot({ path: join(pasta, `e2e-minimapa-${modo}.png`) });
+            }
+        } else {
+            alvo = apresentadas % 2 === 0 ? '#botao-cima' : '#botao-baixo';
+        }
+
+        await pagina.click(alvo);
         await pagina.waitForFunction(() => document.querySelector('#botao-cima').disabled, null, { timeout: 10000 });
+        apresentadas++;
+    }
+
+    if (emCiclo) {
+        assert.ok(pegas <= 24 && pegas >= 12, `devia pegar entre 12 e 24 palavras por conta propria (pegou ${pegas})`);
+        assert.ok(apresentadas > 48, `devia dar mais de uma volta (apresentadas: ${apresentadas})`);
+    } else {
+        assert.equal(apresentadas, 12);
     }
 
     await cartao.waitFor({ timeout: 40000 });

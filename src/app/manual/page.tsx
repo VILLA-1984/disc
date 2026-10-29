@@ -53,7 +53,7 @@ const PASSOS: Passo[] = [
         legenda: 'Apresentação do jogo, com os controles e as regras.',
         texto: (
             <>
-                <p>Você vai correr por uma rua, em duas etapas. Em cada portão aparecem <strong>duas palavras</strong> e você escolhe a que mais combina com você. Não há resposta certa ou errada.</p>
+                <p>Você vai correr por uma rua, em duas etapas. Em cada portão aparece <strong>uma palavra</strong> de um lado e <strong>&quot;Deixar passar&quot;</strong> do outro: você pega a palavra se ela combina com você. Não há resposta certa ou errada.</p>
                 <p>Não existe limite de tempo: o avatar espera pela sua escolha.</p>
             </>
         ),
@@ -80,24 +80,26 @@ const PASSOS: Passo[] = [
                     <li><strong>Etapa 1 · Como você é:</strong> pense em como você é naturalmente, no dia a dia.</li>
                     <li><strong>Etapa 2 · Como esperam de você:</strong> pense em como você acredita que esperam que você seja no trabalho.</li>
                 </ul>
-                <p>Cada etapa tem 12 portões. Você só passa para a seguinte depois de completar todos.</p>
+                <p>Em cada etapa passam as <strong>48 palavras</strong> e você pega <strong>24</strong>. As palavras que você deixar passar <strong>voltam mais tarde</strong>, numa nova volta, até você completar as 24; as que você pegou não voltam. Se as palavras que restam forem exatamente as que faltam, elas entram sozinhas. O contador no alto mostra quantas você já pegou e em que volta está.</p>
+                <p>Você só passa para a etapa seguinte depois de completar as 24. As duas etapas usam as mesmas palavras, mas com perguntas diferentes.</p>
+                <p>O <strong>minimapa</strong>, no canto superior direito, mostra a largada, a chegada e a sua posição na etapa.</p>
             </>
         ),
     },
     {
-        titulo: 'Escolha uma palavra em cada portão',
+        titulo: 'Pegue ou deixe passar em cada portão',
         imagem: '06-portao.jpg',
-        legenda: 'Dois portões com uma palavra cada; os botões embaixo repetem as opções.',
+        legenda: 'Imagem de uma versão anterior, com duas palavras; hoje uma placa traz a palavra e a outra, "Deixar passar".',
         texto: (
             <>
-                <p>Cada portão tem <strong>duas placas</strong>. Cada placa traz uma etiqueta do lado: <strong>← ESQUERDA</strong>, em azul, na placa da esquerda, e <strong>DIREITA →</strong>, em laranja, na da direita. Os botões embaixo do jogo têm as <strong>mesmas cores e ficam do mesmo lado</strong>: o azul à esquerda e o laranja à direita.</p>
+                <p>Cada portão tem <strong>duas placas</strong>: uma com a palavra e outra com <strong>Deixar passar</strong>. A palavra alterna de lado a cada portão. Cada placa traz uma etiqueta do lado: <strong>← ESQUERDA</strong>, em azul, na placa da esquerda, e <strong>DIREITA →</strong>, em laranja, na da direita. Os botões embaixo do jogo têm as <strong>mesmas cores e ficam do mesmo lado</strong>: o azul à esquerda e o laranja à direita.</p>
                 <p>Quando o avatar chega ao portão e as palavras aparecem, escolha de um destes jeitos:</p>
                 <ul>
                     <li><strong>Toque ou clique na placa</strong> da palavra escolhida;</li>
                     <li>use as setas <strong>← →</strong> do teclado (ou as teclas <strong>A</strong> e <strong>D</strong>);</li>
                     <li>ou use os <strong>dois botões</strong> embaixo do jogo.</li>
                 </ul>
-                <p>Leia as duas palavras antes de escolher: depois de escolhida, a palavra não pode ser trocada.</p>
+                <p>Leia a palavra antes de decidir: depois de decidir, não dá para trocar. Se você deixar passar, ela volta numa volta seguinte.</p>
                 <p>Para correr mais rápido, segure <strong>↑</strong> (ou <strong>W</strong>) na vista 3D. Na vista lateral, as escolhas usam ↑ ↓ (cima e baixo) e se corre com →.</p>
                 <p>No alto da tela ficam a etapa, a barra de progresso e o clima da rua. O botão <strong>Som</strong>, no canto, liga e desliga o som.</p>
             </>
@@ -119,7 +121,7 @@ const PASSOS: Passo[] = [
         imagem: '07-etapa-concluida.jpg',
         legenda: 'Aviso ao terminar a etapa 1.',
         texto: (
-            <p>Ao passar pelos 12 portões, aparece este aviso. Toque em <strong>Continuar para a etapa 2</strong>; as palavras serão outras combinações.</p>
+            <p>Ao completar as 24 palavras, aparece este aviso. Toque em <strong>Continuar para a etapa 2</strong>; as palavras são as mesmas, mas a pergunta muda.</p>
         ),
     },
     {

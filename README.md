@@ -48,6 +48,24 @@ aparelhos entre si: teste antes com um celular, ou leve um roteador próprio.
 - O botão "Próxima pessoa", na tela final, volta à abertura para o próximo participante.
 - O endereço é calculado a cada abertura da página: se a rede mudar, recarregue a página para gerar outro QR.
 
+## Como a partida funciona: ciclo de palavras
+
+Modo padrão ("uma por vez"): em cada etapa passam as 48 palavras, uma por portão, e a pessoa **pega** a palavra
+ou **deixa passar**. As pegas saem do jogo; as deixadas voltam na volta seguinte, até completar 24 por etapa
+(`RUA_ESCOLHER`, de 12 a `palavras − 12`). As duas etapas usam as mesmas palavras, com perguntas diferentes
+(natural × adaptado).
+
+- A primeira volta mostra **todas** as palavras antes de qualquer repetição; cada volta traz blocos com uma palavra
+  de cada fator, para nenhum fator ficar todo no começo ou no fim.
+- Se as palavras que restam forem exatamente as que faltam, entram sozinhas (marcadas como automáticas). Se as 6
+  voltas previstas acabarem e ainda faltar, entram as primeiras que restam.
+- **A pontuação usa só as palavras escolhidas**, sem peso pela volta em que foram pegas.
+- As regras estão em `src/jogo/ciclo.js`, o **mesmo arquivo** usado pelo navegador (para saber qual palavra vem agora)
+  e pelo servidor (que refaz a partida a partir das decisões e confere). O servidor DISC em PHP tem uma cópia
+  dessas regras: mudou uma, mude a outra.
+- `RUA_MODO=pares` volta ao formato antigo, com duas palavras por portão.
+- O minimapa (largada, chegada e posição) fica no canto superior direito do jogo.
+
 ## O que fica salvo
 
 Só **nome e WhatsApp** (SQLite embutido em `data/participantes.db`, criado sozinho) e as datas de cadastro e
@@ -79,7 +97,9 @@ Enviar é a pessoa (não há API de envio automático).
 | `RUA_SEGREDO` | Segredo da assinatura do token. Sem ela, é gerado em `data/.segredo`. Em produção com mais de uma instância, defina a mesma em todas. |
 | `RUA_DADOS` | Pasta dos dados (padrão `./data`). |
 | `RUA_BANCO` | Caminho do arquivo SQLite (padrão `<RUA_DADOS>/participantes.db`). |
-| `RUA_PORTOES` | Portões por etapa, de 6 a 24 (padrão 12). |
+| `RUA_ESCOLHER` | Palavras que a pessoa pega por etapa no modo ciclo (padrão 24; de 12 a total − 12). |
+| `RUA_MODO` | `pares` usa o formato antigo de duas palavras por portão; sem valor, usa o ciclo. |
+| `RUA_PORTOES` | Só no modo `pares`: portões por etapa, de 6 a 24 (padrão 12). |
 | `RUA_URL_PUBLICA` | Endereço público do jogo, usado no QR code (ex.: `https://jogo.exemplo.com.br`). Sem ela, o QR usa o IP do computador na rede. |
 
 ## Atenção: lista de palavras

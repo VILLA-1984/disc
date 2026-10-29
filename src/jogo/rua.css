@@ -43,6 +43,31 @@
 }
 
 .rua-app .rua-hud.visivel { display: flex; }
+
+/* Minimapa da etapa, no canto superior direito, sob o HUD */
+.rua-app .rua-mapa {
+    position: absolute;
+    top: 74px; right: 10px;
+    display: none;
+    width: clamp(104px, 17%, 168px);
+    padding: 6px 8px 4px;
+    border-radius: 12px;
+    background: rgba(13, 43, 78, 0.55);
+    z-index: 2;
+    pointer-events: none;
+}
+.rua-app .rua-mapa.visivel { display: block; }
+.rua-app .rua-mapa svg { display: block; width: 100%; height: auto; overflow: visible; }
+.rua-app .rua-mapa-pista { stroke: rgba(255, 255, 255, 0.4); stroke-width: 5; stroke-linecap: round; }
+.rua-app .rua-mapa-feito { stroke: var(--laranja); stroke-width: 5; stroke-linecap: round; }
+.rua-app .rua-mapa-largada { fill: #4cc38a; stroke: #fff; stroke-width: 1.5; }
+.rua-app .rua-mapa-chegada path { stroke: #fff; stroke-width: 1.5; }
+.rua-app .rua-mapa-chegada rect { fill: #0d2b4e; stroke: #fff; stroke-width: 0.6; }
+.rua-app .rua-mapa-chegada rect.claro { fill: #fff; }
+.rua-app .rua-mapa-ponto { fill: #fff; stroke: var(--laranja); stroke-width: 3; }
+.rua-app .rua-mapa-legenda { display: flex; justify-content: space-between; margin-top: 2px; font-size: 0.62rem; font-weight: 700; color: #cfe3f7; letter-spacing: 0.02em; }
+@media (max-width: 640px) { .rua-app .rua-mapa { top: 68px; width: 92px; padding: 4px 6px 2px; } .rua-app .rua-mapa-legenda { font-size: 0.55rem; } }
+@media (prefers-reduced-motion: reduce) { .rua-app .rua-mapa-feito, .rua-app .rua-mapa-ponto { transition: none; } }
 .rua-app .rua-hud-bolas { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
 .rua-app .rua-hud-bolas i { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #6fa8e0; }
 .rua-app .rua-hud-bolas i.feita { background: var(--laranja); border-color: var(--laranja); }

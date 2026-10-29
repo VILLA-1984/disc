@@ -273,6 +273,7 @@ function desenharPlaca(canvas, palavra, estado, dica) {
  * @param {string[]} [opcoes.rotulosEtapas]
  * @param {boolean} [opcoes.reduzirMovimento]
  * @param {Function} [opcoes.aoPronto]
+ * @param {Function} [opcoes.proximoPortao] modo ciclo: ({etapa, indice}) => {cima, baixo} | null (null encerra a etapa)
  * @param {Function} [opcoes.aoPortao] portao legivel: {etapa, indice, total, cima, baixo}
  * @param {Function} [opcoes.aoEscolher] {etapa, indice, lado, escolhida, outra, combinacao, tempoMs}
  * @param {Function} [opcoes.aoConcluirEtapa] {etapa, escolhas}
@@ -651,6 +652,10 @@ export function criarJogo3D(opcoes) {
     let etapaAtual = -1;
     let indice = 0;
     let escolhasNaEtapa = 0;
+    // Modo ciclo: os portoes nao vem prontos, sao pedidos um a um (proximoPortao) e o progresso vem de fora.
+    const dinamico = typeof opcoes.proximoPortao === 'function';
+    let progressoExterno = null;
+    let fracaoMapa = 0;
     let estado = 'parado'; // parado | correndo | concluida
     let velocidade = 0;
     let fase = 0;
@@ -669,21 +674,85 @@ export function criarJogo3D(opcoes) {
         : { cima: { texto: '↑ CIMA', cor: '#1f6fb8', direita: false }, baixo: { texto: '↓ BAIXO', cor: '#c85f0f', direita: true } };
 
     function atualizarHud() {
-        const total = etapas[etapaAtual]?.length ?? 0;
         hudEtapa.textContent = rotulosEtapas[etapaAtual] ?? `Etapa ${etapaAtual + 1}`;
 
-        // A barra mostra o teste inteiro (todas as etapas), nao so a etapa atual.
-        const geral = etapas.reduce((soma, e) => soma + e.length, 0);
-        const feitas = etapas.slice(0, Math.max(0, etapaAtual)).reduce((soma, e) => soma + e.length, 0) + escolhasNaEtapa;
-        const percentual = geral === 0 ? 0 : Math.round((feitas / geral) * 100);
+        let total;
+        let feitasNaEtapa;
+        let percentual;
+        let texto;
+
+        if (progressoExterno) {
+            ({ total, feitas: feitasNaEtapa, percentual, texto } = progressoExterno);
+        } else {
+            total = etapas[etapaAtual]?.length ?? 0;
+            feitasNaEtapa = escolhasNaEtapa;
+
+            // A barra mostra o teste inteiro (todas as etapas), nao so a etapa atual.
+            const geral = etapas.reduce((soma, e) => soma + e.length, 0);
+            const feitas = etapas.slice(0, Math.max(0, etapaAtual)).reduce((soma, e) => soma + e.length, 0) + escolhasNaEtapa;
+            percentual = geral === 0 ? 0 : Math.round((feitas / geral) * 100);
+            texto = `Escolhas ${escolhasNaEtapa}/${total} · ${percentual}%`;
+        }
+
         hudBarraPreenchimento.style.width = `${percentual}%`;
         hudBarra.setAttribute('aria-valuenow', String(percentual));
-        hudConta.textContent = `Escolhas ${escolhasNaEtapa}/${total} · ${percentual}%`;
-        hudBolas.innerHTML = Array.from({ length: total }, (_, i) => {
-            const classe = i < escolhasNaEtapa ? 'feita' : (i === escolhasNaEtapa ? 'atual' : '');
+        hudConta.textContent = texto;
+        // No ciclo (24 escolhas por etapa) as bolinhas quebrariam em duas linhas: a barra e o contador bastam.
+        hudBolas.innerHTML = progressoExterno ? '' : Array.from({ length: total }, (_, i) => {
+            const classe = i < feitasNaEtapa ? 'feita' : (i === feitasNaEtapa ? 'atual' : '');
 
             return `<i class="${classe}"></i>`;
         }).join('');
+    }
+
+    // ----------------------------------------------------------------- minimapa
+    // Pista estilizada (a rua e reta; o desenho so representa o trajeto da etapa): largada embaixo, chegada
+    // no alto, e um ponto que anda conforme as escolhas.
+    const TRACADO = 'M14 62 C14 44 34 40 46 50 S64 70 78 54 S86 22 106 14';
+    const mapa = document.createElement('div');
+    mapa.className = 'rua-mapa';
+    mapa.setAttribute('aria-hidden', 'true');
+    mapa.innerHTML = `<svg viewBox="0 0 120 76" focusable="false">
+            <path class="rua-mapa-pista" d="${TRACADO}" fill="none"/>
+            <path class="rua-mapa-feito" d="${TRACADO}" fill="none"/>
+            <circle class="rua-mapa-largada" cx="14" cy="62" r="4.5"/>
+            <g class="rua-mapa-chegada">
+                <path d="M106 14 V1" fill="none"/>
+                <rect x="106" y="1" width="5" height="5"/><rect x="111" y="6" width="5" height="5"/>
+                <rect class="claro" x="111" y="1" width="5" height="5"/><rect class="claro" x="106" y="6" width="5" height="5"/>
+            </g>
+            <circle class="rua-mapa-ponto" cx="14" cy="62" r="5"/>
+        </svg>
+        <div class="rua-mapa-legenda"><span>Largada</span><span>Chegada</span></div>`;
+    parent.appendChild(mapa);
+    const mapaPista = mapa.querySelector('.rua-mapa-pista');
+    const mapaFeito = mapa.querySelector('.rua-mapa-feito');
+    const mapaPonto = mapa.querySelector('.rua-mapa-ponto');
+
+    function fracaoAlvoDoMapa() {
+        if (dinamico) {
+            return progressoExterno && progressoExterno.total > 0 ? progressoExterno.feitas / progressoExterno.total : 0;
+        }
+
+        const total = etapas[etapaAtual]?.length ?? 0;
+
+        return total > 0 ? (indice + (portao?.escolhido ? 1 : 0)) / total : 0;
+    }
+
+    function atualizarMapa(dt) {
+        const alvo = Math.min(1, fracaoAlvoDoMapa());
+        fracaoMapa += (alvo - fracaoMapa) * Math.min(1, dt * 3);
+
+        const comprimento = mapaPista.getTotalLength();
+
+        if (!comprimento) {
+            return;
+        }
+
+        const ponto = mapaPista.getPointAtLength(comprimento * fracaoMapa);
+        mapaPonto.setAttribute('cx', ponto.x.toFixed(2));
+        mapaPonto.setAttribute('cy', ponto.y.toFixed(2));
+        mapaFeito.style.strokeDasharray = `${(comprimento * fracaoMapa).toFixed(2)} ${comprimento.toFixed(2)}`;
     }
 
     // ----------------------------------------------------------------- portoes
@@ -741,8 +810,21 @@ export function criarJogo3D(opcoes) {
         return { grupo, placas, dados, escolhivel: false, escolhido: false, inicioMs: 0 };
     }
 
+    function dadosDoPortao(i) {
+        return dinamico ? opcoes.proximoPortao({ etapa: etapaAtual, indice: i }) : (etapas[etapaAtual]?.[i] ?? null);
+    }
+
+    /** Cria o portao seguinte; false quando a etapa acabou. */
     function gerarPortao() {
-        portao = criarPortao(etapas[etapaAtual][indice]);
+        const dados = dadosDoPortao(indice);
+
+        if (!dados) {
+            return false;
+        }
+
+        portao = criarPortao(dados);
+
+        return true;
     }
 
     function liberarPortao() {
@@ -751,7 +833,7 @@ export function criarJogo3D(opcoes) {
         opcoes.aoPortao?.({
             etapa: etapaAtual,
             indice,
-            total: etapas[etapaAtual].length,
+            total: dinamico ? (progressoExterno?.total ?? 0) : etapas[etapaAtual].length,
             cima: portao.dados.cima,
             baixo: portao.dados.baixo,
         });
@@ -920,9 +1002,11 @@ export function criarJogo3D(opcoes) {
         escolhasNaEtapa = 0;
         estado = 'correndo';
         velocidade = 0;
+        fracaoMapa = 0;
         gerarPortao();
         atualizarHud();
         hud.classList.add('visivel');
+        mapa.classList.add('visivel');
     }
 
     function obterEstado() {
@@ -931,7 +1015,7 @@ export function criarJogo3D(opcoes) {
             etapa: etapaAtual,
             indice,
             escolhas: escolhasNaEtapa,
-            total: etapas[etapaAtual]?.length ?? 0,
+            total: dinamico ? (progressoExterno?.total ?? 0) : (etapas[etapaAtual]?.length ?? 0),
             portaoEscolhivel: Boolean(portao?.escolhivel && !portao?.escolhido),
             modo,
             velocidade: Math.round(velocidade * 100) / 100,
@@ -1119,9 +1203,7 @@ export function criarJogo3D(opcoes) {
                     proximoClima();
                 }
 
-                if (indice < etapas[etapaAtual].length) {
-                    gerarPortao();
-                } else {
+                if (!gerarPortao()) {
                     estado = 'concluida';
                     opcoes.aoConcluirEtapa?.({ etapa: etapaAtual, escolhas: escolhasNaEtapa });
                 }
@@ -1148,6 +1230,7 @@ export function criarJogo3D(opcoes) {
             }
         }
 
+        atualizarMapa(dt);
         posicionarCamera(dt);
         renderer.render(cena, camera);
     }
@@ -1159,6 +1242,11 @@ export function criarJogo3D(opcoes) {
     return {
         iniciarEtapa,
         escolher,
+        // Modo ciclo: {feitas, total, percentual, texto} da etapa; atualiza HUD e minimapa.
+        definirProgresso(progresso) {
+            progressoExterno = progresso;
+            atualizarHud();
+        },
         // Botao de acelerar da tela de toque (no teclado e a tecla ↑/W).
         acelerar(ativo) {
             acelerando = Boolean(ativo) && estado === 'correndo';
@@ -1180,6 +1268,7 @@ export function criarJogo3D(opcoes) {
             renderer.dispose();
             renderer.domElement.remove();
             hud.remove();
+            mapa.remove();
             velocimetro?.remover();
             linhas.remove();
         },

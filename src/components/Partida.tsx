@@ -8,6 +8,7 @@ import { linkWhatsapp, mascararWhatsapp, normalizarWhatsapp, problemaNoWhatsapp 
 
 type Fase = 'cadastro' | 'jogo' | 'envio';
 type Etapas = { cima: { id: number; word: string }; baixo: { id: number; word: string } }[][];
+type Ciclo = { escolher: number; etapas: number[][][]; palavras: Record<number, string> };
 type Resultado = { natural: Resumo; adaptado: Resumo };
 
 async function chamar<T>(rota: string, corpo: unknown): Promise<T> {
@@ -59,6 +60,7 @@ export default function Partida({ qr }: { qr?: React.ReactNode }) {
     const [erroGeral, setErroGeral] = useState<string | null>(null);
     const [enviando, setEnviando] = useState(false);
     const [etapas, setEtapas] = useState<Etapas | null>(null);
+    const [ciclo, setCiclo] = useState<Ciclo | null>(null);
     const [resultado, setResultado] = useState<Resultado | null>(null);
 
     const token = useRef('');
@@ -81,9 +83,10 @@ export default function Partida({ qr }: { qr?: React.ReactNode }) {
         setEnviando(true);
 
         try {
-            const dados = await chamar<{ token: string; etapas: Etapas }>('/api/iniciar', { nome: nomeLimpo, whatsapp });
+            const dados = await chamar<{ token: string; etapas?: Etapas; ciclo?: Ciclo }>('/api/iniciar', { nome: nomeLimpo, whatsapp });
             token.current = dados.token;
-            setEtapas(dados.etapas);
+            setEtapas(dados.etapas ?? null);
+            setCiclo(dados.ciclo ?? null);
             setFase('jogo');
         } catch (erro) {
             setErroGeral((erro as Error).message);
@@ -99,7 +102,7 @@ export default function Partida({ qr }: { qr?: React.ReactNode }) {
 
     // O jogo (three.js) desenha e controla tudo no navegador; so e baixado quando a fase do jogo comeca.
     useEffect(() => {
-        if (fase !== 'jogo' || !etapas || !raizJogo.current) {
+        if (fase !== 'jogo' || !(etapas || ciclo) || !raizJogo.current) {
             return;
         }
 
@@ -112,7 +115,8 @@ export default function Partida({ qr }: { qr?: React.ReactNode }) {
             }
 
             instancia = montar(raizJogo.current, {
-                etapas,
+                etapas: etapas ?? undefined,
+                ciclo,
                 concluir,
                 aoFinalizar: (resposta: Resultado) => {
                     setResultado(resposta);
@@ -125,7 +129,7 @@ export default function Partida({ qr }: { qr?: React.ReactNode }) {
             cancelado = true;
             instancia?.destruir();
         };
-    }, [fase, etapas, concluir]);
+    }, [fase, etapas, ciclo, concluir]);
 
     return (
         <>
