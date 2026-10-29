@@ -68,10 +68,16 @@ ou **deixa passar**. As pegas saem do jogo; as deixadas voltam na volta seguinte
 
 ## Cenários
 
-Na tela do avatar a pessoa escolhe onde correr (`src/jogo/cenarios.js`): **Rua** (padrão) ou **Rio**, de barco, com colete
-salva-vidas. O cenário é só visual; portões, ciclo de palavras e pontuação não mudam. `avatarCabe(spec, cenario)` decide
-quais avatares entram em cada cenário a partir do campo `mobilidade` (no rio, moto e táxi ficam de fora). Novos cenários
-entram em `CENARIOS` e ganham um construtor da cena em `cenarios.js`.
+Na tela do avatar a pessoa escolhe onde correr (`src/jogo/cenarios.js`) e, quando o cenário tem mais de um meio, "Como
+você quer ir?":
+
+- **Rua** (padrão).
+- **Rio**: barco a motor ou veleiro, de colete salva-vidas, com peixes que pulam.
+- **Céu**: avião, jato, helicóptero, asa delta ou parapente, com nuvens, montanhas ao longe e pássaros.
+
+O cenário e o meio são só visuais; portões, ciclo de palavras e pontuação não mudam. `avatarCabe(spec, cenario, meio)` decide
+quais avatares entram a partir do campo `mobilidade` (no rio e no céu, moto e táxi ficam de fora). Novos cenários entram em
+`CENARIOS` (textos e regra), os meios em `MEIOS`, e ganham um construtor da cena e do veículo em `cenarios.js`.
 
 ## O que fica salvo
 

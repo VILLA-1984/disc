@@ -30,6 +30,17 @@ export const CENARIOS = {
         motivo: 'Moto e táxi não vão de barco.',
         aceita: (mobilidade) => !['moto', 'taxi'].includes(mobilidade),
     },
+    ar: {
+        nome: 'Céu',
+        descricao: 'Voando entre as nuvens, com campos e montanhas lá embaixo.',
+        verbo: 'voar',
+        comeco: 'Começar a voar',
+        fim: 'do voo',
+        acelerar: 'voar mais rápido',
+        percurso: 'pelo céu',
+        motivo: 'Moto e táxi não voam.',
+        aceita: (mobilidade) => !['moto', 'taxi'].includes(mobilidade),
+    },
 };
 
 const SOBE_NO_BARCO = ['anda', 'bengala', 'andador', 'cadeira', 'cadeira-corrida'];
@@ -54,6 +65,48 @@ export const MEIOS = {
         motivo: 'Moto e táxi não vão de veleiro.',
         aceita: (mobilidade) => SOBE_NO_BARCO.includes(mobilidade),
         textos: { verbo: 'velejar', comeco: 'Começar a velejar', acelerar: 'velejar mais rápido' },
+    },
+    // Ceu. `sentado: false` = o avatar fica pendurado em pe (asa delta); nos demais senta no veiculo.
+    aviao: {
+        cenario: 'ar',
+        nome: 'Avião',
+        descricao: 'Num avião de hélice, com a cabine aberta.',
+        motivo: 'Moto e táxi não voam.',
+        aceita: (mobilidade) => SOBE_NO_BARCO.includes(mobilidade),
+        textos: {},
+    },
+    jato: {
+        cenario: 'ar',
+        nome: 'Jato',
+        descricao: 'Num jato veloz, sob uma cúpula de vidro.',
+        motivo: 'Moto e táxi não voam.',
+        aceita: (mobilidade) => SOBE_NO_BARCO.includes(mobilidade),
+        textos: {},
+    },
+    helicoptero: {
+        cenario: 'ar',
+        nome: 'Helicóptero',
+        descricao: 'Num helicóptero, de hélice girando no alto.',
+        motivo: 'Moto e táxi não voam.',
+        aceita: (mobilidade) => SOBE_NO_BARCO.includes(mobilidade),
+        textos: {},
+    },
+    'asa-delta': {
+        cenario: 'ar',
+        nome: 'Asa delta',
+        descricao: 'Pendurado sob uma asa triangular, planando.',
+        motivo: 'Moto e táxi não voam.',
+        sentado: false,
+        aceita: (mobilidade) => SOBE_NO_BARCO.includes(mobilidade),
+        textos: {},
+    },
+    parapente: {
+        cenario: 'ar',
+        nome: 'Parapente',
+        descricao: 'Sentado no arnês, sob uma grande vela.',
+        motivo: 'Moto e táxi não voam.',
+        aceita: (mobilidade) => SOBE_NO_BARCO.includes(mobilidade),
+        textos: {},
     },
 };
 
@@ -430,6 +483,393 @@ export function criarBarco(meio = 'barco', modo = '3d') {
                 e.espuma.scale.setScalar(0.6 + e.idade * 1.8);
                 e.espuma.material.opacity = (1 - e.idade) * 0.55 * forca;
             }
+        },
+    };
+}
+
+// ------------------------------------------------------------------------------------------- ceu
+
+/**
+ * Ceu: campos e montanhas la embaixo (muito abaixo da rota de voo), nuvens ao lado da rota e, no lugar da
+ * faixa de pedestres, balões e nuvenzinhas sob as placas. Tudo que anda entra em `adicionarMovel`.
+ *
+ * @returns {{solo: THREE.Mesh, basePortao: () => THREE.Group}}
+ */
+export function construirCeu({ cena, adicionarMovel, sorteio, periodo, zTras }) {
+    const solo = new THREE.Mesh(new THREE.BoxGeometry(900, 0.5, 720), lambert(0x5aa25c));
+    solo.position.set(0, -42, -250);
+    cena.add(solo);
+
+    // Campos de cultivo, que passam devagar la embaixo e mostram o movimento.
+    const camposCores = [0x6fb06a, 0xc8b86a, 0x4f9a5c, 0x8cbf6a, 0xb7a35a];
+
+    for (let i = 0; i < 28; i++) {
+        const campo = new THREE.Mesh(new THREE.BoxGeometry(14 + sorteio() * 40, 0.1, 10 + sorteio() * 34), lambert(camposCores[i % camposCores.length]));
+        campo.position.set((sorteio() - 0.5) * 200, -41.7, 0);
+        adicionarMovel(campo, 0, zTras - (i / 28) * periodo - sorteio() * 4);
+    }
+
+    // Montanhas, com o topo perto da altura do voo.
+    for (const lado of [-1, 1]) {
+        for (let i = 0; i < 4; i++) {
+            const altura = 44 + sorteio() * 16;
+            const montanha = new THREE.Mesh(new THREE.ConeGeometry(22 + sorteio() * 10, altura, 7), lambert(i % 2 ? 0x6d8f6a : 0x7c9c78));
+            montanha.position.set(lado * (62 + sorteio() * 60), -42 + altura / 2, 0); // longe da rota: aparecem pequenas e enevoadas
+            adicionarMovel(montanha, 0, zTras - (i / 4) * periodo - sorteio() * 10);
+        }
+    }
+
+    // Nuvens ao lado da rota (sempre longe do caminho do avatar).
+    const nuvemMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.95 });
+
+    for (let i = 0; i < 26; i++) {
+        const nuvem = new THREE.Group();
+
+        for (let k = 0; k < 4; k++) {
+            const bola = new THREE.Mesh(new THREE.SphereGeometry(1.2 + sorteio() * 1.2, 10, 8), nuvemMaterial);
+            bola.position.set(k * 1.4 - 2, sorteio() * 0.6, (sorteio() - 0.5) * 1.6);
+            bola.scale.y = 0.7;
+            nuvem.add(bola);
+        }
+
+        nuvem.scale.setScalar(1 + sorteio() * 1.2);
+        nuvem.position.set((i % 2 ? -1 : 1) * (11 + sorteio() * 30), -14 + sorteio() * 24, 0);
+        adicionarMovel(nuvem, 0, zTras - (i / 26) * periodo - sorteio() * 5);
+    }
+
+    // Em vez da faixa de pedestres: balões coloridos atravessando o portão e uma nuvenzinha na base de cada poste.
+    function basePortao() {
+        const grupo = new THREE.Group();
+        const baloes = [0xf08a3c, 0x1f6fb8, 0xd6457f, 0xf2b705, 0x2e9e6b];
+
+        for (let i = -4; i <= 4; i++) {
+            const balao = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), lambert(baloes[Math.abs(i) % baloes.length]));
+            balao.position.set(i * 1.05, 0.45, 0);
+            grupo.add(balao);
+        }
+
+        for (const x of [-4.3, -0.3, 0.3, 4.3]) {
+            const puff = new THREE.Mesh(new THREE.SphereGeometry(0.5, 10, 8), nuvemMaterial);
+            puff.position.set(x, 0.1, 0);
+            puff.scale.set(1.2, 0.6, 1);
+            grupo.add(puff);
+        }
+
+        return grupo;
+    }
+
+    return { solo, basePortao };
+}
+
+/**
+ * Passaros que cruzam o ceu (no lugar dos peixes do rio): vem de um lado, batem as asas e saem do outro,
+ * em varias alturas e distancias. So enfeite: nao afetam nada do jogo.
+ *
+ * @returns {{atualizar: (dt: number, dz: number) => void}}
+ */
+export function criarPassaros({ cena, sorteio }) {
+    const cores = [0x2b3a4f, 0xf2f6fb, 0x6b4a2e, 0xd96b3a, 0x2b3a4f];
+
+    const passaros = cores.map((cor, i) => {
+        const grupo = new THREE.Group();
+        const corpo = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 6), lambert(cor));
+        corpo.scale.set(0.7, 0.7, 1.5);
+        const cabeca = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 6), lambert(cor));
+        cabeca.position.set(0, 0.04, -0.26);
+        const bico = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.14, 4), lambert(0xf2b705));
+        bico.rotation.x = -Math.PI / 2;
+        bico.position.set(0, 0.03, -0.38);
+        grupo.add(corpo, cabeca, bico);
+
+        const asas = [-1, 1].map((lado) => {
+            const pivo = new THREE.Group();
+            pivo.position.set(lado * 0.1, 0.03, 0);
+            const asa = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.025, 0.26), lambert(cor));
+            asa.position.x = lado * 0.28;
+            pivo.add(asa);
+            grupo.add(pivo);
+
+            return { pivo, lado };
+        });
+
+        grupo.scale.setScalar(2.4);
+        cena.add(grupo);
+
+        return { grupo, asas, fase: sorteio() * 6, x: 0, y: 0, z: 0, vx: 0, vz: 0, i };
+    });
+
+    function nascer(p) {
+        const lado = sorteio() < 0.5 ? -1 : 1;
+        p.x = -lado * (16 + sorteio() * 8);
+        p.y = -3 + sorteio() * 9;
+        p.z = -10 - sorteio() * 40;
+        p.vx = lado * (2.4 + sorteio() * 2.6);
+        p.vz = 1 + sorteio() * 2.5; // aproxima-se aos poucos da camera
+        p.grupo.rotation.y = Math.atan2(-p.vx, -p.vz);
+    }
+
+    passaros.forEach((p, i) => {
+        nascer(p);
+        p.x += (sorteio() - 0.5) * 30; // espalha no comeco, para nao entrarem todos juntos
+        p.z += i * 4;
+    });
+
+    return {
+        atualizar(dt, dz) {
+            for (const p of passaros) {
+                p.fase += dt * 11;
+                p.x += p.vx * dt;
+                p.z += dz + p.vz * dt;
+                p.y += Math.sin(p.fase * 0.4 + p.i) * dt * 0.4;
+                p.grupo.position.set(p.x, p.y, p.z);
+
+                for (const { pivo, lado } of p.asas) {
+                    pivo.rotation.z = lado * Math.sin(p.fase) * 0.75;
+                }
+
+                if (Math.abs(p.x) > 28 || p.z > 14) {
+                    nascer(p);
+                }
+            }
+        },
+    };
+}
+
+/** Cilindro fino entre dois pontos (cordas do parapente e da asa delta). */
+function liga(a, b, cor = 0x59616b, raio = 0.014) {
+    const va = new THREE.Vector3(...a);
+    const direcao = new THREE.Vector3(...b).sub(va);
+    const comprimento = direcao.length();
+    const fio = new THREE.Mesh(new THREE.CylinderGeometry(raio, raio, comprimento, 5), lambert(cor));
+    fio.position.copy(va).addScaledVector(direcao, 0.5);
+    fio.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direcao.normalize());
+
+    return fio;
+}
+
+/**
+ * Aeronaves do cenario de ar. O avatar (filho do mesmo grupo) fica em y = 0 sobre o assento; cada aeronave
+ * traz as suas partes moveis. Na vista 3D (camera atras) as partes grandes ficam mais baixas e translucidas
+ * para nao taparem as placas.
+ *
+ * @param {'aviao'|'jato'|'helicoptero'|'asa-delta'|'parapente'} meio
+ * @returns {{grupo: THREE.Group, atualizar: (dt: number, ritmo: number) => void}}
+ */
+export function criarAeronave(meio, modo = '3d') {
+    const grupo = new THREE.Group();
+    const vidro = new THREE.MeshLambertMaterial({ color: 0xbfe3ff, transparent: true, opacity: 0.26, depthWrite: false });
+    const translucido = (cor, opacidade) => new THREE.MeshLambertMaterial({ color: cor, transparent: true, opacity: opacidade, depthWrite: false, side: THREE.DoubleSide });
+    const opacidadeAsa = modo === '3d' ? 0.55 : 0.95;
+    const giros = []; // { obj, eixo, velocidade }
+    const chamas = [];
+    let tempo = 0;
+
+    const assento = (cor = 0x6b4a2e) => {
+        const banco = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.1, 0.45), lambert(cor));
+        banco.position.set(0, 0.23, 0);
+        grupo.add(banco);
+    };
+
+    const cilindroEmZ = (raioTras, raioFrente, comprimento, cor, x, y, z) => {
+        const c = new THREE.Mesh(new THREE.CylinderGeometry(raioTras, raioFrente, comprimento, 14), lambert(cor));
+        c.rotation.x = Math.PI / 2; // topo (raioTras) para a popa, base (raioFrente) para a proa
+        c.position.set(x, y, z);
+
+        return c;
+    };
+
+    if (meio === 'aviao') {
+        assento();
+        grupo.add(cilindroEmZ(0.4, 0.52, 3.8, 0xd6455a, 0, -0.12, 0.1));
+
+        // Borda da cabine aberta: uma moldura escura em volta do avatar.
+        for (const lado of [-1, 1]) {
+            const lateral = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.2, 1.0), lambert(0x2b3a4f));
+            lateral.position.set(lado * 0.5, 0.42, 0.05);
+            grupo.add(lateral);
+        }
+
+        const traseira = new THREE.Mesh(new THREE.BoxGeometry(1.07, 0.2, 0.07), lambert(0x2b3a4f));
+        traseira.position.set(0, 0.42, 0.55);
+        grupo.add(traseira);
+        const nariz = new THREE.Mesh(new THREE.ConeGeometry(0.52, 0.7, 14), lambert(0xf2f6fb));
+        nariz.rotation.x = -Math.PI / 2;
+        nariz.position.set(0, -0.12, -2.15);
+        grupo.add(nariz);
+
+        const asa = new THREE.Mesh(new THREE.BoxGeometry(5.4, 0.07, 1.0), lambert(0xf2f6fb));
+        asa.position.set(0, -0.35, -0.2);
+        grupo.add(asa);
+
+        for (const lado of [-1, 1]) {
+            const ponta = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.075, 1.02), lambert(0xd6455a));
+            ponta.position.set(lado * 2.45, -0.35, -0.2);
+            grupo.add(ponta);
+        }
+
+        const estabilizador = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.06, 0.55), lambert(0xf2f6fb));
+        estabilizador.position.set(0, -0.05, 1.85);
+        const deriva = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.8, 0.55), lambert(0xd6455a));
+        deriva.position.set(0, 0.3, 1.85);
+        grupo.add(estabilizador, deriva);
+
+        const parabrisa = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.5, 0.04), vidro);
+        parabrisa.position.set(0, 0.62, -0.62);
+        parabrisa.rotation.x = -0.5;
+        grupo.add(parabrisa);
+
+        const helice = new THREE.Group();
+        helice.position.set(0, -0.12, -2.55);
+        helice.add(new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.5, 0.04), lambert(0x2b3a4f)));
+        helice.add(Object.assign(new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 6), lambert(0xf08a3c))));
+        grupo.add(helice);
+        giros.push({ obj: helice, eixo: 'z', velocidade: 30 });
+    } else if (meio === 'jato') {
+        assento(0x2b3a4f);
+        grupo.add(cilindroEmZ(0.22, 0.46, 4.2, 0x8fa0b2, 0, -0.1, 0.3));
+        const nariz = new THREE.Mesh(new THREE.ConeGeometry(0.46, 1.4, 14), lambert(0xe9eef4));
+        nariz.rotation.x = -Math.PI / 2;
+        nariz.position.set(0, -0.1, -2.5);
+        grupo.add(nariz);
+
+        const forma = new THREE.Shape();
+        forma.moveTo(0, 1.2);
+        forma.lineTo(-2.6, -1.6);
+        forma.lineTo(0, -1.0);
+        forma.lineTo(2.6, -1.6);
+        forma.lineTo(0, 1.2);
+        const asaDelta = new THREE.Mesh(new THREE.ExtrudeGeometry(forma, { depth: 0.07, bevelEnabled: false }), lambert(0x59708a));
+        asaDelta.rotation.x = -Math.PI / 2;
+        asaDelta.position.set(0, -0.32, 0.3);
+        grupo.add(asaDelta);
+
+        for (const lado of [-1, 1]) {
+            const deriva = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.75, 0.7), lambert(0xd6455a));
+            deriva.position.set(lado * 0.55, 0.2, 2.0);
+            deriva.rotation.z = -lado * 0.25;
+            grupo.add(deriva);
+            grupo.add(cilindroEmZ(0.2, 0.22, 1.0, 0x4a5668, lado * 0.35, -0.2, 2.1));
+
+            const chama = new THREE.Mesh(new THREE.ConeGeometry(0.17, 1.0, 8), new THREE.MeshBasicMaterial({ color: 0xff9a2e, transparent: true, opacity: 0.85 }));
+            chama.rotation.x = Math.PI / 2; // ponta para tras
+            chama.position.set(lado * 0.35, -0.2, 3.1);
+            grupo.add(chama);
+            chamas.push(chama);
+        }
+
+        const cupula = new THREE.Mesh(new THREE.SphereGeometry(0.64, 14, 10), vidro);
+        cupula.scale.set(1, 0.95, 1.9);
+        cupula.position.set(0, 0.85, -0.1);
+        grupo.add(cupula);
+    } else if (meio === 'helicoptero') {
+        assento(0x2b3a4f);
+        const piso = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.08, 1.9), lambert(0x59708a));
+        piso.position.set(0, -0.04, 0.1);
+        grupo.add(piso);
+
+        const cabine = new THREE.Mesh(new THREE.SphereGeometry(1.1, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), vidro);
+        cabine.scale.set(1, 1.8, 1.3);
+        cabine.position.set(0, 0, 0.05);
+        grupo.add(cabine);
+
+        grupo.add(cilindroEmZ(0.06, 0.13, 3.2, 0xd6455a, 0, 0.55, 2.4));
+        const derivaCauda = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.8, 0.5), lambert(0xd6455a));
+        derivaCauda.position.set(0, 0.9, 3.9);
+        grupo.add(derivaCauda);
+
+        const rotorCauda = new THREE.Group();
+        rotorCauda.position.set(0.12, 0.95, 3.9);
+        rotorCauda.add(new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.8, 0.07), lambert(0x2b3a4f)));
+        grupo.add(rotorCauda);
+        giros.push({ obj: rotorCauda, eixo: 'x', velocidade: 34 });
+
+        for (const lado of [-1, 1]) {
+            grupo.add(cilindroEmZ(0.04, 0.04, 2.4, 0x2b3a4f, lado * 0.75, -0.55, 0.1));
+
+            for (const z of [-0.5, 0.7]) {
+                const apoio = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.5, 0.05), lambert(0x2b3a4f));
+                apoio.position.set(lado * 0.75, -0.3, z);
+                grupo.add(apoio);
+            }
+        }
+
+        const mastro = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.5, 8), lambert(0x2b3a4f));
+        mastro.position.set(0, 2.15, 0.05);
+        grupo.add(mastro);
+
+        const rotor = new THREE.Group();
+        rotor.position.set(0, 2.4, 0.05);
+        rotor.add(new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.04, 0.2), lambert(0x2b3a4f)));
+        const disco = new THREE.Mesh(new THREE.CircleGeometry(2.2, 28), translucido(0xffffff, 0.1));
+        disco.rotation.x = -Math.PI / 2;
+        rotor.add(disco);
+        grupo.add(rotor);
+        giros.push({ obj: rotor, eixo: 'y', velocidade: 22 });
+    } else if (meio === 'asa-delta') {
+        // O avatar fica pendurado em pe, preso por duas fitas, sob uma asa triangular.
+        const altura = modo === '3d' ? 2.35 : 2.9;
+        const forma = new THREE.Shape();
+        forma.moveTo(0, 2.2);
+        forma.lineTo(-2.4, -1.2);
+        forma.lineTo(0, -0.6);
+        forma.lineTo(2.4, -1.2);
+        forma.lineTo(0, 2.2);
+        const asa = new THREE.Mesh(new THREE.ExtrudeGeometry(forma, { depth: 0.05, bevelEnabled: false }), translucido(0xf08a3c, opacidadeAsa));
+        asa.rotation.x = -Math.PI / 2;
+        asa.position.set(0, altura, 0.2);
+        grupo.add(asa);
+
+        const quilha = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 3.4), lambert(0xe9eef4));
+        quilha.position.set(0, altura - 0.04, 0.2);
+        grupo.add(quilha);
+
+        for (const lado of [-1, 1]) {
+            grupo.add(liga([0, altura - 0.04, 0.1], [lado * 0.24, 1.45, 0], 0xe9eef4, 0.018));
+            grupo.add(liga([lado * 1.2, altura - 0.05, -0.1], [lado * 0.28, 1.5, -0.25], 0x59616b, 0.012));
+        }
+    } else if (meio === 'parapente') {
+        assento(0x2b3a4f);
+        const raio = 3.0;
+        const centro = 0.6;
+        const faixas = 8;
+        const arco = 1.6;
+
+        for (let i = 0; i < faixas; i++) {
+            const faixa = new THREE.Mesh(
+                new THREE.CylinderGeometry(raio, raio, 1.2, 4, 1, true, Math.PI - arco / 2 + (i * arco) / faixas, arco / faixas),
+                translucido(i % 2 ? 0xffffff : 0xd6455a, opacidadeAsa),
+            );
+            faixa.rotation.x = Math.PI / 2;
+            faixa.position.set(0, centro, 0);
+            grupo.add(faixa);
+        }
+
+        // Cordas das duas bordas e do meio da vela ate os ombros do avatar.
+        const borda = Math.sin(arco / 2) * raio;
+        const alturaBorda = centro + Math.cos(arco / 2) * raio;
+
+        for (const lado of [-1, 1]) {
+            grupo.add(liga([lado * borda, alturaBorda, -0.5], [lado * 0.24, 1.5, 0], 0x59616b));
+            grupo.add(liga([lado * borda, alturaBorda, 0.5], [lado * 0.24, 1.5, 0], 0x59616b));
+            grupo.add(liga([lado * borda * 0.5, centro + Math.cos(arco / 4) * raio, 0], [lado * 0.24, 1.5, 0], 0x59616b));
+        }
+    }
+
+    return {
+        grupo,
+        atualizar(dt, ritmo) {
+            tempo += dt;
+
+            for (const giro of giros) {
+                giro.obj.rotation[giro.eixo] += dt * (giro.velocidade + ritmo * 10);
+            }
+
+            for (const chama of chamas) {
+                chama.scale.set(1, 0.7 + Math.random() * 0.6 + Math.min(ritmo, 2) * 0.25, 1);
+            }
+
+            // Balanco do voo: a vela e a asa balancam, as demais aeronaves adernam de leve nas curvas.
+            grupo.rotation.z = Math.sin(tempo * 0.8) * (meio === 'parapente' || meio === 'asa-delta' ? 0.06 : 0.03);
         },
     };
 }
