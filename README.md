@@ -19,6 +19,19 @@ npm test             # testes de unidade (sorteio, pontuação, WhatsApp, banco,
 Teste de ponta a ponta (com o servidor no ar em `RUA_URL`, padrão `http://127.0.0.1:3100`):
 `node e2e/partida.mjs [pasta] [3d|lateral]`.
 
+## Manual de uso
+
+O manual fica dentro da própria ferramenta, em `/manual` (há um link na tela inicial), com passo a passo para quem
+joga, orientações para quem aplica e dúvidas frequentes. Os prints ficam em `public/manual/` e são gerados por
+uma partida automática: **quando uma tela mudar, regere os prints** para o manual não ficar desatualizado.
+
+```powershell
+# com o servidor no ar (npm start -- -p 3100) e RUA_DADOS apontando para uma pasta temporária
+node e2e/capturar-manual.mjs
+```
+
+O texto do manual está em `src/app/manual/page.tsx`.
+
 ## O que fica salvo
 
 Só **nome e WhatsApp** (SQLite embutido em `data/participantes.db`, criado sozinho) e as datas de cadastro e

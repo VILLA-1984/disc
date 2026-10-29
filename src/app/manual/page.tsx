@@ -1,0 +1,249 @@
+import type { Metadata } from 'next';
+import Link from 'next/link';
+
+export const metadata: Metadata = {
+    title: 'Manual de uso · Rua das Palavras',
+    description: 'Passo a passo para jogar a Rua das Palavras e orientações para quem aplica o teste.',
+};
+
+type Passo = {
+    titulo: string;
+    imagem: string;
+    legenda: string;
+    texto: React.ReactNode;
+};
+
+const PASSOS: Passo[] = [
+    {
+        titulo: 'Informe o nome e o WhatsApp',
+        imagem: '01-cadastro.png',
+        legenda: 'Tela inicial: nome e WhatsApp antes do jogo.',
+        texto: (
+            <>
+                <p>Digite o seu nome e o número do seu WhatsApp com DDD. A máscara <strong>(65) 99999-9999</strong> aparece enquanto você digita.</p>
+                <p>É só isso que fica guardado: o nome e o número, para o resultado ser enviado no fim. As suas escolhas no jogo <strong>não são gravadas</strong>.</p>
+            </>
+        ),
+    },
+    {
+        titulo: 'Corrija o número se o aviso aparecer',
+        imagem: '02-numero-incompleto.png',
+        legenda: 'Aviso de número incompleto: faltou o 9 do celular.',
+        texto: (
+            <>
+                <p>O WhatsApp precisa de <strong>DDD + 9 dígitos</strong> (11 números no total). Se faltar algo, a tela explica o que é, e o jogo só começa depois de o número estar certo.</p>
+                <p>Digitou um número válido, mas errado? Sem problema: você poderá trocá-lo no final, antes de enviar.</p>
+            </>
+        ),
+    },
+    {
+        titulo: 'Leia a apresentação',
+        imagem: '03-apresentacao.jpg',
+        legenda: 'Apresentação do jogo, com os controles e as regras.',
+        texto: (
+            <>
+                <p>Você vai correr por uma rua, em duas etapas. Em cada portão aparecem <strong>duas palavras</strong> e você escolhe a que mais combina com você. Não há resposta certa ou errada.</p>
+                <p>Não existe limite de tempo: o avatar espera pela sua escolha.</p>
+            </>
+        ),
+    },
+    {
+        titulo: 'Escolha o avatar, a cor e a vista',
+        imagem: '04-avatar.jpg',
+        legenda: 'Escolha do avatar, da cor da roupa e do jeito de ver a rua.',
+        texto: (
+            <>
+                <p>Todos os avatares jogam do mesmo jeito; o nome é só um apelido. Escolha também a cor da roupa.</p>
+                <p>Em <strong>Como você quer ver a rua?</strong> há duas opções: <strong>Vista 3D</strong> (o avatar corre para a frente) e <strong>Vista lateral</strong> (o avatar corre para o lado, como num jogo clássico). Em telas pequenas, role o cartão para ver essa opção e o botão <strong>Começar</strong>.</p>
+            </>
+        ),
+    },
+    {
+        titulo: 'Entenda a etapa',
+        imagem: '05-etapa.jpg',
+        legenda: 'Cartão que explica o que pensar em cada etapa.',
+        texto: (
+            <>
+                <p>O jogo tem duas etapas, e a pergunta em cada uma é diferente:</p>
+                <ul>
+                    <li><strong>Etapa 1 · Como você é:</strong> pense em como você é naturalmente, no dia a dia.</li>
+                    <li><strong>Etapa 2 · Como esperam de você:</strong> pense em como você acredita que esperam que você seja no trabalho.</li>
+                </ul>
+                <p>Cada etapa tem 12 portões. Você só passa para a seguinte depois de completar todos.</p>
+            </>
+        ),
+    },
+    {
+        titulo: 'Escolha uma palavra em cada portão',
+        imagem: '06-portao.jpg',
+        legenda: 'Dois portões com uma palavra cada; os botões embaixo repetem as opções.',
+        texto: (
+            <>
+                <p>Quando o avatar chega ao portão, escolha de um destes jeitos:</p>
+                <ul>
+                    <li><strong>Toque ou clique na placa</strong> da palavra escolhida;</li>
+                    <li>use as setas <strong>← →</strong> do teclado (ou as teclas <strong>A</strong> e <strong>D</strong>);</li>
+                    <li>ou use os <strong>dois botões</strong> embaixo do jogo.</li>
+                </ul>
+                <p>Para correr mais rápido, segure <strong>↑</strong> (ou <strong>W</strong>) na vista 3D. Na vista lateral, as escolhas usam ↑ ↓ e se corre com →.</p>
+                <p>No alto da tela ficam a etapa, a barra de progresso e o clima da rua. O botão <strong>Som</strong>, no canto, liga e desliga o som.</p>
+            </>
+        ),
+    },
+    {
+        titulo: 'Conclua a primeira etapa',
+        imagem: '07-etapa-concluida.jpg',
+        legenda: 'Aviso ao terminar a etapa 1.',
+        texto: (
+            <p>Ao passar pelos 12 portões, aparece este aviso. Toque em <strong>Continuar para a etapa 2</strong>; as palavras serão outras combinações.</p>
+        ),
+    },
+    {
+        titulo: 'Descubra o seu animal',
+        imagem: '08-resultado.jpg',
+        legenda: 'Resultado: o animal, o superpoder, o ponto de atenção e as barras por animal.',
+        texto: (
+            <>
+                <p>Ao terminar a etapa 2, toque em <strong>Descobrir meu animal</strong>. Depois de uma pequena animação, o resultado mostra:</p>
+                <ul>
+                    <li>o <strong>animal principal</strong> e, quando as escolhas ficaram próximas, <strong>traços de um segundo animal</strong>;</li>
+                    <li>o <strong>superpoder</strong> e o <strong>ponto de atenção</strong> desse estilo;</li>
+                    <li>as <strong>barras por animal</strong>: a barra colorida mostra “como você é” e o traço escuro marca “como esperam de você”.</li>
+                </ul>
+                <p>Se as escolhas ficaram bem distribuídas, o resultado é <strong>equilibrado</strong>: nenhum animal predomina. Isso costuma indicar flexibilidade ou um momento de transição.</p>
+                <p>Os botões <strong>Pular animação</strong> e <strong>Reduzir efeitos</strong> ficam no canto da tela.</p>
+            </>
+        ),
+    },
+    {
+        titulo: 'Confira o número e envie pelo WhatsApp',
+        imagem: '09-enviar.png',
+        legenda: 'Tela de envio, com o número digitado no início.',
+        texto: (
+            <>
+                <p>Na tela final, confira o número. É o momento de corrigir se você digitou errado no início.</p>
+                <p>Toque em <strong>Enviar pelo WhatsApp</strong>: o WhatsApp abre na conversa com esse número, com a mensagem do resultado pronta. Basta tocar em enviar dentro do WhatsApp.</p>
+            </>
+        ),
+    },
+    {
+        titulo: 'Número corrigido',
+        imagem: '10-numero-corrigido.png',
+        legenda: 'Aviso de que o número foi atualizado.',
+        texto: (
+            <>
+                <p>Se você trocou o número, o aviso <strong>Número atualizado</strong> confirma que o cadastro foi corrigido antes de abrir o WhatsApp.</p>
+                <p>O WhatsApp não abriu? Use o link <strong>Toque aqui para abrir</strong>, ou o botão <strong>Copiar a mensagem</strong> e cole a mensagem na conversa.</p>
+            </>
+        ),
+    },
+];
+
+const PERGUNTAS: { pergunta: string; resposta: React.ReactNode }[] = [
+    {
+        pergunta: 'Fechei a página antes de enviar. O resultado foi perdido?',
+        resposta: 'Sim. O resultado não é gravado: aparece na tela e segue na mensagem do WhatsApp. Se a página for fechada antes do envio, é preciso jogar de novo.',
+    },
+    {
+        pergunta: 'Digitei o número errado no começo.',
+        resposta: 'Corrija na tela final, antes de tocar em Enviar pelo WhatsApp. O cadastro é atualizado com o número novo.',
+    },
+    {
+        pergunta: 'O WhatsApp não abriu.',
+        resposta: 'Use o link “Toque aqui para abrir” que aparece na tela, ou copie a mensagem e cole na conversa. Alguns navegadores bloqueiam a abertura de nova aba.',
+    },
+    {
+        pergunta: 'Aparece que o navegador não consegue exibir o jogo.',
+        resposta: 'O jogo usa gráficos 3D (WebGL). Abra a página em outro navegador ou em outro aparelho.',
+    },
+    {
+        pergunta: 'O resultado mostrou “perfil equilibrado”. Está errado?',
+        resposta: 'Não. Significa que as escolhas ficaram distribuídas entre os quatro animais, sem um estilo dominante.',
+    },
+    {
+        pergunta: 'O resultado é um diagnóstico? Posso comparar pessoas?',
+        resposta: 'Não. É uma leitura lúdica das escolhas do momento, baseada no modelo DISC de quatro fatores. Como cada pessoa escolhe entre duas palavras, os percentuais mostram a proporção dentro dela mesma, e por isso não servem para ranquear ou comparar pessoas entre si.',
+    },
+];
+
+export default function Manual() {
+    return (
+        <main className="pagina manual">
+            <div className="cabecalho">
+                <h1>Manual de uso</h1>
+                <Link href="/">Voltar ao jogo</Link>
+            </div>
+
+            <p className="manual-intro">
+                A <strong>Rua das Palavras</strong> é uma versão em jogo do teste comportamental DISC do SENAC-MT. A pessoa corre por uma rua e, em cada portão, escolhe uma entre duas palavras. No fim, descobre o seu animal e recebe o resultado pelo WhatsApp.
+            </p>
+
+            <nav className="manual-indice" aria-label="Neste manual">
+                <a href="#jogar">Para quem vai jogar</a>
+                <a href="#aplicar">Para quem aplica o teste</a>
+                <a href="#duvidas">Dúvidas frequentes</a>
+            </nav>
+
+            <h2 id="jogar">Para quem vai jogar</h2>
+
+            <ol className="manual-passos">
+                {PASSOS.map((passo) => (
+                    <li key={passo.imagem}>
+                        <h3>{passo.titulo}</h3>
+                        <div className="manual-passo">
+                            <figure>
+                                <img src={`/manual/${passo.imagem}`} alt={passo.legenda} loading="lazy" />
+                                <figcaption>{passo.legenda}</figcaption>
+                            </figure>
+                            <div className="manual-texto">{passo.texto}</div>
+                        </div>
+                    </li>
+                ))}
+            </ol>
+
+            <h2 id="aplicar">Para quem aplica o teste</h2>
+
+            <div className="manual-bloco">
+                <h3>Antes de usar com candidatos</h3>
+                <ul>
+                    <li>A lista de palavras ainda é um <strong>rascunho, não validado por profissional com formação em DISC</strong>. Revise palavra por palavra antes de aplicar em candidato real.</li>
+                    <li>O resultado é <strong>experimental</strong>: a escolha entre duas palavras não equivale à marcação livre de uma lista, então não deve ser tratado como o relatório oficial.</li>
+                    <li>Faça uma primeira rodada com pessoas da equipe para ver se as telas e as palavras fazem sentido.</li>
+                </ul>
+            </div>
+
+            <div className="manual-bloco">
+                <h3>No dia da aplicação</h3>
+                <ul>
+                    <li>Use um navegador atual com WebGL (o jogo foi testado no Edge, no computador). O jogo aceita toque, mas teste antes no aparelho que será usado. Peça para ligar o som.</li>
+                    <li>O WhatsApp abre <strong>na conta do aparelho usado</strong>, já na conversa com o número informado. Quem toca em Enviar é a pessoa que está com o aparelho: se o jogo for feito no seu celular, a mensagem sai da sua conta para o número do participante.</li>
+                    <li>Peça que a pessoa só feche a página depois de enviar. O resultado não fica guardado.</li>
+                </ul>
+            </div>
+
+            <div className="manual-bloco">
+                <h3>Dados guardados</h3>
+                <ul>
+                    <li>Ficam salvos apenas <strong>nome e WhatsApp</strong>, com as datas de cadastro e de correção, em um banco SQLite embutido no servidor (<code>data/participantes.db</code>).</li>
+                    <li>Para exportar os cadastros: <code>npm run exportar &gt; participantes.csv</code>.</li>
+                    <li>São dados pessoais (LGPD). Defina quem acessa o arquivo, por quanto tempo ele é mantido e faça backup da pasta <code>data</code> se os cadastros importarem.</li>
+                </ul>
+            </div>
+
+            <h2 id="duvidas">Dúvidas frequentes</h2>
+
+            <div className="manual-faq">
+                {PERGUNTAS.map((item) => (
+                    <details key={item.pergunta}>
+                        <summary>{item.pergunta}</summary>
+                        <p>{item.resposta}</p>
+                    </details>
+                ))}
+            </div>
+
+            <p className="manual-fim">
+                <Link className="botao" href="/">Começar o jogo</Link>
+            </p>
+        </main>
+    );
+}

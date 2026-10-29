@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { resolverAnimais } from '@/jogo/animais-dados.js';
 import { montarMensagem, type Resumo } from '@/lib/mensagem';
@@ -147,6 +148,10 @@ export default function Partida() {
                             {enviando ? 'Preparando o jogo…' : 'Continuar'}
                         </button>
                     </form>
+
+                    <p className="link-manual">
+                        Primeira vez? <Link href="/manual">Veja o manual de uso</Link>.
+                    </p>
                 </section>
             )}
 
