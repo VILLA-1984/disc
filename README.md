@@ -107,6 +107,9 @@ Enviar é a pessoa (não há API de envio automático).
 
 ## Deploy no Vercel (GitHub + Turso)
 
+**Em produção:** https://rua-das-palavras.vercel.app (projeto `rua-das-palavras` no Vercel, ligado ao repositório
+`VILLA-1984/disc`, branch `main`). Cada push na `main` publica sozinho.
+
 O Vercel não tem disco permanente, então lá o cadastro vai para o **Turso** e o segredo de assinatura vem de variável de ambiente.
 
 1. Versione o projeto num repositório do GitHub (o `.env` fica fora do git; só o `.env.example` vai).
