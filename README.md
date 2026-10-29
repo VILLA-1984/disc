@@ -66,6 +66,13 @@ ou **deixa passar**. As pegas saem do jogo; as deixadas voltam na volta seguinte
 - `RUA_MODO=pares` volta ao formato antigo, com duas palavras por portão.
 - O minimapa (largada, chegada e posição) fica no canto superior direito do jogo.
 
+## Cenários
+
+Na tela do avatar a pessoa escolhe onde correr (`src/jogo/cenarios.js`): **Rua** (padrão) ou **Rio**, de barco, com colete
+salva-vidas. O cenário é só visual; portões, ciclo de palavras e pontuação não mudam. `avatarCabe(spec, cenario)` decide
+quais avatares entram em cada cenário a partir do campo `mobilidade` (no rio, moto e táxi ficam de fora). Novos cenários
+entram em `CENARIOS` e ganham um construtor da cena em `cenarios.js`.
+
 ## O que fica salvo
 
 Só **nome e WhatsApp** (SQLite embutido em `data/participantes.db`, criado sozinho) e as datas de cadastro e

@@ -461,6 +461,18 @@ export function criarAvatar3D(spec) {
     tronco.scale.z = 0.8;
     superior.add(tronco);
 
+    // Colete salva-vidas (cenario do rio): laranja vivo por cima da roupa, com uma faixa refletiva.
+    if (spec.colete) {
+        const colete = capsula(0.262 * w, 0.28, '#ff7a1a');
+        colete.position.y = 1.24;
+        colete.scale.z = 0.86;
+        superior.add(colete);
+        const refletiva = new THREE.Mesh(new THREE.CylinderGeometry(0.268 * w, 0.268 * w, 0.04, 18), material('#ffffff'));
+        refletiva.position.y = 1.3;
+        refletiva.scale.z = 0.86;
+        superior.add(refletiva);
+    }
+
     const faixa = new THREE.Mesh(new THREE.CylinderGeometry(0.245 * w, 0.245 * w, 0.06, 18), material(spec.detalhe ?? '#ffffff'));
     faixa.position.y = 1.12;
     faixa.scale.z = 0.8;

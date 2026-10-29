@@ -181,6 +181,9 @@
 
 .rua-app .avatar-op img { width: 100%; max-width: 48px; height: auto; display: block; }
 .rua-app .avatar-op:hover { border-color: var(--azul); }
+.rua-app .avatar-op:disabled { opacity: 0.38; cursor: not-allowed; filter: grayscale(0.6); }
+.rua-app .avatar-op:disabled:hover { border-color: inherit; }
+.rua-app .cenario-aviso { margin: 2px 0 0; min-height: 1.1em; font-size: 0.78rem; color: var(--suave); }
 .rua-app .avatar-op[aria-checked="true"] { border-color: var(--laranja); background: #fff6ec; box-shadow: 0 0 0 3px rgba(240, 138, 60, 0.25); }
 .rua-app .avatar-ini { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; color: #fff; font-size: 1.4rem; }
 

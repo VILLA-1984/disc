@@ -65,6 +65,7 @@ const PASSOS: Passo[] = [
         texto: (
             <>
                 <p>Todos os avatares jogam do mesmo jeito; o nome é só um apelido. Escolha também a cor da roupa.</p>
+                <p>Em <strong>Onde você quer correr?</strong> escolha o cenário: a <strong>Rua</strong> (de cidade) ou o <strong>Rio</strong>, percorrido de barco, de colete salva-vidas. O cenário muda só o visual: as palavras, as regras e o resultado são os mesmos. Alguns avatares não vão em todos os cenários: <strong>moto e táxi não vão de barco</strong>, e ficam apagados na lista quando o Rio está marcado.</p>
                 <p>Em <strong>Como você quer ver a rua?</strong> há duas opções: <strong>Vista 3D</strong> (o avatar corre para a frente) e <strong>Vista lateral</strong> (o avatar corre para o lado, como num jogo clássico). Em telas pequenas, role o cartão para ver essa opção e o botão <strong>Começar</strong>.</p>
             </>
         ),

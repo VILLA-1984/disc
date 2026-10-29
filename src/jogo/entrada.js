@@ -1,5 +1,6 @@
 import { AVATARES, CORES_ROUPA, gerarRetratos } from './avatars.js';
 import { alternarMudo, estaMudo, iniciarAudio, iniciarMusica, pararMusica, sons } from './audio.js';
+import { CENARIOS, avatarCabe } from './cenarios.js';
 import { criarCiclo } from './ciclo.js';
 import { criarJogo3D } from './game3d.js';
 import { mostrarRelatorio } from './report.js';
@@ -103,6 +104,7 @@ export function montar(raiz, api) {
     const escolhas = [];
     let jogo = null;
     let modo = '3d';
+    let cenario = 'rua';
     let avatarId = AVATARES[0].id;
     let corRoupa = null; // null = cor original do avatar
     let retratoAtual = '';
@@ -244,7 +246,7 @@ export function montar(raiz, api) {
             botao: 'Começar',
             corpoHtml: `<p>Escolha quem vai correr na rua. Todos os avatares jogam do mesmo jeito; o nome é só um apelido.</p>
                 <div class="avatares" role="radiogroup" aria-label="Avatar">${AVATARES.map((a) => `
-                    <button type="button" class="avatar-op" role="radio" aria-checked="${a.id === avatarId}" data-id="${a.id}">
+                    <button type="button" class="avatar-op" role="radio" aria-checked="${a.id === avatarId}" data-id="${a.id}" ${avatarCabe(a, cenario) ? '' : 'disabled'}>
                         ${retratos.get(a.id) ? `<img src="${retratos.get(a.id)}" alt="">` : `<span class="avatar-ini" style="background:${a.roupa}">${a.nome[0]}</span>`}
                         <span>${a.nome}</span>
                     </button>`).join('')}</div>
@@ -253,6 +255,10 @@ export function montar(raiz, api) {
                         <button type="button" class="cor-op" data-cor="" aria-pressed="${corRoupa === null}" aria-label="Cor original" title="Cor original">★</button>
                         ${CORES_ROUPA.map((c, i) => `<button type="button" class="cor-op" data-cor="${c}" aria-pressed="${corRoupa === c}" aria-label="${NOMES_CORES[i]}" title="${NOMES_CORES[i]}" style="background:${c}"></button>`).join('')}
                     </div>
+                    <fieldset class="vistas"><legend>Onde você quer correr?</legend>
+                        ${Object.entries(CENARIOS).map(([chave, c]) => `<label><input type="radio" name="cenario" value="${chave}" ${cenario === chave ? 'checked' : ''}> <span><strong>${c.nome}</strong><small>${c.descricao}</small></span></label>`).join('')}
+                        <p class="cenario-aviso" aria-live="polite"></p>
+                    </fieldset>
                     <fieldset class="vistas"><legend>Como você quer ver a rua?</legend>
                         <label><input type="radio" name="vista" value="3d" ${modo === '3d' ? 'checked' : ''}> <span><strong>Vista 3D</strong><small>o avatar corre para a frente, em direção ao topo da tela</small></span></label>
                         <label><input type="radio" name="vista" value="lateral" ${modo === 'lateral' ? 'checked' : ''}> <span><strong>Vista lateral</strong><small>o avatar corre para o lado, como num jogo clássico</small></span></label>
@@ -285,6 +291,33 @@ export function montar(raiz, api) {
                 corpo.querySelectorAll('input[name="vista"]').forEach((radio) => {
                     radio.addEventListener('change', () => { modo = radio.value; });
                 });
+
+                // Cada cenario aceita certos avatares (o criterio e o meio de locomocao de cada um).
+                const aplicarCenario = () => {
+                    const aviso = corpo.querySelector('.cenario-aviso');
+
+                    for (const botao of botoes) {
+                        const cabe = avatarCabe(AVATARES.find((a) => a.id === botao.dataset.id), cenario);
+                        botao.disabled = !cabe;
+                        botao.title = cabe ? '' : CENARIOS[cenario].motivo;
+                    }
+
+                    if (!avatarCabe(AVATARES.find((a) => a.id === avatarId), cenario)) {
+                        avatarId = AVATARES.find((a) => avatarCabe(a, cenario)).id;
+                        botoes.forEach((b) => b.setAttribute('aria-checked', String(b.dataset.id === avatarId)));
+                    }
+
+                    aviso.textContent = CENARIOS[cenario].motivo ? `${CENARIOS[cenario].motivo} Esses avatares ficam indisponíveis aqui.` : '';
+                };
+
+                corpo.querySelectorAll('input[name="cenario"]').forEach((radio) => {
+                    radio.addEventListener('change', () => {
+                        cenario = radio.value;
+                        aplicarCenario();
+                    });
+                });
+
+                aplicarCenario();
             },
             aoClicar: () => {
                 fecharCartao();
@@ -332,6 +365,7 @@ export function montar(raiz, api) {
             proximoPortao: ciclo ? proximoPortao : undefined,
             avatar: spec,
             modo,
+            cenario,
             rotulosEtapas: ROTULOS,
             reduzirMovimento,
             aoPasso: () => {
