@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { criarAvatar3D } from './avatars.js';
 import { continuos } from './audio.js';
-import { MEIOS, construirCeu, construirRio, criarAeronave, criarBarco, criarPassaros, criarPeixes } from './cenarios.js';
+import { MEIOS, construirCeu, construirNeve, construirRio, criarAeronave, criarBarco, criarNevasca, criarPassaros, criarPeixes, criarVeiculoNeve } from './cenarios.js';
 
 /**
  * Velocimetro em SVG para avatares sobre rodas. A escala vai de 0 a kmhMax; o ponteiro acompanha a
@@ -109,19 +109,19 @@ const PREDIOS = ['#1f6fb8', '#0d2b4e', '#f08a3c', '#6fa8e0', '#2f5f94', '#c9d8ea
 const CLIMAS = {
     sol: {
         nome: 'Ensolarado', ceuTopo: '#9cc8f0', ceuBase: '#f4f9ff', nevoa: '#dcebf9', alcance: 1,
-        luz: 1.5, direta: 1.35, sol: 1, nuvem: 0.85, nuvemCor: '#ffffff', chuva: 0, vento: 0, asfalto: '#3b4a5c', agua: '#2f86b8', solo: '#5aa25c', nuvemVelocidade: 0.6,
+        luz: 1.5, direta: 1.35, sol: 1, nuvem: 0.85, nuvemCor: '#ffffff', chuva: 0, vento: 0, asfalto: '#3b4a5c', agua: '#2f86b8', solo: '#5aa25c', neve: '#f4f8fc', nuvemVelocidade: 0.6,
     },
     nublado: {
         nome: 'Nublado', ceuTopo: '#8f9cab', ceuBase: '#d8dde4', nevoa: '#c9d0d8', alcance: 0.85,
-        luz: 1.25, direta: 0.4, sol: 0, nuvem: 1, nuvemCor: '#b4bcc7', chuva: 0, vento: 0, asfalto: '#36424f', agua: '#4f7288', solo: '#4f8a58', nuvemVelocidade: 0.9,
+        luz: 1.25, direta: 0.4, sol: 0, nuvem: 1, nuvemCor: '#b4bcc7', chuva: 0, vento: 0, asfalto: '#36424f', agua: '#4f7288', solo: '#4f8a58', neve: '#dfe6ee', nuvemVelocidade: 0.9,
     },
     chuva: {
         nome: 'Chuvoso', ceuTopo: '#566476', ceuBase: '#a7b2be', nevoa: '#97a3b0', alcance: 0.62,
-        luz: 0.98, direta: 0.18, sol: 0, nuvem: 1, nuvemCor: '#7d8896', chuva: 1, vento: 0.15, asfalto: '#27313d', agua: '#3d5a6e', solo: '#3f6e4c', nuvemVelocidade: 1.2,
+        luz: 0.98, direta: 0.18, sol: 0, nuvem: 1, nuvemCor: '#7d8896', chuva: 1, vento: 0.15, asfalto: '#27313d', agua: '#3d5a6e', solo: '#3f6e4c', neve: '#cfd8e2', nuvemVelocidade: 1.2,
     },
     vento: {
         nome: 'Ventania', ceuTopo: '#86bde8', ceuBase: '#e6f0fa', nevoa: '#d3e5f4', alcance: 1,
-        luz: 1.45, direta: 1.15, sol: 0.85, nuvem: 0.9, nuvemCor: '#f2f6fb', chuva: 0, vento: 1, asfalto: '#3b4a5c', agua: '#3a8bbd', solo: '#5aa25c', nuvemVelocidade: 7,
+        luz: 1.45, direta: 1.15, sol: 0.85, nuvem: 0.9, nuvemCor: '#f2f6fb', chuva: 0, vento: 1, asfalto: '#3b4a5c', agua: '#3a8bbd', solo: '#5aa25c', neve: '#eef3f9', nuvemVelocidade: 7,
     },
 };
 
@@ -286,7 +286,7 @@ function desenharPlaca(canvas, palavra, estado, dica) {
 export function criarJogo3D(opcoes) {
     const { parent, etapas, rotulosEtapas = [], reduzirMovimento = false } = opcoes;
     const modo = opcoes.modo === 'lateral' ? 'lateral' : '3d';
-    const cenario = ['rio', 'ar'].includes(opcoes.cenario) ? opcoes.cenario : 'rua'; // ver cenarios.js
+    const cenario = ['rio', 'ar', 'neve'].includes(opcoes.cenario) ? opcoes.cenario : 'rua'; // ver cenarios.js
     const cfg = CONFIG[modo];
     const velocidadeBase = reduzirMovimento ? VELOCIDADE.reduzida : VELOCIDADE.normal;
 
@@ -376,8 +376,11 @@ export function criarJogo3D(opcoes) {
     const aereo = cenario === 'ar'
         ? construirCeu({ cena, adicionarMovel, sorteio, periodo: PERIODO, zTras: Z_TRAS })
         : null;
-    const mundo = rio ?? aereo; // cenario sem rua nem predios (rio ou ceu)
-    const estrada = rio ? rio.agua : (aereo ? aereo.solo : new THREE.Mesh(new THREE.BoxGeometry(LARGURA_ESTRADA, 0.1, 420, 1, 1, 140), new THREE.MeshLambertMaterial({ color: 0x3b4a5c })));
+    const gelo = cenario === 'neve'
+        ? construirNeve({ cena, lados, adicionarMovel, arvores, sorteio, periodo: PERIODO, zTras: Z_TRAS })
+        : null;
+    const mundo = rio ?? aereo ?? gelo; // cenario sem rua nem predios (rio, ceu ou neve)
+    const estrada = rio ? rio.agua : (aereo ? aereo.solo : (gelo ? gelo.solo : new THREE.Mesh(new THREE.BoxGeometry(LARGURA_ESTRADA, 0.1, 420, 1, 1, 140), new THREE.MeshLambertMaterial({ color: 0x3b4a5c }))));
 
     if (!mundo) {
         estrada.position.set(0, -0.05, -170);
@@ -474,7 +477,7 @@ export function criarJogo3D(opcoes) {
     // No rio e no ceu o avatar segue o mesmo, mas num veiculo (barco, veleiro, aviao, jato, helicoptero, asa
     // delta, parapente): no rio de colete salva-vidas, sentado no banco. O veiculo e filho do avatar: acompanha
     // troca de pista, inclinacao e salto; a escala inversa mantem o tamanho real.
-    const meioEscolhido = opcoes.meio ?? (rio ? 'barco' : 'aviao');
+    const meioEscolhido = opcoes.meio ?? (rio ? 'barco' : (aereo ? 'aviao' : (gelo ? 'treno' : undefined)));
     const infoMeio = MEIOS[meioEscolhido] ?? {};
     const ALTURA_CONVES = infoMeio.base ?? 0.34;
     const sentadoNoMeio = infoMeio.sentado !== false; // a asa delta pendura o avatar em pe
@@ -487,11 +490,13 @@ export function criarJogo3D(opcoes) {
     };
     const specAvatar = rio
         ? { ...opcoes.avatar, colete: true, noBarco: true, ...tracosDoMeio }
-        : (aereo ? { ...opcoes.avatar, noBarco: sentadoNoMeio, ...tracosDoMeio } : opcoes.avatar);
+        : ((aereo || gelo) ? { ...opcoes.avatar, noBarco: sentadoNoMeio, ...tracosDoMeio } : opcoes.avatar);
     const avatar = criarAvatar3D(specAvatar);
     avatar.grupo.position.set(0, 0, 0);
     cena.add(avatar.grupo);
-    const barco = rio ? criarBarco(meioEscolhido, modo) : (aereo ? criarAeronave(meioEscolhido, modo) : null);
+    const barco = rio
+        ? criarBarco(meioEscolhido, modo)
+        : (aereo ? criarAeronave(meioEscolhido, modo) : (gelo ? criarVeiculoNeve(meioEscolhido) : null));
 
     if (barco) {
         barco.grupo.scale.setScalar(1 / avatar.grupo.scale.x);
@@ -501,10 +506,11 @@ export function criarJogo3D(opcoes) {
     // Enfeites vivos (so visuais; ficam de fora com "reduzir movimento"): peixes que pulam no rio, passaros no ceu.
     const peixes = rio && !reduzirMovimento ? criarPeixes({ cena, sorteio }) : null;
     const passaros = aereo && !reduzirMovimento ? criarPassaros({ cena, sorteio }) : null;
+    const nevasca = gelo && !reduzirMovimento ? criarNevasca({ cena, sorteio }) : null;
 
     // Som do meio de locomocao: motor no barco, aviao, jato e helicoptero; veleiro, asa delta e parapente
     // so tem o ar do turbo.
-    const semMotor = ['veleiro', 'caiaque', 'boia-pato', 'nado', 'asa-delta', 'parapente'].includes(meioEscolhido);
+    const semMotor = ['veleiro', 'caiaque', 'boia-pato', 'nado', 'asa-delta', 'parapente', 'esqui', 'sit-ski', 'treno'].includes(meioEscolhido);
     const somDoMeio = mundo ? (semMotor ? 'passos' : 'motor') : avatar.info.som;
     curvarObjeto(cena);
 
@@ -519,6 +525,7 @@ export function criarJogo3D(opcoes) {
         asfalto: new THREE.Color(CLIMAS.sol.asfalto),
         agua: new THREE.Color(CLIMAS.sol.agua),
         solo: new THREE.Color(CLIMAS.sol.solo),
+        neve: new THREE.Color(CLIMAS.sol.neve),
     };
     let nomeClima = 'sol';
     let portoesPassados = 0;
@@ -583,7 +590,7 @@ export function criarJogo3D(opcoes) {
             climaAtual[chave] = lerpNum(climaAtual[chave], climaAlvo[chave]);
         }
 
-        for (const chave of ['ceuTopo', 'ceuBase', 'nevoa', 'nuvemCor', 'asfalto', 'agua', 'solo']) {
+        for (const chave of ['ceuTopo', 'ceuBase', 'nevoa', 'nuvemCor', 'asfalto', 'agua', 'solo', 'neve']) {
             climaAtual[chave].lerp(new THREE.Color(climaAlvo[chave]), k);
         }
 
@@ -601,7 +608,7 @@ export function criarJogo3D(opcoes) {
         sol.intensity = climaAtual.direta;
         solSprite.material.opacity = climaAtual.sol;
         solSprite.visible = climaAtual.sol > 0.02;
-        estrada.material.color.copy(rio ? climaAtual.agua : (aereo ? climaAtual.solo : climaAtual.asfalto));
+        estrada.material.color.copy(rio ? climaAtual.agua : (aereo ? climaAtual.solo : (gelo ? climaAtual.neve : climaAtual.asfalto)));
 
         for (const nuvem of nuvens) {
             nuvem.material.opacity = climaAtual.nuvem;
@@ -609,7 +616,7 @@ export function criarJogo3D(opcoes) {
         }
 
         // Particulas so quando ha movimento permitido.
-        const chuvaVisivel = !reduzirMovimento && climaAtual.chuva > 0.03;
+        const chuvaVisivel = !reduzirMovimento && !gelo && climaAtual.chuva > 0.03; // na neve cai neve, nao chuva
         chuva.visible = chuvaVisivel;
         chuva.material.opacity = 0.5 * climaAtual.chuva;
         const ventoVisivel = !reduzirMovimento && climaAtual.vento > 0.08;
@@ -1209,6 +1216,7 @@ export function criarJogo3D(opcoes) {
         barco?.atualizar(dt, velocidade / velocidadeBase);
         peixes?.atualizar(dt, dz);
         passaros?.atualizar(dt, dz);
+        nevasca?.atualizar(dt, dz);
 
         if (!mundo && velocidade / velocidadeBase > 0.3 && Math.floor(fase / Math.PI) !== faseDoUltimoPasso) {
             faseDoUltimoPasso = Math.floor(fase / Math.PI);
@@ -1230,7 +1238,7 @@ export function criarJogo3D(opcoes) {
         }
 
         // No rio o barco flutua e no ar a aeronave sobe e desce de leve (mais devagar e mais amplo).
-        const alturaBase = mundo ? ALTURA_CONVES + (reduzirMovimento ? 0 : Math.sin(agoraSeg * (aereo ? 1.4 : 2.1)) * (aereo ? 0.07 : 0.035)) : 0;
+        const alturaBase = mundo ? ALTURA_CONVES + (reduzirMovimento ? 0 : Math.sin(agoraSeg * (aereo ? 1.4 : 2.1)) * (aereo ? 0.07 : (gelo ? 0.01 : 0.035))) : 0;
 
         if (saltoRestante > 0) {
             saltoRestante = Math.max(0, saltoRestante - dt);

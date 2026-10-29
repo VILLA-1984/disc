@@ -41,6 +41,17 @@ export const CENARIOS = {
         motivo: 'Moto e táxi não voam.',
         aceita: (mobilidade) => !['moto', 'taxi'].includes(mobilidade),
     },
+    neve: {
+        nome: 'Neve',
+        descricao: 'Uma pista de montanha coberta de neve, com pinheiros e nevasca.',
+        verbo: 'deslizar',
+        comeco: 'Começar a deslizar',
+        fim: 'da pista',
+        acelerar: 'deslizar mais rápido',
+        percurso: 'pela neve',
+        motivo: 'Moto, táxi e cadeira de corrida não vão para a neve.',
+        aceita: (mobilidade) => !['moto', 'taxi', 'cadeira-corrida'].includes(mobilidade),
+    },
 };
 
 const SOBE_NO_BARCO = ['anda', 'bengala', 'andador', 'cadeira', 'cadeira-corrida'];
@@ -89,6 +100,41 @@ export const MEIOS = {
         base: 0.3,
         bracos: 0.95,
         textos: { verbo: 'pilotar', comeco: 'Começar a pilotar', acelerar: 'pilotar mais rápido' },
+    },
+    // Neve. Quem anda ou usa bengala ou andador esquia em pe (os apoios ficam na base da pista); quem usa cadeira
+    // vai de sit-ski; o trenó serve a todos os que cabem na neve.
+    esqui: {
+        cenario: 'neve',
+        nome: 'Esqui',
+        descricao: 'Esquiando em pé, com bastões. Os apoios (bengala, andador) ficam na base da pista.',
+        motivo: 'Para esquiar em pé: quem anda ou usa bengala ou andador. Quem usa cadeira vai de sit-ski ou trenó.',
+        aceita: (mobilidade) => ['anda', 'bengala', 'andador'].includes(mobilidade),
+        semApoio: true,
+        sentado: false,
+        base: 0.04,
+        bracos: 0.5,
+        textos: { verbo: 'esquiar', comeco: 'Começar a esquiar', acelerar: 'esquiar mais rápido' },
+    },
+    'sit-ski': {
+        cenario: 'neve',
+        nome: 'Sit-ski',
+        descricao: 'Sentado num esqui adaptado, com bastões de apoio, para quem usa cadeira de rodas.',
+        motivo: 'O sit-ski é para quem usa cadeira de rodas.',
+        aceita: (mobilidade) => mobilidade === 'cadeira',
+        semApoio: true,
+        base: 0.16,
+        bracos: 0.55,
+        textos: { verbo: 'esquiar', comeco: 'Começar a esquiar', acelerar: 'esquiar mais rápido' },
+    },
+    treno: {
+        cenario: 'neve',
+        nome: 'Trenó',
+        descricao: 'Deslizando sentado num trenó de madeira.',
+        motivo: 'Moto, táxi e cadeira de corrida não vão para a neve.',
+        aceita: (mobilidade) => ['anda', 'bengala', 'andador', 'cadeira'].includes(mobilidade),
+        semApoio: true,
+        base: 0.1,
+        textos: { verbo: 'deslizar', comeco: 'Começar a deslizar', acelerar: 'deslizar mais rápido' },
     },
     nado: {
         cenario: 'rio',
@@ -1160,6 +1206,248 @@ export function criarAeronave(meio, modo = '3d') {
 
             // Balanco do voo: a vela e a asa balancam, as demais aeronaves adernam de leve nas curvas.
             grupo.rotation.z = Math.sin(tempo * 0.8) * (meio === 'parapente' || meio === 'asa-delta' ? 0.06 : 0.03);
+        },
+    };
+}
+
+// ----------------------------------------------------------------------------------------- neve
+
+/**
+ * Neve: pista branca de montanha, pinheiros nevados, montanhas ao longe, bandeirinhas de slalom nas bordas e,
+ * no lugar da faixa de pedestres, uma fileira de bandeirinhas sob as placas. Tudo que anda entra em
+ * `adicionarMovel`, como a rua.
+ *
+ * @returns {{solo: THREE.Mesh, basePortao: () => THREE.Group}}
+ */
+export function construirNeve({ cena, lados, adicionarMovel, arvores, sorteio, periodo, zTras }) {
+    const solo = new THREE.Mesh(new THREE.BoxGeometry(LARGURA_RIO, 0.1, 420, 1, 1, 140), lambert(0xf4f8fc));
+    solo.position.set(0, -0.05, -170);
+    cena.add(solo);
+
+    const neveAlta = lambert(0xe6eef6);
+    const verdePinheiro = lambert(0x2f6b4a);
+    const capaDeNeve = lambert(0xffffff);
+
+    for (const lado of [-1, 1]) {
+        const barranco = new THREE.Mesh(new THREE.BoxGeometry(60, 0.9, 420, 1, 1, 140), neveAlta);
+        barranco.position.set(lado * (LARGURA_RIO / 2 + 30), 0, -170);
+        cena.add(barranco);
+
+        const grupoLado = lado < 0 ? lados.esquerdo : lados.direito;
+
+        // Pinheiros com neve nos galhos.
+        const quantidade = Math.round(periodo / 6);
+
+        for (let i = 0; i < quantidade; i++) {
+            const pinheiro = new THREE.Group();
+            const escala = 0.9 + sorteio() * 0.9;
+            const tronco = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.2, 1.2, 8), lambert(0x6b4a2e));
+            tronco.position.y = 0.6;
+            pinheiro.add(tronco);
+
+            [[1.7, 2.0, 1.4], [1.3, 1.8, 2.5], [0.9, 1.6, 3.5]].forEach(([raio, altura, y], k) => {
+                const galho = new THREE.Mesh(new THREE.ConeGeometry(raio, altura, 9), verdePinheiro);
+                galho.position.y = y;
+                pinheiro.add(galho);
+                const capa = new THREE.Mesh(new THREE.ConeGeometry(raio * 0.72, altura * 0.55, 9), capaDeNeve);
+                capa.position.y = y + altura * 0.22;
+                pinheiro.add(capa);
+                void k;
+            });
+
+            pinheiro.scale.setScalar(escala);
+            pinheiro.position.x = lado * (LARGURA_RIO / 2 + 2.6 + sorteio() * 8);
+            arvores.push(pinheiro);
+            adicionarMovel(pinheiro, 0, zTras - (i / quantidade) * periodo - sorteio() * 2, grupoLado);
+        }
+
+        // Bandeirinhas de slalom nas bordas da pista, vermelhas e azuis.
+        for (let i = 0; i < Math.round(periodo / 7); i++) {
+            const bandeira = new THREE.Group();
+            const haste = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.5, 6), lambert(0x59616b));
+            haste.position.y = 0.75;
+            const pano = new THREE.Mesh(new THREE.ConeGeometry(0.26, 0.55, 3), lambert(i % 2 ? 0x1f6fb8 : 0xd6455a));
+            pano.rotation.z = -Math.PI / 2;
+            pano.position.set(lado * 0.3, 1.25, 0);
+            bandeira.add(haste, pano);
+            bandeira.position.x = lado * (LARGURA_RIO / 2 - 0.4);
+            adicionarMovel(bandeira, 0, zTras - i * 7 - 2, grupoLado);
+        }
+
+        // Montanhas ao fundo, de topo branco.
+        for (let i = 0; i < 4; i++) {
+            const altura = 22 + sorteio() * 16;
+            const raio = 18 + sorteio() * 10;
+            const montanha = new THREE.Group();
+            const corpo = new THREE.Mesh(new THREE.ConeGeometry(raio, altura, 7), lambert(0x9fb2c6));
+            const topo = new THREE.Mesh(new THREE.ConeGeometry(raio * 0.5, altura * 0.5, 7), capaDeNeve);
+            topo.position.y = altura * 0.27;
+            montanha.add(corpo, topo);
+            montanha.position.set(lado * (55 + sorteio() * 55), altura / 2 - 2, 0);
+            adicionarMovel(montanha, 0, zTras - (i / 4) * periodo - sorteio() * 12, grupoLado);
+        }
+    }
+
+    // Marcas de esqui na neve: tracos claros que passam e mostram a velocidade.
+    const marcaGeo = new THREE.BoxGeometry(0.06, 0.012, 3.2);
+    const marcaMat = new THREE.MeshLambertMaterial({ color: 0xc6d9ea });
+
+    for (let i = 0; i < periodo / 4; i++) {
+        const marca = new THREE.Mesh(marcaGeo, marcaMat);
+        marca.position.set((sorteio() - 0.5) * (LARGURA_RIO - 1.5), 0.012, 0);
+        adicionarMovel(marca, 0, zTras - i * 4 - sorteio() * 2);
+    }
+
+    // Em vez da faixa de pedestres: uma fileira de bandeirinhas sob o portao.
+    function basePortao() {
+        const grupo = new THREE.Group();
+
+        for (let i = -4; i <= 4; i++) {
+            const haste = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.8, 6), lambert(0x59616b));
+            haste.position.set(i * 1.05, 0.4, 0);
+            const pano = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.3, 3), lambert(i % 2 ? 0x1f6fb8 : 0xd6455a));
+            pano.rotation.z = -Math.PI / 2;
+            pano.position.set(i * 1.05 + 0.15, 0.68, 0);
+            grupo.add(haste, pano);
+        }
+
+        return grupo;
+    }
+
+    return { solo, basePortao };
+}
+
+/** Nevasca: flocos que caem devagar, levados de lado pelo vento, e acompanham o movimento da pista. So enfeite. */
+export function criarNevasca({ cena, sorteio }) {
+    const FLOCOS = 650;
+    const posicoes = new Float32Array(FLOCOS * 3);
+    const velocidades = Array.from({ length: FLOCOS }, () => 0.8 + sorteio() * 1.4);
+    const geometria = new THREE.BufferGeometry();
+    geometria.setAttribute('position', new THREE.BufferAttribute(posicoes, 3));
+    const flocos = new THREE.Points(geometria, new THREE.PointsMaterial({ color: 0xffffff, size: 0.16, transparent: true, opacity: 0.9, depthWrite: false }));
+    flocos.frustumCulled = false;
+    cena.add(flocos);
+
+    const nascer = (i, topo = false) => {
+        posicoes.set([-22 + sorteio() * 44, topo ? 12 + sorteio() * 3 : sorteio() * 14, -75 + sorteio() * 85], i * 3);
+    };
+
+    for (let i = 0; i < FLOCOS; i++) {
+        nascer(i);
+    }
+
+    let tempo = 0;
+
+    return {
+        atualizar(dt, dz) {
+            tempo += dt;
+
+            for (let i = 0; i < FLOCOS; i++) {
+                const o = i * 3;
+                posicoes[o] += Math.sin(tempo * 0.7 + i) * dt * 0.5 + dt * 0.35;
+                posicoes[o + 1] -= velocidades[i] * dt;
+                posicoes[o + 2] += dz;
+
+                if (posicoes[o + 1] < 0 || posicoes[o + 2] > 10) {
+                    nascer(i, true);
+
+                    // Os que reaparecem na frente da camera vem de longe.
+                    if (posicoes[o + 2] > 0) {
+                        posicoes[o + 2] -= 75;
+                    }
+                }
+            }
+
+            geometria.attributes.position.needsUpdate = true;
+        },
+    };
+}
+
+/**
+ * Veiculos da neve (conves em y = 0, avatar no mesmo grupo): esqui (dois esquis e bastoes que balancam),
+ * sit-ski (um esqui com cadeirinha e bastoes de apoio) e trenó de madeira.
+ */
+export function criarVeiculoNeve(meio) {
+    const grupo = new THREE.Group();
+    const pivos = [];
+    let tempo = 0;
+
+    // Bastao preso a mao: um pivo na altura da mao, com a haste e o discinho na ponta.
+    const bastao = (x, yMao, zMao, xPonta, yPonta, zPonta) => {
+        const pivo = new THREE.Group();
+        pivo.position.set(x, yMao, zMao);
+        pivo.add(liga([0, 0, 0], [xPonta - x, yPonta - yMao, zPonta - zMao], 0x59616b, 0.016));
+        const disco = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.015, 10), lambert(0xd6455a));
+        disco.position.set(xPonta - x, yPonta - yMao + 0.05, zPonta - zMao);
+        pivo.add(disco);
+        grupo.add(pivo);
+        pivos.push(pivo);
+    };
+
+    if (meio === 'esqui') {
+        [-1, 1].forEach((lado) => {
+            const esqui = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.035, 1.9), lambert(lado < 0 ? 0x1f6fb8 : 0xf08a3c));
+            esqui.position.set(lado * 0.17, 0.02, -0.1);
+            const ponta = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.035, 0.28), lambert(lado < 0 ? 0x1f6fb8 : 0xf08a3c));
+            ponta.rotation.x = 0.45;
+            ponta.position.set(lado * 0.17, 0.07, -1.12);
+            grupo.add(esqui, ponta);
+            bastao(lado * 0.28, 0.76, -0.3, lado * 0.42, 0.02, -0.95);
+        });
+    } else if (meio === 'sit-ski') {
+        const esqui = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.04, 2.1), lambert(0xd6455a));
+        esqui.position.set(0, -0.14, -0.1);
+        const ponta = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.04, 0.3), lambert(0xd6455a));
+        ponta.rotation.x = 0.45;
+        ponta.position.set(0, -0.09, -1.2);
+        grupo.add(esqui, ponta);
+        grupo.add(liga([0, -0.12, -0.35], [0, 0.2, -0.05], 0x4a5668, 0.03));
+        grupo.add(liga([0, -0.12, 0.55], [0, 0.2, 0.25], 0x4a5668, 0.03));
+
+        const assento = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.1, 0.45), lambert(0x2b3a4f));
+        assento.position.set(0, 0.23, 0.05);
+        const encosto = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.42, 0.07), lambert(0x2b3a4f));
+        encosto.position.set(0, 0.46, 0.3);
+        grupo.add(assento, encosto);
+
+        // Bastoes de apoio (outriggers), com um mini esqui na ponta.
+        [-1, 1].forEach((lado) => {
+            bastao(lado * 0.3, 0.74, -0.38, lado * 0.62, -0.14, -0.95);
+            const mini = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.02, 0.4), lambert(0x1f6fb8));
+            mini.position.set(lado * 0.62, -0.14, -0.95);
+            grupo.add(mini);
+        });
+    } else {
+        // Trenó de madeira, com patins de metal e a frente curvada.
+        const prancha = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.08, 2.3), lambert(0xb5472f));
+        prancha.position.set(0, 0.0, 0.1);
+        const curva = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.08, 0.45), lambert(0xb5472f));
+        curva.rotation.x = -0.6;
+        curva.position.set(0, 0.12, -1.28);
+        grupo.add(prancha, curva);
+
+        for (const lado of [-1, 1]) {
+            const patim = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.07, 2.7), lambert(0x59616b));
+            patim.position.set(lado * 0.52, -0.1, 0.0);
+            const apoio = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.12, 0.06), lambert(0x59616b));
+            apoio.position.set(lado * 0.52, -0.04, -0.3);
+            grupo.add(patim, apoio);
+        }
+
+        const assento = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.2, 0.5), lambert(0x6b4a2e));
+        assento.position.set(0, 0.14, 0.15);
+        grupo.add(assento);
+    }
+
+    return {
+        grupo,
+        atualizar(dt, ritmo) {
+            tempo += dt;
+
+            // Os bastoes balancam um contra o outro; os veiculos trepidam de leve na neve quando andam.
+            pivos.forEach((p, i) => { p.rotation.x = Math.sin(tempo * 2.4 + i * Math.PI) * 0.28 * Math.min(1, ritmo + 0.2); });
+            grupo.rotation.x = Math.sin(tempo * 9) * 0.006 * Math.min(1, ritmo);
+            grupo.rotation.z = Math.sin(tempo * 1.1) * 0.015;
         },
     };
 }

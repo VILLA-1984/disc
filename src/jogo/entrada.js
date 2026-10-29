@@ -329,7 +329,10 @@ export function montar(raiz, api) {
                     }
 
                     if (!lista.some(([chave]) => chave === meio)) {
-                        meio = meioPadrao(cenario);
+                        // Prefere o primeiro meio que aceita o avatar ja escolhido (assim quem usa cadeira nao
+                        // perde o avatar ao entrar na neve, por exemplo).
+                        const mobilidadeAtual = AVATARES.find((a) => a.id === avatarId)?.mobilidade ?? 'anda';
+                        meio = (lista.find(([, m]) => m.aceita(mobilidadeAtual)) ?? lista[0])[0];
                     }
 
                     caixaMeios.innerHTML = `<legend>Como você quer ir?</legend>${lista.map(([chave, m]) => `<label><input type="radio" name="meio" value="${chave}" ${meio === chave ? 'checked' : ''}> <span><strong>${m.nome}</strong><small>${m.descricao}</small></span></label>`).join('')}`;
