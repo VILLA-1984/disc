@@ -434,7 +434,10 @@ export function criarAvatar3D(spec) {
     const moto = mobilidade === 'moto';
     const taxi = mobilidade === 'taxi';
     const andador = mobilidade === 'andador';
-    const sentado = cadeira || corrida || moto || taxi;
+    // No barco (cenario do rio) quem anda, usa bengala ou andador senta no banco; quem usa cadeira de rodas
+    // continua na propria cadeira.
+    const noBarco = Boolean(spec.noBarco) && !cadeira && !corrida && !moto && !taxi;
+    const sentado = cadeira || corrida || moto || taxi || noBarco;
     const balancos = [];
 
     // Altura do quadril e inclinacao do tronco de cada postura (para a frente = negativo).
@@ -445,7 +448,7 @@ export function criarAvatar3D(spec) {
         taxi: { quadril: -0.5, inclina: 0 },
         andador: { quadril: 0, inclina: -0.12 },
     };
-    const postura = posturas[mobilidade] ?? { quadril: 0, inclina: 0 };
+    const postura = noBarco ? { quadril: -0.4, inclina: 0 } : (posturas[mobilidade] ?? { quadril: 0, inclina: 0 });
 
     // O tronco gira em torno do quadril, nao do chao: quadril fica no pivo e a parte de cima desce.
     const quadril = new THREE.Group();
@@ -562,8 +565,8 @@ export function criarAvatar3D(spec) {
         corpo.add(caixa(0.58, 0.46, 0.04, '#2b2f36', 0, 0.78, 0.27));
     }
 
-    // Quem esta sentado numa moto, num taxi ou na cadeira de corrida: coxas a frente, canelas para baixo.
-    if (corrida || moto || taxi) {
+    // Quem esta sentado numa moto, num taxi, no barco ou na cadeira de corrida: coxas a frente, canelas para baixo.
+    if (corrida || moto || taxi || noBarco) {
         const hy = 0.86 + postura.quadril;
 
         for (const lado of [-1, 1]) {
@@ -580,7 +583,7 @@ export function criarAvatar3D(spec) {
                 canela.position.set(x, hy - 0.2, -0.47);
                 corpo.add(canela);
             } else {
-                const chao = taxi ? 0.14 : 0.36;
+                const chao = taxi ? 0.14 : (noBarco ? 0.08 : 0.36);
                 const canela = capsula(0.075, Math.max(0.2, hy - chao - 0.2), spec.calca);
                 canela.position.set(x, (hy + chao) / 2 - 0.06, -0.46);
                 corpo.add(canela);

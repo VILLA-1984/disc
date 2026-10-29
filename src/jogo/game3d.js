@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { criarAvatar3D } from './avatars.js';
 import { continuos } from './audio.js';
-import { construirRio, criarBarco } from './cenarios.js';
+import { construirRio, criarBarco, criarPeixes } from './cenarios.js';
 
 /**
  * Velocimetro em SVG para avatares sobre rodas. A escala vai de 0 a kmhMax; o ponteiro acompanha a
@@ -465,10 +465,10 @@ export function criarJogo3D(opcoes) {
     }
 
     // ------------------------------------------------------------------ avatar
-    // No rio o avatar segue o mesmo, mas de colete salva-vidas, em pe no conves do barco (o barco e filho
+    // No rio o avatar segue o mesmo, mas de colete salva-vidas, sentado no banco do barco (o barco e filho
     // do avatar: acompanha troca de pista, inclinacao e salto; a escala inversa mantem o tamanho real).
     const ALTURA_CONVES = 0.34;
-    const avatar = criarAvatar3D(rio ? { ...opcoes.avatar, colete: true } : opcoes.avatar);
+    const avatar = criarAvatar3D(rio ? { ...opcoes.avatar, colete: true, noBarco: true } : opcoes.avatar);
     avatar.grupo.position.set(0, 0, 0);
     cena.add(avatar.grupo);
     const barco = rio ? criarBarco() : null;
@@ -477,6 +477,9 @@ export function criarJogo3D(opcoes) {
         barco.grupo.scale.setScalar(1 / avatar.grupo.scale.x);
         avatar.grupo.add(barco.grupo);
     }
+
+    // Peixes que pulam (so enfeite; ficam de fora com "reduzir movimento").
+    const peixes = rio && !reduzirMovimento ? criarPeixes({ cena, sorteio }) : null;
 
     // Som do meio de locomocao: o barco tem motor de popa.
     const somDoMeio = rio ? 'motor' : avatar.info.som;
@@ -1177,9 +1180,10 @@ export function criarJogo3D(opcoes) {
 
         // Avatar: corrida, troca de pista e salto.
         fase += velocidade * dt * 1.05;
-        // No barco ninguem corre: o avatar fica parado no conves e quem se move e o barco.
+        // No barco ninguem corre: o avatar fica sentado e quem se move e o barco.
         avatar.animar(fase, rio ? 0 : velocidade / velocidadeBase);
         barco?.atualizar(dt, velocidade / velocidadeBase);
+        peixes?.atualizar(dt, dz);
 
         if (!rio && velocidade / velocidadeBase > 0.3 && Math.floor(fase / Math.PI) !== faseDoUltimoPasso) {
             faseDoUltimoPasso = Math.floor(fase / Math.PI);

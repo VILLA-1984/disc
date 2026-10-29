@@ -150,8 +150,99 @@ export function construirRio({ cena, lados, adicionarMovel, arvores, sorteio, pe
 }
 
 /**
+ * Peixes que pulam no rio (dourado, prata e pintado): de tempos em tempos um deles salta num arco perto do
+ * barco, faz um anel de agua ao sair e ao voltar, e some. Acompanham a agua (somam `dz`, como o resto do
+ * cenario). So enfeite: nao afetam nada do jogo.
+ *
+ * @returns {{atualizar: (dt: number, dz: number) => void}}
+ */
+export function criarPeixes({ cena, sorteio }) {
+    const cores = [0xe8b33a, 0xc9d3dc, 0xd96b3a, 0xe8b33a];
+    const corpoGeo = new THREE.SphereGeometry(0.22, 10, 8);
+    const caudaGeo = new THREE.ConeGeometry(0.13, 0.3, 4);
+    const aneisGeo = new THREE.RingGeometry(0.25, 0.34, 22);
+    const DURACAO = 0.95; // segundos no ar
+    const ALTURA = 1.3;
+    const TAMANHO = 1.8; // os peixes precisam ser vistos de longe, na vista de cima e no celular
+    const AVANCO = 2.4; // quanto o peixe anda para a frente enquanto salta
+
+    const peixes = cores.map((cor, i) => {
+        const grupo = new THREE.Group();
+        const corpo = new THREE.Mesh(corpoGeo, lambert(cor));
+        corpo.scale.set(0.5, 0.5, 1.6); // alongado em z; a cabeca aponta para -z
+        const cauda = new THREE.Mesh(caudaGeo, lambert(cor));
+        cauda.rotation.x = -Math.PI / 2; // ponta para o corpo, base aberta atras
+        cauda.scale.set(0.22, 1, 1);
+        cauda.position.z = 0.42;
+        grupo.add(corpo, cauda);
+        grupo.scale.setScalar(TAMANHO);
+        grupo.visible = false;
+        cena.add(grupo);
+
+        const anel = new THREE.Mesh(aneisGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
+        anel.rotation.x = -Math.PI / 2;
+        anel.visible = false;
+        cena.add(anel);
+
+        return { grupo, anel, ativo: false, espera: 0.4 + i * 0.9, t: 0, x: 0, z: 0, anelT: 1 };
+    });
+
+    function soltarAnel(peixe, x, z) {
+        peixe.anel.position.set(x, 0.04, z);
+        peixe.anelT = 0;
+    }
+
+    return {
+        atualizar(dt, dz) {
+            for (const p of peixes) {
+                // O anel de agua cresce e some, andando com o rio.
+                if (p.anelT < 1) {
+                    p.anelT += dt / 0.8;
+                    p.anel.visible = p.anelT < 1;
+                    p.anel.position.z += dz;
+                    p.anel.scale.setScalar(0.6 + p.anelT * 2.4);
+                    p.anel.material.opacity = Math.max(0, 0.7 * (1 - p.anelT));
+                }
+
+                if (!p.ativo) {
+                    p.espera -= dt;
+
+                    if (p.espera <= 0) {
+                        // Salta perto do barco, mas fora dele, de um dos lados e a alguma distancia a frente.
+                        const lado = sorteio() < 0.5 ? -1 : 1;
+                        p.x = lado * (1.8 + sorteio() * 2.6);
+                        p.z = -5 - sorteio() * 8;
+                        p.t = 0;
+                        p.ativo = true;
+                        p.grupo.visible = true;
+                        soltarAnel(p, p.x, p.z);
+                    }
+
+                    continue;
+                }
+
+                p.t += dt;
+                p.z += dz - (AVANCO / DURACAO) * dt;
+                const s = Math.min(1, p.t / DURACAO);
+                const y = 4 * ALTURA * s * (1 - s);
+                const subida = 4 * ALTURA * (1 - 2 * s) / DURACAO; // dy/dt
+                p.grupo.position.set(p.x, 0.05 + y, p.z);
+                p.grupo.rotation.x = Math.atan2(subida, AVANCO / DURACAO);
+
+                if (s >= 1) {
+                    p.ativo = false;
+                    p.grupo.visible = false;
+                    p.espera = 1.5 + sorteio() * 2.5;
+                    soltarAnel(p, p.x, p.z);
+                }
+            }
+        },
+    };
+}
+
+/**
  * Barco de motor de popa (as "voadeiras" dos rios do Mato Grosso). O convés fica em y = 0, e o casco
- * desce abaixo disso; comprimento de z = -2 (proa) a z = 1,4 (popa). O avatar fica em pe no convés.
+ * desce abaixo disso; comprimento de z = -2 (proa) a z = 1,4 (popa). O avatar senta no banco do meio.
  *
  * @returns {{grupo: THREE.Group, atualizar: (dt: number, ritmo: number) => void}}
  */
@@ -184,8 +275,9 @@ export function criarBarco() {
         grupo.add(faixa);
     }
 
-    const banco = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.1, 0.32), lambert(0x6b4a2e));
-    banco.position.set(0, 0.32, 0.95);
+    // Banco no meio do barco: e onde o avatar senta (o topo fica em 0,28, na altura do quadril sentado).
+    const banco = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.1, 0.4), lambert(0x6b4a2e));
+    banco.position.set(0, 0.23, 0);
     grupo.add(banco);
 
     // Motor de popa e a helice, ja dentro da agua.
