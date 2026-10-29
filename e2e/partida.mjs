@@ -124,8 +124,10 @@ for (let etapa = 0; etapa < 2; etapa++) {
     }
 
     if (emCiclo) {
-        assert.ok(pegas <= 24 && pegas >= 12, `devia pegar entre 12 e 24 palavras por conta propria (pegou ${pegas})`);
-        assert.ok(apresentadas > 48, `devia dar mais de uma volta (apresentadas: ${apresentadas})`);
+        const escolher = Number(process.env.RUA_ESCOLHER) || 14;
+        assert.equal(pegas, escolher, `devia pegar ${escolher} palavras por etapa (pegou ${pegas})`);
+        // Pegando 1 de cada 3, as 14 saem antes de a primeira volta de 48 terminar: a etapa fica bem mais curta que antes.
+        assert.ok(apresentadas < 48, `devia terminar antes de passar as 48 palavras (apresentadas: ${apresentadas})`);
     } else {
         assert.equal(apresentadas, 12);
     }
@@ -157,7 +159,19 @@ assert.equal(await pagina.inputValue('#whatsapp-final'), '(65) 99999-0000', 'dev
 // Corrige o numero errado e envia.
 await pagina.fill('#whatsapp-final', '65988887777');
 await pagina.getByRole('button', { name: 'Enviar pelo WhatsApp' }).click();
-await pagina.getByText('Número atualizado.').waitFor({ timeout: 10000 });
+try {
+    await pagina.getByText('Número atualizado.').waitFor({ timeout: 15000 });
+} catch (erroEspera) {
+    // Diagnostico: mostra o que a tela exibia em vez do aviso (mensagem de erro, botao ocupado, etc.).
+    await pagina.screenshot({ path: join(pasta, 'e2e-falha-envio.png') });
+    console.log('TELA NO MOMENTO DA FALHA:', JSON.stringify({
+        erro: await pagina.locator('.erro-geral').allTextContents(),
+        aviso: await pagina.locator('.ok-geral').allTextContents(),
+        botao: await pagina.getByRole('button', { name: /WhatsApp|Abrindo/ }).first().textContent(),
+        erros,
+    }));
+    throw erroEspera;
+}
 await pagina.screenshot({ path: join(pasta, 'e2e-2-envio.png') });
 
 const abertos = await pagina.evaluate(() => window.__abertos);

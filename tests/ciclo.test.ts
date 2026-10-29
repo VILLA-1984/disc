@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { criarCiclo, simular } from '../src/jogo/ciclo.js';
-import { ESCOLHER_PADRAO, escolherPorEtapa, montarCiclo, resolverCiclo, VOLTAS } from '../src/server/ciclo';
+import { escolherPorEtapa, montarCiclo, resolverCiclo, sortearPalavras, tamanhoDoPool, VOLTAS } from '../src/server/ciclo';
 import { RodadaInvalida } from '../src/server/gameRound';
 import { PALAVRAS } from '../src/server/palavras';
 import { percentuais, resumir } from '../src/server/pontuacao';
@@ -36,7 +36,7 @@ function jogar(ordens: number[][], escolher: number, decide: (i: number, id: num
 
 describe('montarCiclo', () => {
     it.each([1, 2, 3])('cada volta traz as 48 palavras uma vez e balanceia os fatores em blocos (semente %i)', (s) => {
-        const rodada = montarCiclo(PALAVRAS, ESCOLHER_PADRAO, semente(s));
+        const rodada = montarCiclo(PALAVRAS, 24, semente(s));
         const todas = PALAVRAS.map((p) => p.id).sort((a, b) => a - b);
         const codigo = new Map(PALAVRAS.map((p) => [p.id, p.code]));
 
@@ -56,9 +56,13 @@ describe('montarCiclo', () => {
     });
 
     it('limita quantas palavras se escolhe', () => {
-        expect(escolherPorEtapa(48)).toBe(24);
-        expect(escolherPorEtapa(48, 4)).toBe(12);
-        expect(escolherPorEtapa(48, 90)).toBe(36);
+        expect(escolherPorEtapa(48)).toBe(14); // padrao: 14 por etapa (eram 24)
+        expect(escolherPorEtapa(48, 24)).toBe(24);
+        expect(escolherPorEtapa(14, 1)).toBe(3);
+        expect(escolherPorEtapa(14, 90)).toBe(11);
+        expect(tamanhoDoPool(48)).toBe(48); // padrao: a lista toda
+        expect(tamanhoDoPool(48, 3)).toBe(8);
+        expect(tamanhoDoPool(48, 99)).toBe(48);
     });
 
     it('recusa lista sem os quatro fatores', () => {
@@ -184,5 +188,127 @@ describe('resolverCiclo e pontuacao', () => {
         expect(() => resolverCiclo(rodada, [{ stage: 5, take: true }])).toThrow(RodadaInvalida);
         expect(() => resolverCiclo(rodada, [{ stage: 0, take: 'sim' }])).toThrow(RodadaInvalida);
         expect(() => resolverCiclo(rodada, 'x')).toThrow(RodadaInvalida);
+    });
+});
+
+describe('padrao: 14 escolhidas por etapa, de 48 palavras', () => {
+    const rodada = montarCiclo(PALAVRAS, escolherPorEtapa(tamanhoDoPool(PALAVRAS.length)), semente(5), tamanhoDoPool(PALAVRAS.length));
+
+    it('monta 14 por etapa com a lista toda', () => {
+        expect(rodada.escolher).toBe(14);
+        expect(new Set(rodada.etapas[0][0]).size).toBe(48);
+    });
+
+    it('cada etapa fecha com exatamente 14 palavras escolhidas e a pessoa passa por bem menos palavras que antes', () => {
+        const escolhas: { stage: number; take: boolean }[] = [];
+        const apresentadas: number[] = [];
+
+        rodada.etapas.forEach((ordens, stage) => {
+            const { decisoes, estado } = jogar(ordens, 14, (i) => i % 3 === 0);
+
+            decisoes.forEach((take) => escolhas.push({ stage, take }));
+            apresentadas.push(estado.apresentacoes.length);
+            expect(estado.escolhidas).toHaveLength(14);
+            expect(new Set(estado.escolhidas).size).toBe(14);
+        });
+
+        expect(resolverCiclo(rodada, escolhas).map((e) => e.escolhidas.length)).toEqual([14, 14]);
+        expect(Math.max(...apresentadas)).toBeLessThanOrEqual(48); // pegando 1 de cada 3, nem chega a dar a volta toda
+    });
+
+    it('a pontuacao tem 14 palavras por etapa: percentuais em passos de 7%', () => {
+        const dominantes = new Set(PALAVRAS.filter((p) => p.code === 'D').map((p) => p.id));
+        const { estado } = jogar(rodada.etapas[0], 14, (_, id) => dominantes.has(id));
+        const resumo = resumir(estado.escolhidas, PALAVRAS);
+
+        expect(resumo.total).toBe(14);
+        expect(resumo.percentual.D).toBeGreaterThanOrEqual(Math.max(...Object.values(resumo.percentual)));
+    });
+});
+
+describe('conjunto reduzido de palavras (opcional: RUA_PALAVRAS=14 e RUA_ESCOLHER=7)', () => {
+    const porId = new Map(PALAVRAS.map((p) => [p.id, p]));
+
+    it.each([1, 2, 3, 4, 5, 6])('sorteia 14 palavras distintas, 4, 4, 3 e 3 entre os fatores (semente %i)', (s) => {
+        const pool = sortearPalavras(PALAVRAS, 14, semente(s));
+        const contagem = ['D', 'I', 'S', 'C'].map((f) => pool.filter((p) => p.code === f).length).sort();
+
+        expect(pool).toHaveLength(14);
+        expect(new Set(pool.map((p) => p.id)).size).toBe(14);
+        expect(contagem).toEqual([3, 3, 4, 4]);
+    });
+
+    it('os fatores que levam uma palavra a mais mudam de partida para partida', () => {
+        const comQuatro = new Set<string>();
+
+        for (let s = 1; s <= 40; s++) {
+            const pool = sortearPalavras(PALAVRAS, 14, semente(s));
+
+            for (const f of ['D', 'I', 'S', 'C']) {
+                if (pool.filter((p) => p.code === f).length === 4) {
+                    comQuatro.add(f);
+                }
+            }
+        }
+
+        expect([...comQuatro].sort()).toEqual(['C', 'D', 'I', 'S']); // nenhum fator tem vantagem fixa
+    });
+
+    it('as mesmas 14 palavras valem nas duas etapas e em todas as voltas', () => {
+        const rodada = montarCiclo(PALAVRAS, 7, semente(9), 14);
+        const conjunto = [...rodada.etapas[0][0]].sort((a, b) => a - b);
+
+        expect(rodada.escolher).toBe(7);
+        expect(conjunto).toHaveLength(14);
+
+        for (const etapa of rodada.etapas) {
+            for (const volta of etapa) {
+                expect([...volta].sort((a, b) => a - b)).toEqual(conjunto);
+            }
+        }
+    });
+
+    it('a primeira volta mostra as 14 palavras antes de qualquer repeticao, e a pessoa escolhe 7 em cada etapa', () => {
+        const rodada = montarCiclo(PALAVRAS, 7, semente(3), 14);
+        const escolhas: { stage: number; take: boolean }[] = [];
+        let apresentadasNaEtapa1 = 0;
+
+        rodada.etapas.forEach((ordens, stage) => {
+            const { decisoes, estado } = jogar(ordens, 7, (i) => i % 3 === 0);
+
+            decisoes.forEach((take) => escolhas.push({ stage, take }));
+            expect(estado.escolhidas).toHaveLength(7);
+            expect(new Set(estado.escolhidas).size).toBe(7);
+            expect(new Set(estado.apresentacoes.filter((a) => a.volta === 1).map((a) => a.id)).size).toBe(14);
+
+            if (stage === 0) {
+                apresentadasNaEtapa1 = estado.apresentacoes.length;
+            }
+        });
+
+        const etapas = resolverCiclo(rodada, escolhas);
+
+        expect(etapas.map((e) => e.escolhidas.length)).toEqual([7, 7]);
+        expect(apresentadasNaEtapa1).toBeLessThan(48); // bem menos passagens que as 48 palavras da versao completa
+    });
+
+    it('a pontuacao continua saindo so das palavras escolhidas e identifica o perfil dominante', () => {
+        const rodada = montarCiclo(PALAVRAS, 7, semente(21), 14);
+        const dominantes = new Set(PALAVRAS.filter((p) => p.code === 'D').map((p) => p.id));
+        const { estado } = jogar(rodada.etapas[0], 7, (_, id) => dominantes.has(id));
+        const resumo = resumir(estado.escolhidas, PALAVRAS);
+
+        expect(resumo.total).toBe(7);
+        // Pegou todas as palavras D que apareceram (3 ou 4): D tem de ser o fator mais alto.
+        const maior = Math.max(...Object.values(resumo.percentual));
+
+        expect(resumo.percentual.D).toBe(maior);
+        expect(estado.escolhidas.every((id) => porId.has(id))).toBe(true);
+    });
+
+    it('recusa pedir mais palavras de um fator do que a lista tem', () => {
+        const poucas = PALAVRAS.filter((p) => p.code !== 'C' || p.id % 12 === 0); // so 1 palavra C
+
+        expect(() => sortearPalavras(poucas, 14, semente(1))).toThrow(RodadaInvalida);
     });
 });

@@ -70,7 +70,7 @@ hora e devolve um token novo com o id do cadastro, usado nas correções seguint
 ## Como a partida funciona: ciclo de palavras
 
 Modo padrão ("uma por vez"): em cada etapa passam as 48 palavras, uma por portão, e a pessoa **pega** a palavra
-ou **deixa passar**. As pegas saem do jogo; as deixadas voltam na volta seguinte, até completar 24 por etapa
+ou **deixa passar**. As pegas saem do jogo; as deixadas voltam na volta seguinte, até completar 14 por etapa (eram 24; o jogo ficou bem mais curto)
 (`RUA_ESCOLHER`, de 12 a `palavras − 12`). As duas etapas usam as mesmas palavras, com perguntas diferentes
 (natural × adaptado).
 
@@ -155,7 +155,8 @@ URL). Defina quem acessa o banco e por quanto tempo os cadastros são mantidos.
 | `RUA_SEGREDO` | Segredo da assinatura do token. Sem ela, é gerado em `data/.segredo`. Em produção com mais de uma instância, defina a mesma em todas. |
 | `RUA_DADOS` | Pasta dos dados (padrão `./data`). |
 | `RUA_BANCO` | Caminho do arquivo SQLite (padrão `<RUA_DADOS>/participantes.db`). |
-| `RUA_ESCOLHER` | Palavras que a pessoa pega por etapa no modo ciclo (padrão 24; de 12 a total − 12). |
+| `RUA_ESCOLHER` | Palavras que a pessoa pega por etapa no modo ciclo (padrão 14; de 3 a conjunto − 3). |
+| `RUA_PALAVRAS` | Quantas palavras entram na partida (padrão: a lista toda, 48; de 8 a 48). Menor que a lista: sorteia esse tanto por pessoa, repartido entre os quatro fatores (14 = 4, 4, 3 e 3), as mesmas nas duas etapas. |
 | `RUA_MODO` | `pares` usa o formato antigo de duas palavras por portão; sem valor, usa o ciclo. |
 | `RUA_PORTOES` | Só no modo `pares`: portões por etapa, de 6 a 24 (padrão 12). |
 | `RUA_URL_PUBLICA` | Endereço público do jogo, usado no QR code (ex.: `https://jogo.exemplo.com.br`). Sem ela, o QR usa o IP do computador na rede. |

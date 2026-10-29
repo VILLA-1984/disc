@@ -85,8 +85,8 @@ const PASSOS: Passo[] = [
                     <li><strong>Etapa 1 · Como você é:</strong> pense em como você é naturalmente, no dia a dia.</li>
                     <li><strong>Etapa 2 · Como esperam de você:</strong> pense em como você acredita que esperam que você seja no trabalho.</li>
                 </ul>
-                <p>Em cada etapa passam as <strong>48 palavras</strong> e você pega <strong>24</strong>. As palavras que você deixar passar <strong>voltam mais tarde</strong>, numa nova volta, até você completar as 24; as que você pegou não voltam. Se as palavras que restam forem exatamente as que faltam, elas entram sozinhas. O contador no alto mostra quantas você já pegou e em que volta está.</p>
-                <p>Você só passa para a etapa seguinte depois de completar as 24. As duas etapas usam as mesmas palavras, mas com perguntas diferentes.</p>
+                <p>Em cada etapa passam as <strong>48 palavras</strong> e você pega <strong>14</strong>. As palavras que você deixar passar <strong>voltam mais tarde</strong>, numa nova volta, até você completar as 14; as que você pegou não voltam. Se as palavras que restam forem exatamente as que faltam, elas entram sozinhas. O contador no alto mostra quantas você já pegou e em que volta está.</p>
+                <p>Você só passa para a etapa seguinte depois de completar as 14. As duas etapas usam as mesmas palavras, mas com perguntas diferentes.</p>
                 <p>O <strong>minimapa</strong>, no canto superior direito, mostra a largada, a chegada e a sua posição na etapa.</p>
             </>
         ),
@@ -126,7 +126,7 @@ const PASSOS: Passo[] = [
         imagem: '07-etapa-concluida.jpg',
         legenda: 'Aviso ao terminar a etapa 1.',
         texto: (
-            <p>Ao completar as 24 palavras, aparece este aviso. Toque em <strong>Continuar para a etapa 2</strong>; as palavras são as mesmas, mas a pergunta muda.</p>
+            <p>Ao completar as 14 palavras, aparece este aviso. Toque em <strong>Continuar para a etapa 2</strong>; as palavras são as mesmas, mas a pergunta muda.</p>
         ),
     },
     {

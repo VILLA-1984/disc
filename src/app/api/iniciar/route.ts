@@ -1,5 +1,5 @@
 import { normalizarWhatsapp, problemaNoWhatsapp } from '@/lib/whatsapp';
-import { escolherPorEtapa, montarCiclo } from '@/server/ciclo';
+import { escolherPorEtapa, montarCiclo, tamanhoDoPool } from '@/server/ciclo';
 import { criarParticipante } from '@/server/db';
 import { montarRodada, portoesPorEtapa, RodadaInvalida } from '@/server/gameRound';
 import { PALAVRA_POR_ID, PALAVRAS } from '@/server/palavras';
@@ -38,7 +38,9 @@ export async function POST(request: Request) {
         if (emPares) {
             rodada = montarRodada(PALAVRAS, portoesPorEtapa(Number(process.env.RUA_PORTOES) || null));
         } else {
-            ciclo = montarCiclo(PALAVRAS, escolherPorEtapa(PALAVRAS.length, Number(process.env.RUA_ESCOLHER) || null));
+            // Padrao: a lista toda, 14 escolhidas em cada etapa (RUA_ESCOLHER e RUA_PALAVRAS mudam isso).
+            const tamanho = tamanhoDoPool(PALAVRAS.length, Number(process.env.RUA_PALAVRAS) || null);
+            ciclo = montarCiclo(PALAVRAS, escolherPorEtapa(tamanho, Number(process.env.RUA_ESCOLHER) || null), undefined, tamanho);
         }
     } catch (erro) {
         if (erro instanceof RodadaInvalida) {
@@ -64,7 +66,8 @@ export async function POST(request: Request) {
     }
 
     if (ciclo) {
-        const palavras = Object.fromEntries(PALAVRAS.map((p) => [p.id, p.word]));
+        // So as palavras desta partida vao ao navegador (cada volta traz todas elas, entao a primeira ordem as lista).
+        const palavras = Object.fromEntries(ciclo.etapas[0][0].map((id) => [id, PALAVRA_POR_ID.get(id)!.word]));
 
         return Response.json({ token: assinar(participanteId, ciclo), ciclo: { ...ciclo, palavras } });
     }
