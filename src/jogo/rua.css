@@ -192,6 +192,7 @@
 .rua-app .cor-op[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--laranja); }
 
 .rua-app .vistas { border: 1px solid var(--borda); border-radius: 12px; margin: 0 0 8px; padding: 8px 14px 10px; display: grid; gap: 6px; }
+.rua-app .vistas[hidden] { display: none; }
 .rua-app .vistas legend { font-size: 0.8rem; color: var(--suave); padding: 0 6px; }
 .rua-app .vistas label { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; color: var(--texto); }
 .rua-app .vistas label span { display: grid; }

@@ -272,6 +272,7 @@ function desenharPlaca(canvas, palavra, estado, dica) {
  * @param {object} opcoes.avatar especificacao do avatar (ver avatars.js)
  * @param {'3d'|'lateral'} [opcoes.modo]
  * @param {'rua'|'rio'} [opcoes.cenario] so o visual: o resto do jogo e igual
+ * @param {string} [opcoes.meio] meio de locomocao do cenario (rio: barco, veleiro); ver MEIOS em cenarios.js
  * @param {string[]} [opcoes.rotulosEtapas]
  * @param {boolean} [opcoes.reduzirMovimento]
  * @param {Function} [opcoes.aoPronto]
@@ -471,7 +472,8 @@ export function criarJogo3D(opcoes) {
     const avatar = criarAvatar3D(rio ? { ...opcoes.avatar, colete: true, noBarco: true } : opcoes.avatar);
     avatar.grupo.position.set(0, 0, 0);
     cena.add(avatar.grupo);
-    const barco = rio ? criarBarco() : null;
+    const meioDoRio = opcoes.meio ?? 'barco';
+    const barco = rio ? criarBarco(meioDoRio, modo) : null;
 
     if (barco) {
         barco.grupo.scale.setScalar(1 / avatar.grupo.scale.x);
@@ -481,8 +483,8 @@ export function criarJogo3D(opcoes) {
     // Peixes que pulam (so enfeite; ficam de fora com "reduzir movimento").
     const peixes = rio && !reduzirMovimento ? criarPeixes({ cena, sorteio }) : null;
 
-    // Som do meio de locomocao: o barco tem motor de popa.
-    const somDoMeio = rio ? 'motor' : avatar.info.som;
+    // Som do meio de locomocao: o barco tem motor de popa; o veleiro so tem o ar do turbo.
+    const somDoMeio = rio ? (meioDoRio === 'veleiro' ? 'passos' : 'motor') : avatar.info.som;
     curvarObjeto(cena);
 
     // ------------------------------------------------------------------- clima

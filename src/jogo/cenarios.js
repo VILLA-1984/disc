@@ -32,9 +32,49 @@ export const CENARIOS = {
     },
 };
 
-/** O avatar (especificacao de avatars.js) pode ir neste cenario? */
-export function avatarCabe(spec, cenario) {
-    return (CENARIOS[cenario] ?? CENARIOS.rua).aceita(spec.mobilidade ?? 'anda');
+const SOBE_NO_BARCO = ['anda', 'bengala', 'andador', 'cadeira', 'cadeira-corrida'];
+
+/**
+ * Meios de locomocao de cada cenario (a pessoa escolhe em "Como voce quer ir?"). `aceita` recebe a
+ * `mobilidade` do avatar; `textos` troca as frases do jogo (verbo, botao de comecar, como acelerar).
+ */
+export const MEIOS = {
+    barco: {
+        cenario: 'rio',
+        nome: 'Barco a motor',
+        descricao: 'Sentado no banco de uma voadeira, com motor de popa.',
+        motivo: 'Moto e táxi não vão de barco.',
+        aceita: (mobilidade) => SOBE_NO_BARCO.includes(mobilidade),
+        textos: {},
+    },
+    veleiro: {
+        cenario: 'rio',
+        nome: 'Veleiro',
+        descricao: 'Sentado no veleiro, com a vela cheia de vento.',
+        motivo: 'Moto e táxi não vão de veleiro.',
+        aceita: (mobilidade) => SOBE_NO_BARCO.includes(mobilidade),
+        textos: { verbo: 'velejar', comeco: 'Começar a velejar', acelerar: 'velejar mais rápido' },
+    },
+};
+
+/** Primeiro meio de um cenario (o que vem marcado), ou null se o cenario nao tem meios. */
+export function meioPadrao(cenario) {
+    return Object.keys(MEIOS).find((chave) => MEIOS[chave].cenario === cenario) ?? null;
+}
+
+/** Quem entra: a regra do meio, quando o cenario tem meios, ou a do proprio cenario. */
+export function regraDe(cenario, meio) {
+    return MEIOS[meio]?.cenario === cenario ? MEIOS[meio] : (CENARIOS[cenario] ?? CENARIOS.rua);
+}
+
+/** Frases do jogo para o cenario e o meio escolhidos. */
+export function textosDe(cenario, meio) {
+    return { ...(CENARIOS[cenario] ?? CENARIOS.rua), ...(MEIOS[meio]?.cenario === cenario ? MEIOS[meio].textos : {}) };
+}
+
+/** O avatar (especificacao de avatars.js) pode ir neste cenario, neste meio? */
+export function avatarCabe(spec, cenario, meio) {
+    return regraDe(cenario, meio).aceita(spec.mobilidade ?? 'anda');
 }
 
 const lambert = (cor) => new THREE.MeshLambertMaterial({ color: cor });
@@ -258,7 +298,11 @@ export function criarPeixes({ cena, sorteio }) {
  *
  * @returns {{grupo: THREE.Group, atualizar: (dt: number, ritmo: number) => void}}
  */
-export function criarBarco() {
+export function criarBarco(meio = 'barco', modo = '3d') {
+    const veleiro = meio === 'veleiro';
+    // Vista 3D (camera atras do avatar): vela mais baixa e translucida, para nao tapar as placas das palavras.
+    const alturaVela = modo === '3d' ? 0.62 : 1;
+    const baixa = (y) => 0.5 + (y - 0.5) * alturaVela;
     const grupo = new THREE.Group();
 
     // Casco: vista de cima com proa em ponta, extrudada para baixo do convés.
@@ -282,7 +326,7 @@ export function criarBarco() {
     grupo.add(piso);
 
     for (const lado of [-1, 1]) {
-        const faixa = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.16, 2.5), lambert(0xf08a3c));
+        const faixa = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.16, 2.5), lambert(veleiro ? 0x1f6fb8 : 0xf08a3c));
         faixa.position.set(lado * 0.86, -0.16, -0.3);
         grupo.add(faixa);
     }
@@ -292,18 +336,58 @@ export function criarBarco() {
     banco.position.set(0, 0.23, 0);
     grupo.add(banco);
 
-    // Motor de popa e a helice, ja dentro da agua.
-    const motor = new THREE.Group();
-    const cabecaMotor = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.5, 0.3), lambert(0x2b3a4f));
-    cabecaMotor.position.set(0, 0.25, 0);
-    const haste = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.8, 8), lambert(0x4a5668));
-    haste.position.set(0, -0.2, 0);
-    motor.add(cabecaMotor, haste);
-    const helice = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.05, 0.05), lambert(0x9aa5b1));
-    helice.position.set(0, -0.62, 0);
-    motor.add(helice);
-    motor.position.set(0, 0, 1.55);
-    grupo.add(motor);
+    // Motor de popa e a helice, ja dentro da agua (o veleiro nao tem motor).
+    let helice = null;
+
+    if (!veleiro) {
+        const motor = new THREE.Group();
+        const cabecaMotor = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.5, 0.3), lambert(0x2b3a4f));
+        cabecaMotor.position.set(0, 0.25, 0);
+        const haste = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.8, 8), lambert(0x4a5668));
+        haste.position.set(0, -0.2, 0);
+        motor.add(cabecaMotor, haste);
+        helice = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.05, 0.05), lambert(0x9aa5b1));
+        helice.position.set(0, -0.62, 0);
+        motor.add(helice);
+        motor.position.set(0, 0, 1.55);
+        grupo.add(motor);
+    }
+
+    // Veleiro: mastro na frente do avatar, vela grande (grande) e vela da proa (buja), com a retranca. As
+    // velas ficam levemente abertas para o lado oposto ao da camera lateral, para nao taparem o avatar.
+    let balanco = null;
+
+    if (veleiro) {
+        const alturaMastro = 3.7 * alturaVela;
+        const mastro = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, alturaMastro, 8), lambert(0xe9eef4));
+        mastro.position.set(0, alturaMastro / 2, -0.9);
+        grupo.add(mastro);
+
+        const velaMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: modo === '3d' ? 0.5 : 0.96, depthWrite: false });
+        const triangulo = (pontos) => {
+            const forma2d = new THREE.Shape();
+            pontos.forEach(([x, y], i) => (i === 0 ? forma2d.moveTo(x, y) : forma2d.lineTo(x, y)));
+
+            return new THREE.Mesh(new THREE.ShapeGeometry(forma2d), velaMaterial);
+        };
+
+        balanco = new THREE.Group();
+        balanco.position.set(0, 0, -0.9); // gira em torno do mastro
+
+        const plano = new THREE.Group();
+        plano.rotation.y = -Math.PI / 2; // o x das velas vira o eixo do barco (para a popa)
+        plano.add(triangulo([[0, 0.5], [0, baixa(3.4)], [2.4, 0.6]])); // vela grande
+        plano.add(triangulo([[-0.08, baixa(3.0)], [-0.08, 0.5], [-1.05, 0.45]])); // buja
+        balanco.add(plano);
+
+        const retranca = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 2.4), lambert(0xe9eef4));
+        retranca.position.set(0, 0.55, 1.2);
+        balanco.add(retranca);
+        balanco.rotation.y = -0.4;
+        grupo.add(balanco);
+    }
+
+    let tempo = 0;
 
     // Espuma na popa: bolhas que saem do barco, crescem e somem.
     const espumas = [];
@@ -321,7 +405,17 @@ export function criarBarco() {
     return {
         grupo,
         atualizar(dt, ritmo) {
-            helice.rotation.x += dt * (8 + ritmo * 18);
+            tempo += dt;
+
+            if (helice) {
+                helice.rotation.x += dt * (8 + ritmo * 18);
+            }
+
+            if (balanco) {
+                // O vento enche as velas: elas balancam de leve e o casco adorna para o lado.
+                balanco.rotation.y = -0.4 + Math.sin(tempo * 1.3) * 0.05;
+                grupo.rotation.z = 0.07 + Math.sin(tempo * 0.9) * 0.02;
+            }
 
             for (const e of espumas) {
                 e.idade += dt * (0.25 + Math.min(ritmo, 2) * 0.35);

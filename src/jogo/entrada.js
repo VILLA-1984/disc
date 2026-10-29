@@ -1,6 +1,6 @@
 import { AVATARES, CORES_ROUPA, gerarRetratos } from './avatars.js';
 import { alternarMudo, estaMudo, iniciarAudio, iniciarMusica, pararMusica, sons } from './audio.js';
-import { CENARIOS, avatarCabe } from './cenarios.js';
+import { CENARIOS, MEIOS, avatarCabe, meioPadrao, regraDe, textosDe } from './cenarios.js';
 import { criarCiclo } from './ciclo.js';
 import { criarJogo3D } from './game3d.js';
 import { mostrarRelatorio } from './report.js';
@@ -105,6 +105,7 @@ export function montar(raiz, api) {
     let jogo = null;
     let modo = '3d';
     let cenario = 'rua';
+    let meio = null; // meio de locomocao do cenario (so o rio tem)
     let avatarId = AVATARES[0].id;
     let corRoupa = null; // null = cor original do avatar
     let retratoAtual = '';
@@ -192,8 +193,8 @@ export function montar(raiz, api) {
         const instrucao = ciclo
             ? 'Em cada portão há uma palavra de um lado e "Deixar passar" do outro. Vá para o lado da palavra se ela combina com você'
             : 'Em cada portão, escolha a palavra que mais combina com você';
-        const complemento = (comToque ? c.dicaToque : c.dica).replaceAll('correr mais rápido', CENARIOS[cenario].acelerar);
-        botaoTurbo.textContent = `Segure para ${CENARIOS[cenario].acelerar}`;
+        const complemento = (comToque ? c.dicaToque : c.dica).replaceAll('correr mais rápido', textosDe(cenario, meio).acelerar);
+        botaoTurbo.textContent = `Segure para ${textosDe(cenario, meio).acelerar}`;
         el('dica').textContent = `${instrucao}: ${complemento}.`;
     }
 
@@ -248,7 +249,7 @@ export function montar(raiz, api) {
             botao: 'Começar',
             corpoHtml: `<p>Escolha quem vai participar. Todos os avatares jogam do mesmo jeito; o nome é só um apelido.</p>
                 <div class="avatares" role="radiogroup" aria-label="Avatar">${AVATARES.map((a) => `
-                    <button type="button" class="avatar-op" role="radio" aria-checked="${a.id === avatarId}" data-id="${a.id}" ${avatarCabe(a, cenario) ? '' : 'disabled'}>
+                    <button type="button" class="avatar-op" role="radio" aria-checked="${a.id === avatarId}" data-id="${a.id}" ${avatarCabe(a, cenario, meio) ? '' : 'disabled'}>
                         ${retratos.get(a.id) ? `<img src="${retratos.get(a.id)}" alt="">` : `<span class="avatar-ini" style="background:${a.roupa}">${a.nome[0]}</span>`}
                         <span>${a.nome}</span>
                     </button>`).join('')}</div>
@@ -261,6 +262,7 @@ export function montar(raiz, api) {
                         ${Object.entries(CENARIOS).map(([chave, c]) => `<label><input type="radio" name="cenario" value="${chave}" ${cenario === chave ? 'checked' : ''}> <span><strong>${c.nome}</strong><small>${c.descricao}</small></span></label>`).join('')}
                         <p class="cenario-aviso" aria-live="polite"></p>
                     </fieldset>
+                    <fieldset class="vistas meios" hidden></fieldset>
                     <fieldset class="vistas"><legend>Como você quer ver o cenário?</legend>
                         <label><input type="radio" name="vista" value="3d" ${modo === '3d' ? 'checked' : ''}> <span><strong>Vista 3D</strong><small>o avatar avança para a frente, em direção ao topo da tela</small></span></label>
                         <label><input type="radio" name="vista" value="lateral" ${modo === 'lateral' ? 'checked' : ''}> <span><strong>Vista lateral</strong><small>o avatar segue para o lado, como num jogo clássico</small></span></label>
@@ -299,26 +301,54 @@ export function montar(raiz, api) {
                     const aviso = corpo.querySelector('.cenario-aviso');
 
                     for (const botao of botoes) {
-                        const cabe = avatarCabe(AVATARES.find((a) => a.id === botao.dataset.id), cenario);
+                        const cabe = avatarCabe(AVATARES.find((a) => a.id === botao.dataset.id), cenario, meio);
                         botao.disabled = !cabe;
-                        botao.title = cabe ? '' : CENARIOS[cenario].motivo;
+                        botao.title = cabe ? '' : regraDe(cenario, meio).motivo;
                     }
 
-                    if (!avatarCabe(AVATARES.find((a) => a.id === avatarId), cenario)) {
-                        avatarId = AVATARES.find((a) => avatarCabe(a, cenario)).id;
+                    if (!avatarCabe(AVATARES.find((a) => a.id === avatarId), cenario, meio)) {
+                        avatarId = AVATARES.find((a) => avatarCabe(a, cenario, meio)).id;
                         botoes.forEach((b) => b.setAttribute('aria-checked', String(b.dataset.id === avatarId)));
                     }
 
-                    aviso.textContent = CENARIOS[cenario].motivo ? `${CENARIOS[cenario].motivo} Esses avatares ficam indisponíveis aqui.` : '';
+                    aviso.textContent = regraDe(cenario, meio).motivo ? `${regraDe(cenario, meio).motivo} Esses avatares ficam indisponíveis aqui.` : '';
+                };
+
+                // "Como voce quer ir?": so aparece quando o cenario tem mais de um meio de locomocao.
+                const caixaMeios = corpo.querySelector('.meios');
+
+                const desenharMeios = () => {
+                    const lista = Object.entries(MEIOS).filter(([, m]) => m.cenario === cenario);
+                    caixaMeios.hidden = lista.length === 0;
+
+                    if (lista.length === 0) {
+                        meio = null;
+
+                        return;
+                    }
+
+                    if (!lista.some(([chave]) => chave === meio)) {
+                        meio = meioPadrao(cenario);
+                    }
+
+                    caixaMeios.innerHTML = `<legend>Como você quer ir?</legend>${lista.map(([chave, m]) => `<label><input type="radio" name="meio" value="${chave}" ${meio === chave ? 'checked' : ''}> <span><strong>${m.nome}</strong><small>${m.descricao}</small></span></label>`).join('')}`;
+                    caixaMeios.querySelectorAll('input[name="meio"]').forEach((radio) => {
+                        radio.addEventListener('change', () => {
+                            meio = radio.value;
+                            aplicarCenario();
+                        });
+                    });
                 };
 
                 corpo.querySelectorAll('input[name="cenario"]').forEach((radio) => {
                     radio.addEventListener('change', () => {
                         cenario = radio.value;
+                        desenharMeios();
                         aplicarCenario();
                     });
                 });
 
+                desenharMeios();
                 aplicarCenario();
             },
             aoClicar: () => {
@@ -342,8 +372,8 @@ export function montar(raiz, api) {
             titulo: indice === 0 ? 'Como você é' : 'Como esperam de você',
             corpoHtml: ciclo
                 ? `<p>${TEXTO_ETAPA_CICLO[indice]}</p><p>Você precisa pegar <strong>${escolhasPorEtapa} palavras</strong> no total. As que você deixar passar voltam mais tarde, até você completar as ${escolhasPorEtapa}.</p>`
-                : `<p>${TEXTO_ETAPA[indice]}</p><p>Siga ${CENARIOS[cenario].percurso} e, em cada portão, escolha <strong>uma</strong> das duas palavras. A etapa termina quando você passar pelos <strong>${escolhasPorEtapa} portões</strong>.</p>`,
-            botao: CENARIOS[cenario].comeco,
+                : `<p>${TEXTO_ETAPA[indice]}</p><p>Siga ${textosDe(cenario, meio).percurso} e, em cada portão, escolha <strong>uma</strong> das duas palavras. A etapa termina quando você passar pelos <strong>${escolhasPorEtapa} portões</strong>.</p>`,
+            botao: textosDe(cenario, meio).comeco,
             aoClicar: () => {
                 fecharCartao();
 
@@ -368,6 +398,7 @@ export function montar(raiz, api) {
             avatar: spec,
             modo,
             cenario,
+            meio,
             rotulosEtapas: ROTULOS,
             reduzirMovimento,
             aoPasso: () => {
@@ -454,7 +485,7 @@ export function montar(raiz, api) {
     function mostrarFim(mensagemErro = '') {
         mostrarCartao({
             sobretitulo: 'Fim da jornada',
-            titulo: `Você chegou ao fim ${CENARIOS[cenario].fim}!`,
+            titulo: `Você chegou ao fim ${textosDe(cenario, meio).fim}!`,
             corpoHtml: `<p>Suas escolhas viram um animal. Quer descobrir qual é o seu?</p>${mensagemErro ? `<p class="erro-jogo" role="alert">${escapar(mensagemErro)}</p>` : ''}`,
             botao: mensagemErro ? 'Tentar de novo' : 'Descobrir meu animal',
             aoClicar: (botao) => concluir(botao),
