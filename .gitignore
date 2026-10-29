@@ -9,3 +9,4 @@ data/*.db-*
 data/.segredo
 .env*.local
 e2e/capturas/
+e2e/capturas-mobile*/

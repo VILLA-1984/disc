@@ -178,25 +178,66 @@
 
 .rua-app #controles[hidden], .rua-app #dica[hidden] { display: none; }
 
+/* Os dois botoes ficam sempre lado a lado (esquerda a esquerda, direita a direita), com a mesma cor e o mesmo
+   texto da etiqueta da placa no jogo, para nao haver duvida de qual lado e qual. */
+.rua-app { --lado-esq: #1f6fb8; --lado-dir: #c85f0f; }
+
 .rua-app #controles button {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-    text-align: left;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 6px;
+    min-height: 92px;
+    text-align: center;
     font: inherit;
-    padding: 12px 16px;
-    border: 2px solid var(--borda);
+    padding: 8px 10px 12px;
+    border: 3px solid var(--borda);
     border-radius: 12px;
     background: #fff;
     color: var(--texto);
     cursor: pointer;
 }
 
-.rua-app #controles button small { color: var(--suave); font-size: 0.75rem; }
-.rua-app #controles button strong { font-size: 1.15rem; }
-.rua-app #controles button:not(:disabled):hover { border-color: var(--azul); background: var(--azul-claro); }
+.rua-app #controles .lado {
+    padding: 5px 8px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #fff;
+}
+
+.rua-app #botao-cima .lado { background: var(--lado-esq); text-align: left; }
+.rua-app #botao-baixo .lado { background: var(--lado-dir); text-align: right; }
+.rua-app #controles button strong { padding: 2px 4px; font-size: clamp(1rem, 4.6vw, 1.3rem); overflow-wrap: anywhere; }
+.rua-app #controles .tecla { color: var(--suave); font-size: 0.72rem; }
+.rua-app #botao-cima:not(:disabled) { border-color: var(--lado-esq); background: #eef4fc; }
+.rua-app #botao-baixo:not(:disabled) { border-color: var(--lado-dir); background: #fff4ea; }
 .rua-app #controles button:disabled { opacity: 0.45; cursor: default; }
+
+/* Celular: sem teclado, a dica de tecla some e aparece o botao de acelerar (segurar). */
+@media (pointer: coarse) { .rua-app #controles .tecla { display: none; } }
+
+.rua-app #botao-turbo {
+    display: none;
+    width: 100%;
+    min-height: 56px;
+    margin-top: 10px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--marinho);
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
+@media (pointer: coarse) { .rua-app #botao-turbo:not([hidden]) { display: block; } }
+.rua-app #botao-turbo.ativo { background: var(--laranja); color: var(--texto); }
 
 .rua-app .dica { margin: 10px 2px 0; font-size: 0.8rem; color: var(--suave); }
 .rua-app .erro-jogo { color: #b42318; font-weight: 600; }
@@ -211,8 +252,19 @@
 }
 
 @media (max-width: 640px) {
-    .rua-app #controles { grid-template-columns: 1fr; }
+    /* Com um cartao aberto, o botao de som cobriria o "Comecar"; ele volta quando o jogo comeca. */
+    .rua-app #cartao.aberto ~ #som { display: none; }
+    .rua-app #palco.palco--relatorio #som { display: none; }
     .rua-app .cartao-conteudo { padding: 18px 16px; }
+    .rua-app .cartao-conteudo button.principal { width: 100%; }
+}
+
+/* O botao principal do cartao fica visivel no fim da rolagem (o cartao do avatar e mais alto que a tela do celular). */
+.rua-app .cartao-conteudo button.principal { position: sticky; bottom: 0; box-shadow: 0 -12px 12px -6px #fff; }
+
+/* Celular em pe: a area do jogo ocupa a altura da tela, em vez de uma faixa 16:9 baixinha. */
+@media (max-width: 640px) and (orientation: portrait) {
+    .rua-app #palco:not(.palco--relatorio) { aspect-ratio: auto; height: clamp(400px, calc(100svh - 360px), 640px); }
 }
 
 /* HUD: linha de informacoes e barra de progresso do teste inteiro */

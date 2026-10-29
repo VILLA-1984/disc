@@ -15,6 +15,17 @@ type Passo = {
 
 const PASSOS: Passo[] = [
     {
+        titulo: 'Abra o jogo no celular ou no computador',
+        imagem: '00-abertura.jpg',
+        legenda: 'Tela de abertura: cadastro à esquerda e QR code à direita.',
+        texto: (
+            <>
+                <p>No computador, a abertura mostra um <strong>QR code</strong>. Quem quiser jogar no próprio celular aponta a câmera para ele e o jogo abre no aparelho.</p>
+                <p>O celular precisa estar na <strong>mesma rede Wi-Fi</strong> do computador que mostra o QR code. No celular, o QR code não aparece: a pessoa já está jogando nele.</p>
+            </>
+        ),
+    },
+    {
         titulo: 'Informe o nome e o WhatsApp',
         imagem: '01-cadastro.png',
         legenda: 'Tela inicial: nome e WhatsApp antes do jogo.',
@@ -79,14 +90,27 @@ const PASSOS: Passo[] = [
         legenda: 'Dois portões com uma palavra cada; os botões embaixo repetem as opções.',
         texto: (
             <>
-                <p>Quando o avatar chega ao portão, escolha de um destes jeitos:</p>
+                <p>Cada portão tem <strong>duas placas</strong>. Cada placa traz uma etiqueta do lado: <strong>← ESQUERDA</strong>, em azul, na placa da esquerda, e <strong>DIREITA →</strong>, em laranja, na da direita. Os botões embaixo do jogo têm as <strong>mesmas cores e ficam do mesmo lado</strong>: o azul à esquerda e o laranja à direita.</p>
+                <p>Quando o avatar chega ao portão e as palavras aparecem, escolha de um destes jeitos:</p>
                 <ul>
                     <li><strong>Toque ou clique na placa</strong> da palavra escolhida;</li>
                     <li>use as setas <strong>← →</strong> do teclado (ou as teclas <strong>A</strong> e <strong>D</strong>);</li>
                     <li>ou use os <strong>dois botões</strong> embaixo do jogo.</li>
                 </ul>
-                <p>Para correr mais rápido, segure <strong>↑</strong> (ou <strong>W</strong>) na vista 3D. Na vista lateral, as escolhas usam ↑ ↓ e se corre com →.</p>
+                <p>Leia as duas palavras antes de escolher: depois de escolhida, a palavra não pode ser trocada.</p>
+                <p>Para correr mais rápido, segure <strong>↑</strong> (ou <strong>W</strong>) na vista 3D. Na vista lateral, as escolhas usam ↑ ↓ (cima e baixo) e se corre com →.</p>
                 <p>No alto da tela ficam a etapa, a barra de progresso e o clima da rua. O botão <strong>Som</strong>, no canto, liga e desliga o som.</p>
+            </>
+        ),
+    },
+    {
+        titulo: 'No celular',
+        imagem: '11-celular-portao.jpg',
+        legenda: 'No celular: botões lado a lado e botão para correr mais rápido.',
+        texto: (
+            <>
+                <p>Segure o aparelho em pé. A rua ocupa a tela e as duas palavras aparecem em <strong>dois botões grandes, lado a lado</strong>: azul à esquerda e laranja à direita.</p>
+                <p>Como o celular não tem a tecla ↑, existe o botão <strong>Segure para correr mais rápido</strong>: o avatar acelera enquanto você mantém o dedo nele. Para escolher, toque na placa ou em um dos botões.</p>
             </>
         ),
     },
@@ -134,6 +158,7 @@ const PASSOS: Passo[] = [
             <>
                 <p>Se você trocou o número, o aviso <strong>Número atualizado</strong> confirma que o cadastro foi corrigido antes de abrir o WhatsApp.</p>
                 <p>O WhatsApp não abriu? Use o link <strong>Toque aqui para abrir</strong>, ou o botão <strong>Copiar a mensagem</strong> e cole a mensagem na conversa.</p>
+                <p>Terminou? O botão <strong>Próxima pessoa</strong> volta à abertura, limpa a tela e deixa o jogo pronto para quem vem a seguir.</p>
             </>
         ),
     },
@@ -209,6 +234,18 @@ export default function Manual() {
                     <li>A lista de palavras ainda é um <strong>rascunho, não validado por profissional com formação em DISC</strong>. Revise palavra por palavra antes de aplicar em candidato real.</li>
                     <li>O resultado é <strong>experimental</strong>: a escolha entre duas palavras não equivale à marcação livre de uma lista, então não deve ser tratado como o relatório oficial.</li>
                     <li>Faça uma primeira rodada com pessoas da equipe para ver se as telas e as palavras fazem sentido.</li>
+                </ul>
+            </div>
+
+            <div className="manual-bloco">
+                <h3>Montar o estande (QR code para jogar no celular)</h3>
+                <ul>
+                    <li>No computador do estande, rode <code>npm run feira</code>. Ele compila o jogo e o deixa acessível a outros aparelhos da rede, na porta 3000.</li>
+                    <li>Abra <code>http://localhost:3000</code> nesse computador. O QR code da abertura usa sozinho o endereço do computador na rede (por exemplo <code>http://192.168.0.20:3000</code>).</li>
+                    <li>Computador e celulares precisam estar na <strong>mesma rede Wi-Fi</strong>. Redes de eventos costumam isolar os aparelhos entre si: teste antes com um celular. Uma alternativa segura é levar um roteador próprio ou usar o ponto de acesso de um celular.</li>
+                    <li>Na primeira execução, o Windows pergunta se o Node.js pode receber conexões: permita na <strong>rede privada</strong>. Sem isso, o celular não consegue abrir o endereço.</li>
+                    <li>Se o jogo estiver hospedado na internet, defina <code>RUA_URL_PUBLICA</code> com o endereço real e o QR code passa a usá-lo.</li>
+                    <li>Se a rede mudar (outro Wi-Fi), o endereço muda: reabra a página no computador para o QR code ser gerado de novo.</li>
                 </ul>
             </div>
 

@@ -32,6 +32,22 @@ node e2e/capturar-manual.mjs
 
 O texto do manual está em `src/app/manual/page.tsx`.
 
+## Estande / feira (QR code para jogar no celular)
+
+```powershell
+npm run feira   # compila e sobe na porta 3000, acessível a outros aparelhos da rede (-H 0.0.0.0)
+```
+
+Abra `http://localhost:3000` no computador do estande. A tela de abertura mostra um **QR code** (só em tela
+larga) com o endereço do computador na rede, por exemplo `http://192.168.0.20:3000`; quem escaneia joga no
+próprio celular. Celular e computador precisam estar na **mesma rede Wi-Fi**, e o Windows precisa permitir o
+Node.js na rede privada (o aviso do firewall aparece na primeira execução). Redes de eventos costumam isolar os
+aparelhos entre si: teste antes com um celular, ou leve um roteador próprio.
+
+- `RUA_URL_PUBLICA`: se o jogo estiver hospedado na internet, o QR code usa exatamente este endereço.
+- O botão "Próxima pessoa", na tela final, volta à abertura para o próximo participante.
+- O endereço é calculado a cada abertura da página: se a rede mudar, recarregue a página para gerar outro QR.
+
 ## O que fica salvo
 
 Só **nome e WhatsApp** (SQLite embutido em `data/participantes.db`, criado sozinho) e as datas de cadastro e
@@ -64,6 +80,7 @@ Enviar é a pessoa (não há API de envio automático).
 | `RUA_DADOS` | Pasta dos dados (padrão `./data`). |
 | `RUA_BANCO` | Caminho do arquivo SQLite (padrão `<RUA_DADOS>/participantes.db`). |
 | `RUA_PORTOES` | Portões por etapa, de 6 a 24 (padrão 12). |
+| `RUA_URL_PUBLICA` | Endereço público do jogo, usado no QR code (ex.: `https://jogo.exemplo.com.br`). Sem ela, o QR usa o IP do computador na rede. |
 
 ## Atenção: lista de palavras
 

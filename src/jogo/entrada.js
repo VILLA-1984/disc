@@ -19,9 +19,20 @@ const TEXTO_ETAPA = [
     'Agora pense em como você acredita que esperam que você seja no trabalho. Em cada portão, escolha a palavra que mais combina com essa expectativa.',
 ];
 const NOMES_CORES = ['Azul', 'Laranja', 'Verde', 'Roxo', 'Rosa', 'Marinho', 'Amarelo'];
+// rotulo: o que aparece no botao, igual a etiqueta da placa no jogo; tecla: dica so para quem tem teclado.
 const CONTROLES = {
-    '3d': { cima: ['Esquerda · tecla ← ou A', 'esquerda'], baixo: ['Direita · tecla → ou D', 'direita'], dica: 'toque na placa, use as setas ← → (ou A e D) ou os botões abaixo. Segure ↑ (ou W) para correr mais rápido' },
-    lateral: { cima: ['Pista de cima · tecla ↑ ou W', 'cima'], baixo: ['Pista de baixo · tecla ↓ ou S', 'baixo'], dica: 'toque na placa, use as setas ↑ ↓ (ou W e S) ou os botões abaixo. Segure → (ou D) para correr mais rápido' },
+    '3d': {
+        cima: { rotulo: '← ESQUERDA', tecla: 'tecla ← ou A', nome: 'esquerda' },
+        baixo: { rotulo: 'DIREITA →', tecla: 'tecla → ou D', nome: 'direita' },
+        dica: 'toque na placa, use as setas ← → (ou A e D) ou os botões abaixo. Segure ↑ (ou W) para correr mais rápido',
+        dicaToque: 'toque na placa ou nos botões abaixo. Para correr mais rápido, segure o botão escuro de baixo',
+    },
+    lateral: {
+        cima: { rotulo: '↑ CIMA', tecla: 'tecla ↑ ou W', nome: 'pista de cima' },
+        baixo: { rotulo: '↓ BAIXO', tecla: 'tecla ↓ ou S', nome: 'pista de baixo' },
+        dica: 'toque na placa, use as setas ↑ ↓ (ou W e S) ou os botões abaixo. Segure → (ou D) para correr mais rápido',
+        dicaToque: 'toque na placa ou nos botões abaixo. Para correr mais rápido, segure o botão escuro de baixo',
+    },
 };
 
 const ESTRUTURA = `
@@ -38,9 +49,10 @@ const ESTRUTURA = `
     <button type="button" id="som" aria-pressed="true"></button>
 </div>
 <div id="controles" role="group" aria-label="Escolha uma das duas palavras">
-    <button type="button" id="botao-cima" disabled><small></small><strong>—</strong></button>
-    <button type="button" id="botao-baixo" disabled><small></small><strong>—</strong></button>
+    <button type="button" id="botao-cima" disabled><small class="lado"></small><strong>—</strong><span class="tecla"></span></button>
+    <button type="button" id="botao-baixo" disabled><small class="lado"></small><strong>—</strong><span class="tecla"></span></button>
 </div>
+<button type="button" id="botao-turbo" hidden>Segure para correr mais rápido</button>
 <p class="dica" id="dica"></p>
 <div class="sr-only" aria-live="polite" id="anuncio"></div>`;
 
@@ -114,6 +126,24 @@ export function montar(raiz, api) {
     botaoCima.addEventListener('click', () => jogo?.escolher('cima'));
     botaoBaixo.addEventListener('click', () => jogo?.escolher('baixo'));
 
+    // Sem teclado (celular), correr mais rapido e um botao que se mantem pressionado.
+    const botaoTurbo = el('botao-turbo');
+    const comToque = matchMedia('(pointer: coarse)').matches;
+    const soltarTurbo = () => {
+        jogo?.acelerar(false);
+        botaoTurbo.classList.remove('ativo');
+    };
+
+    botaoTurbo.addEventListener('pointerdown', (evento) => {
+        evento.preventDefault();
+        botaoTurbo.setPointerCapture?.(evento.pointerId);
+        botaoTurbo.classList.add('ativo');
+        iniciarAudio();
+        jogo?.acelerar(true);
+    });
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach((nome) => botaoTurbo.addEventListener(nome, soltarTurbo));
+    botaoTurbo.addEventListener('contextmenu', (evento) => evento.preventDefault());
+
     // ----------------------------------------------------------------- cartoes
     function mostrarCartao({ sobretitulo, titulo, corpoHtml, botao, aoClicar, largo = false, aoRenderizar }) {
         el('cartao-sobretitulo').textContent = sobretitulo;
@@ -141,9 +171,12 @@ export function montar(raiz, api) {
 
     function ajustarControles() {
         const c = CONTROLES[modo];
-        botaoCima.querySelector('small').textContent = c.cima[0];
-        botaoBaixo.querySelector('small').textContent = c.baixo[0];
-        el('dica').textContent = `Em cada portão, escolha a palavra que mais combina com você: ${c.dica}.`;
+        botaoCima.querySelector('.lado').textContent = c.cima.rotulo;
+        botaoBaixo.querySelector('.lado').textContent = c.baixo.rotulo;
+        botaoCima.querySelector('.tecla').textContent = c.cima.tecla;
+        botaoBaixo.querySelector('.tecla').textContent = c.baixo.tecla;
+        botaoTurbo.hidden = !comToque;
+        el('dica').textContent = `Em cada portão, escolha a palavra que mais combina com você: ${comToque ? c.dicaToque : c.dica}.`;
     }
 
     // ------------------------------------------------------------------ avatar
@@ -260,7 +293,7 @@ export function montar(raiz, api) {
                 botaoBaixo.querySelector('strong').textContent = baixo.word;
                 botaoCima.disabled = false;
                 botaoBaixo.disabled = false;
-                const [nomeCima, nomeBaixo] = [CONTROLES[modo].cima[1], CONTROLES[modo].baixo[1]];
+                const [nomeCima, nomeBaixo] = [CONTROLES[modo].cima.nome, CONTROLES[modo].baixo.nome];
                 anuncio.textContent = `Portão ${indice + 1} de ${total}. Opção da ${nomeCima}: ${cima.word}. Opção da ${nomeBaixo}: ${baixo.word}.`;
             },
             aoEscolher: (escolha) => {
@@ -348,6 +381,7 @@ export function montar(raiz, api) {
         pararMusica();
         el('jogo').innerHTML = '';
         el('controles').hidden = true;
+        botaoTurbo.hidden = true;
         el('dica').hidden = true;
         palco.classList.add('palco--relatorio');
 

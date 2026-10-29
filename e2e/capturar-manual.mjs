@@ -34,9 +34,11 @@ const painel = pagina.locator('.painel');
 const jogo = pagina.locator('.rua-app');
 const cartao = pagina.locator('#cartao.aberto');
 
-// 1. Cadastro e erro de numero
+// 1. Abertura (com o QR code), cadastro e erro de numero
 await pagina.goto(base);
 await painel.waitFor();
+await pagina.locator('.qr-abertura').waitFor();
+await foto('00-abertura')(pagina.locator('.abertura'));
 await foto('01-cadastro', 'png')(painel);
 
 await pagina.fill('#nome', 'Maria da Silva');
@@ -97,6 +99,31 @@ await pagina.fill('#whatsapp-final', '65988887777');
 await pagina.getByRole('button', { name: 'Enviar pelo WhatsApp' }).click();
 await pagina.getByText('Número atualizado.').waitFor();
 await foto('10-numero-corrigido', 'png')(painel);
+
+// 4. No celular (emulado): tela do jogo em pe, com os botoes de lado e o de acelerar
+const celular = await (await navegador.newContext({
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 1.5,
+    isMobile: true,
+    hasTouch: true,
+})).newPage();
+await celular.addInitScript(() => { window.open = () => ({}); });
+await celular.goto(base);
+await celular.fill('#nome', 'Maria da Silva');
+await celular.fill('#whatsapp', '65999990000');
+await celular.getByRole('button', { name: 'Continuar' }).tap();
+
+const cartaoCelular = celular.locator('#cartao.aberto');
+await cartaoCelular.waitFor({ timeout: 30000 });
+await celular.tap('#cartao-botao'); // Vamos la
+await cartaoCelular.waitFor();
+await celular.tap('#cartao-botao'); // Comecar (avatar)
+await cartaoCelular.waitFor({ timeout: 30000 });
+await celular.tap('#cartao-botao'); // Comecar a correr
+await celular.waitForFunction(() => !document.querySelector('#botao-cima').disabled, null, { timeout: 60000 });
+await celular.waitForTimeout(700);
+await celular.screenshot({ path: join(pasta, '11-celular-portao.jpg'), type: 'jpeg', quality: 80 });
+console.log('salvo 11-celular-portao');
 
 await navegador.close();
 console.log('Prints do manual salvos em', pasta);

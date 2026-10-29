@@ -247,14 +247,20 @@ function desenharPlaca(canvas, palavra, estado, dica) {
     c.textBaseline = 'middle';
     c.fillText(palavra, w / 2, h / 2 + 8);
 
+    // Etiqueta do lado, no canto correspondente da placa: azul "← ESQUERDA" / laranja "DIREITA →".
     if (dica) {
+        c.font = 'bold 40px system-ui, "Segoe UI", sans-serif';
+        const largura = Math.ceil(c.measureText(dica.texto).width) + 40;
+        const x = dica.direita ? w - 28 - largura : 28;
+
         c.beginPath();
-        c.roundRect(34, 30, 66, 52, 12);
-        c.fillStyle = estado === 'descartada' ? '#b9c3d0' : '#0d2b4e';
+        c.roundRect(x, 22, largura, 64, 16);
+        c.fillStyle = estado === 'descartada' ? '#b9c3d0' : dica.cor;
         c.fill();
         c.fillStyle = '#ffffff';
-        c.font = 'bold 36px system-ui, sans-serif';
-        c.fillText(dica, 67, 58);
+        c.textAlign = 'left';
+        c.textBaseline = 'middle';
+        c.fillText(dica.texto, x + 20, 55);
     }
 }
 
@@ -657,7 +663,10 @@ export function criarJogo3D(opcoes) {
     let rodando = true;
     let quadroId = 0;
 
-    const teclaDeLado = modo === '3d' ? { cima: '←', baixo: '→' } : { cima: '↑', baixo: '↓' };
+    // Mesmas cores e textos dos botoes embaixo do jogo (rua.css: --lado-esq e --lado-dir).
+    const teclaDeLado = modo === '3d'
+        ? { cima: { texto: '← ESQUERDA', cor: '#1f6fb8', direita: false }, baixo: { texto: 'DIREITA →', cor: '#c85f0f', direita: true } }
+        : { cima: { texto: '↑ CIMA', cor: '#1f6fb8', direita: false }, baixo: { texto: '↓ BAIXO', cor: '#c85f0f', direita: true } };
 
     function atualizarHud() {
         const total = etapas[etapaAtual]?.length ?? 0;
@@ -935,11 +944,19 @@ export function criarJogo3D(opcoes) {
         };
     }
 
+    // Campo de visao vertical de referencia, feito para 16:9. Em telas mais altas (celular em pe) ele abre
+    // um pouco, para as duas placas continuarem inteiras na tela sem distorcer demais.
+    let fovBase = cfg.fov;
+
     function ajustarTamanho() {
         const w = parent.clientWidth || 960;
         const h = parent.clientHeight || 540;
         renderer.setSize(w, h, false);
         camera.aspect = w / h;
+
+        const compensacao = Math.max(1, (16 / 9) / camera.aspect) ** 0.6;
+        fovBase = Math.min(78, (2 * Math.atan(Math.tan((cfg.fov * Math.PI) / 360) * compensacao) * 180) / Math.PI);
+        camera.fov = fovBase;
         camera.updateProjectionMatrix();
     }
 
@@ -951,7 +968,7 @@ export function criarJogo3D(opcoes) {
         const x = avatar.grupo.position.x;
 
         // Sensacao de velocidade: o campo de visao abre um pouco enquanto acelera.
-        const fovAlvo = cfg.fov + (acelerando && velocidade > velocidadeBase * 1.1 && !reduzirMovimento ? (modo === '3d' ? 8 : 3) : 0);
+        const fovAlvo = fovBase + (acelerando && velocidade > velocidadeBase * 1.1 && !reduzirMovimento ? (modo === '3d' ? 8 : 3) : 0);
 
         if (Math.abs(camera.fov - fovAlvo) > 0.05) {
             camera.fov += (fovAlvo - camera.fov) * Math.min(1, dt * 5);
@@ -1142,6 +1159,10 @@ export function criarJogo3D(opcoes) {
     return {
         iniciarEtapa,
         escolher,
+        // Botao de acelerar da tela de toque (no teclado e a tecla ↑/W).
+        acelerar(ativo) {
+            acelerando = Boolean(ativo) && estado === 'correndo';
+        },
         obterEstado,
         destruir() {
             rodando = false;

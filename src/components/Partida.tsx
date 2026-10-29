@@ -25,7 +25,32 @@ async function chamar<T>(rota: string, corpo: unknown): Promise<T> {
     return dados as T;
 }
 
-export default function Partida() {
+/** Copia o texto; em endereco http (rede local do estande) o navegador bloqueia a area de transferencia, entao ha um plano B. */
+async function copiarTexto(texto: string): Promise<boolean> {
+    try {
+        await navigator.clipboard.writeText(texto);
+
+        return true;
+    } catch {
+        const campo = document.createElement('textarea');
+        campo.value = texto;
+        campo.setAttribute('readonly', '');
+        campo.style.position = 'fixed';
+        campo.style.opacity = '0';
+        document.body.appendChild(campo);
+        campo.select();
+
+        try {
+            return document.execCommand('copy');
+        } catch {
+            return false;
+        } finally {
+            campo.remove();
+        }
+    }
+}
+
+export default function Partida({ qr }: { qr?: React.ReactNode }) {
     const [fase, setFase] = useState<Fase>('cadastro');
     const [nome, setNome] = useState('');
     const [whatsapp, setWhatsapp] = useState('');
@@ -105,6 +130,7 @@ export default function Partida() {
     return (
         <>
             {fase === 'cadastro' && (
+                <div className="abertura">
                 <section className="painel" aria-labelledby="titulo-cadastro">
                     <h2 id="titulo-cadastro">Rua das Palavras</h2>
                     <p>Antes de começar, diga quem está jogando. No fim, você recebe o seu resultado pelo WhatsApp.</p>
@@ -153,6 +179,8 @@ export default function Partida() {
                         Primeira vez? <Link href="/manual">Veja o manual de uso</Link>.
                     </p>
                 </section>
+                {qr}
+                </div>
             )}
 
             {fase === 'jogo' && (
@@ -233,11 +261,11 @@ function EnvioWhatsApp({
     }
 
     async function copiar() {
-        try {
-            await navigator.clipboard.writeText(mensagem);
+        if (await copiarTexto(mensagem)) {
+            setErro(null);
             setAviso('Mensagem copiada.');
-        } catch {
-            setErro('Não foi possível copiar. Selecione e copie o texto manualmente.');
+        } else {
+            setErro('Não foi possível copiar. Use o botão de enviar pelo WhatsApp.');
         }
     }
 
@@ -285,6 +313,9 @@ function EnvioWhatsApp({
                 </button>
                 <button className="botao botao--secundario" type="button" onClick={copiar}>
                     Copiar a mensagem
+                </button>
+                <button className="botao botao--discreto" type="button" onClick={() => window.location.assign('/')}>
+                    Próxima pessoa
                 </button>
             </div>
 

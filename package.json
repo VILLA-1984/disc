@@ -6,17 +6,20 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "feira": "next build && next start -H 0.0.0.0 -p 3000",
     "test": "vitest run",
     "exportar": "node scripts/exportar.mjs"
   },
   "dependencies": {
     "next": "^16.4.3",
+    "qrcode": "^1.5.4",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "three": "^0.181.2"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "playwright-core": "^1.64.1",

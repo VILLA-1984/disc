@@ -100,7 +100,37 @@ body {
 .botao--whatsapp:hover { background: #136d3a; }
 .botao--secundario { background: #fff; color: var(--azul); border: 2px solid var(--azul); }
 .botao--secundario:hover { background: var(--azul-claro); }
+.botao--discreto { background: transparent; color: var(--suave); min-height: 44px; font-weight: 600; }
+.botao--discreto:hover { background: var(--azul-claro); color: var(--marinho); }
 .botoes { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+
+/* ----------------------------------------------------------- abertura com QR */
+.abertura { display: block; }
+.abertura .painel { margin-bottom: 0; }
+
+.qr-abertura {
+    display: none;
+    padding: 28px 24px;
+    text-align: center;
+    background: #fff;
+    border: 1px solid var(--borda);
+    border-radius: 14px;
+    box-shadow: 0 8px 28px rgba(13, 43, 78, 0.08);
+}
+
+.qr-abertura h2 { margin: 0 0 6px; font-size: 1.5rem; color: var(--marinho); }
+.qr-abertura p { margin: 0 0 12px; color: var(--suave); }
+.qr-codigo { width: min(100%, 300px); margin: 8px auto 12px; }
+.qr-codigo svg { display: block; width: 100%; height: auto; }
+.qr-abertura .qr-endereco { margin: 0 0 6px; font-weight: 700; font-size: 1.05rem; color: var(--marinho); overflow-wrap: anywhere; }
+.qr-abertura .qr-aviso { margin: 0; font-size: 0.9rem; }
+
+/* O QR so faz sentido em tela grande (o computador do estande); no celular a pessoa ja esta jogando nele. */
+@media (min-width: 900px) {
+    .abertura { display: grid; grid-template-columns: minmax(0, 480px) minmax(0, 380px); gap: 32px; justify-content: center; align-items: start; margin-top: 6vh; }
+    .abertura .painel { margin: 0; }
+    .qr-abertura { display: block; }
+}
 
 .painel .erro-geral { margin: 0 0 14px; padding: 10px 12px; color: var(--erro); background: #fdeceb; border-radius: 8px; }
 .painel .ok-geral { margin: 0 0 14px; padding: 10px 12px; color: #14532d; background: #e3f6ea; border-radius: 8px; }
