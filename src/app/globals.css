@@ -75,6 +75,27 @@ body {
 
 .aviso-dados { font-size: 0.85rem; color: var(--suave); margin: 0 0 18px; }
 
+/* Pergunta da abertura: quer receber o resultado pelo WhatsApp? (duas opcoes grandes, faceis de tocar) */
+.escolha-recebimento { border: 0; margin: 0 0 18px; padding: 0; display: grid; gap: 10px; }
+.escolha-recebimento legend { font-weight: 700; color: var(--marinho); padding: 0; margin-bottom: 8px; }
+.escolha-recebimento .opcao {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px 14px;
+    border: 2px solid var(--borda);
+    border-radius: 12px;
+    cursor: pointer;
+    background: #fff;
+}
+.escolha-recebimento .opcao:hover { border-color: var(--azul); }
+.escolha-recebimento .opcao.marcada { border-color: var(--laranja); background: #fff6ec; box-shadow: 0 0 0 3px rgba(240, 138, 60, 0.2); }
+.escolha-recebimento .opcao input { margin-top: 4px; width: 20px; height: 20px; accent-color: var(--laranja); flex: none; }
+.escolha-recebimento .opcao span { display: grid; gap: 2px; }
+.escolha-recebimento .opcao strong { color: var(--texto); }
+.escolha-recebimento .opcao small { color: var(--suave); font-size: 0.85rem; line-height: 1.35; }
+.escolha-recebimento .opcao:focus-within { outline: 3px solid var(--laranja); outline-offset: 2px; }
+
 .botao {
     display: inline-flex;
     align-items: center;

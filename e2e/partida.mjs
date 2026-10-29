@@ -35,6 +35,10 @@ await pagina.goto(base);
 await pagina.getByRole('heading', { name: 'Rua das Palavras' }).waitFor();
 await pagina.screenshot({ path: join(pasta, 'e2e-0-cadastro.png') });
 
+// Receber o resultado e opcional: o botao so libera depois de escolher, e os campos so aparecem com o "Sim".
+assert.ok(await pagina.getByRole('button', { name: 'Continuar' }).isDisabled(), 'devia exigir a escolha antes de continuar');
+assert.equal(await pagina.locator('#nome').count(), 0, 'os campos so aparecem depois de escolher "Sim"');
+await pagina.check('#receber-sim');
 await pagina.getByRole('button', { name: 'Continuar' }).click();
 assert.ok(await pagina.getByText('Informe o seu nome.').isVisible(), 'devia exigir o nome');
 assert.ok(await pagina.getByText('Informe o número do WhatsApp.').isVisible(), 'devia exigir o WhatsApp');

@@ -10,10 +10,11 @@ function linhaPercentuais(percentual: Record<string, number>): string {
 
 /** Texto enviado pelo WhatsApp: o animal e as proporcoes, no mesmo tom do relatorio do jogo. */
 export function montarMensagem(nome: string, natural: Resumo, adaptado: Resumo): string {
-    const primeiroNome = nome.trim().split(/\s+/)[0] ?? nome;
+    const primeiroNome = nome.trim().split(/\s+/)[0] ?? '';
     const nat = resolverAnimais(natural.percentual);
     const adp = resolverAnimais(adaptado.percentual);
-    const linhas: string[] = [`Olá, ${primeiroNome}! Este é o seu resultado na Rua das Palavras (SENAC-MT).`, ''];
+    const saudacao = primeiroNome ? `Olá, ${primeiroNome}!` : 'Olá!'; // quem joga sem cadastro pode nao ter informado o nome
+    const linhas: string[] = [`${saudacao} Este é o seu resultado na Rua das Palavras (SENAC-MT).`, ''];
 
     if (nat.principal) {
         linhas.push(`Seu animal: ${nat.principal.nome}. ${nat.principal.slogan}`);

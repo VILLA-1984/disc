@@ -10,18 +10,24 @@ import { assinar } from '@/server/token';
  * Modo padrao: ciclo (uma palavra por vez; RUA_MODO=pares volta aos portoes com duas palavras).
  */
 export async function POST(request: Request) {
-    const corpo = (await request.json().catch(() => null)) as { nome?: unknown; whatsapp?: unknown } | null;
+    const corpo = (await request.json().catch(() => null)) as { nome?: unknown; whatsapp?: unknown; anonimo?: unknown } | null;
+
+    // Receber o resultado pelo WhatsApp e opcional: sem cadastro (anonimo) nada pessoal e pedido nem guardado.
+    const anonimo = corpo?.anonimo === true;
     const nome = typeof corpo?.nome === 'string' ? corpo.nome.trim().replace(/\s+/g, ' ') : '';
     const whatsappInformado = typeof corpo?.whatsapp === 'string' ? corpo.whatsapp : '';
+    let whatsapp: string | null = null;
 
-    if (nome.length < 2 || nome.length > 80) {
-        return Response.json({ erro: 'Informe o seu nome (entre 2 e 80 letras).' }, { status: 422 });
-    }
+    if (!anonimo) {
+        if (nome.length < 2 || nome.length > 80) {
+            return Response.json({ erro: 'Informe o seu nome (entre 2 e 80 letras).' }, { status: 422 });
+        }
 
-    const whatsapp = normalizarWhatsapp(whatsappInformado);
+        whatsapp = normalizarWhatsapp(whatsappInformado);
 
-    if (!whatsapp) {
-        return Response.json({ erro: problemaNoWhatsapp(whatsappInformado) }, { status: 422 });
+        if (!whatsapp) {
+            return Response.json({ erro: problemaNoWhatsapp(whatsappInformado) }, { status: 422 });
+        }
     }
 
     const emPares = process.env.RUA_MODO === 'pares';
@@ -42,10 +48,14 @@ export async function POST(request: Request) {
         throw erro;
     }
 
-    let participanteId: number;
+    // Id 0 = partida sem cadastro (nenhuma linha no banco). Se a pessoa quiser receber o resultado no fim,
+    // /api/whatsapp cadastra nessa hora e devolve um token com o id novo.
+    let participanteId = 0;
 
     try {
-        participanteId = await criarParticipante(nome, whatsapp);
+        if (!anonimo) {
+            participanteId = await criarParticipante(nome, whatsapp as string);
+        }
     } catch (erro) {
         // Banco indisponivel (por exemplo, Turso fora do ar ou token errado): nao deixa a pessoa sem saber o que houve.
         console.error('Falha ao gravar o cadastro:', erro);

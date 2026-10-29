@@ -26,13 +26,17 @@ const PASSOS: Passo[] = [
         ),
     },
     {
-        titulo: 'Informe o nome e o WhatsApp',
+        titulo: 'Escolha se quer receber o resultado',
         imagem: '01-cadastro.png',
-        legenda: 'Tela inicial: nome e WhatsApp antes do jogo.',
+        legenda: 'Com "Sim, quero receber", aparecem os campos de nome e WhatsApp. (O print mostra a tela de uma versão anterior.)',
         texto: (
             <>
-                <p>Digite o seu nome e o número do seu WhatsApp com DDD. A máscara <strong>(65) 99999-9999</strong> aparece enquanto você digita.</p>
-                <p>É só isso que fica guardado: o nome e o número, para o resultado ser enviado no fim. As suas escolhas no jogo <strong>não são gravadas</strong>.</p>
+                <p>Receber o resultado pelo WhatsApp é <strong>opcional</strong>. A tela pergunta <strong>“Quer receber o seu resultado pelo WhatsApp?”</strong>, e o botão só libera depois da sua escolha:</p>
+                <ul>
+                    <li><strong>Sim, quero receber:</strong> digite o seu nome e o número do WhatsApp com DDD. A máscara <strong>(65) 99999-9999</strong> aparece enquanto você digita. Só o nome e o número ficam guardados, para o resultado ser enviado no fim.</li>
+                    <li><strong>Não, só quero jogar:</strong> nada é pedido nem guardado, e o botão vira <strong>Começar a jogar</strong>. Você vê o animal na tela e, no fim, ainda pode pedir o resultado pelo WhatsApp.</li>
+                </ul>
+                <p>Em qualquer caso, as suas escolhas no jogo <strong>não são gravadas</strong>.</p>
             </>
         ),
     },
@@ -161,6 +165,7 @@ const PASSOS: Passo[] = [
             <>
                 <p>Se você trocou o número, o aviso <strong>Número atualizado</strong> confirma que o cadastro foi corrigido antes de abrir o WhatsApp.</p>
                 <p>O WhatsApp não abriu? Use o link <strong>Toque aqui para abrir</strong>, ou o botão <strong>Copiar a mensagem</strong> e cole a mensagem na conversa.</p>
+                <p>Jogou sem cadastro? A tela final pergunta <strong>“Quer receber o resultado?”</strong>: informe o nome e o número para receber (o cadastro só é criado nesse momento) ou toque em <strong>Não, obrigado · próxima pessoa</strong>, e nada seu fica guardado.</p>
                 <p>Terminou? O botão <strong>Próxima pessoa</strong> volta à abertura, limpa a tela e deixa o jogo pronto para quem vem a seguir.</p>
             </>
         ),
@@ -171,6 +176,10 @@ const PERGUNTAS: { pergunta: string; resposta: React.ReactNode }[] = [
     {
         pergunta: 'Fechei a página antes de enviar. O resultado foi perdido?',
         resposta: 'Sim. O resultado não é gravado: aparece na tela e segue na mensagem do WhatsApp. Se a página for fechada antes do envio, é preciso jogar de novo.',
+    },
+    {
+        pergunta: 'Preciso informar nome e telefone para jogar?',
+        resposta: 'Não. Na primeira tela, escolha “Não, só quero jogar”: nada pessoal é pedido nem guardado. Se mudar de ideia, a tela final deixa pedir o resultado pelo WhatsApp.',
     },
     {
         pergunta: 'Digitei o número errado no começo.',
@@ -264,7 +273,7 @@ export default function Manual() {
             <div className="manual-bloco">
                 <h3>Dados guardados</h3>
                 <ul>
-                    <li>Ficam salvos apenas <strong>nome e WhatsApp</strong>, com as datas de cadastro e de correção, em um banco SQLite embutido no servidor (<code>data/participantes.db</code>).</li>
+                    <li>Ficam salvos apenas <strong>nome e WhatsApp</strong>, e só de quem escolhe receber o resultado, com as datas de cadastro e de correção. O banco é o <strong>Turso</strong> (nuvem; é o que o Vercel usa) ou um SQLite embutido no servidor (<code>data/participantes.db</code>, o modo da feira). Quem joga sem cadastro não deixa nenhum registro.</li>
                     <li>Para exportar os cadastros: <code>npm run exportar &gt; participantes.csv</code>.</li>
                     <li>São dados pessoais (LGPD). Defina quem acessa o arquivo, por quanto tempo ele é mantido e faça backup da pasta <code>data</code> se os cadastros importarem.</li>
                 </ul>

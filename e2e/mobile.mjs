@@ -46,6 +46,7 @@ await pagina.goto(base);
 await pagina.getByRole('heading', { name: 'Rua das Palavras' }).waitFor();
 await tela('m-0-abertura');
 
+await pagina.check('#receber-sim');
 await pagina.fill('#nome', 'Maria da Silva');
 await pagina.fill('#whatsapp', '65999990000');
 await pagina.getByRole('button', { name: 'Continuar' }).tap();

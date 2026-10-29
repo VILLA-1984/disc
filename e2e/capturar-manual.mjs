@@ -39,8 +39,10 @@ await pagina.goto(base);
 await painel.waitFor();
 await pagina.locator('.qr-abertura').waitFor();
 await foto('00-abertura')(pagina.locator('.abertura'));
-await foto('01-cadastro', 'png')(painel);
+await foto('01-pergunta', 'png')(painel); // a pergunta, ainda sem escolha
 
+await pagina.check('#receber-sim');
+await foto('01-cadastro', 'png')(painel); // com "Sim": aparecem nome e WhatsApp
 await pagina.fill('#nome', 'Maria da Silva');
 await pagina.fill('#whatsapp', '6599991234');
 await pagina.getByRole('button', { name: 'Continuar' }).click();
@@ -109,6 +111,7 @@ const celular = await (await navegador.newContext({
 })).newPage();
 await celular.addInitScript(() => { window.open = () => ({}); });
 await celular.goto(base);
+await celular.check('#receber-sim');
 await celular.fill('#nome', 'Maria da Silva');
 await celular.fill('#whatsapp', '65999990000');
 await celular.getByRole('button', { name: 'Continuar' }).tap();

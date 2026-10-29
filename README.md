@@ -48,6 +48,13 @@ aparelhos entre si: teste antes com um celular, ou leve um roteador próprio.
 - O botão "Próxima pessoa", na tela final, volta à abertura para o próximo participante.
 - O endereço é calculado a cada abertura da página: se a rede mudar, recarregue a página para gerar outro QR.
 
+## Cadastro opcional
+
+Na abertura a pessoa escolhe se quer receber o resultado pelo WhatsApp: **"Sim"** pede nome e WhatsApp (guardados no
+Turso ou no SQLite); **"Não, só quero jogar"** não pede nem guarda nada. Quem joga sem cadastro (`/api/iniciar` com
+`{ anonimo: true }`, token com id 0) pode, na tela final, informar nome e número: `/api/whatsapp` cria o cadastro nessa
+hora e devolve um token novo com o id do cadastro, usado nas correções seguintes. Sem cadastro, nenhuma linha vai ao banco.
+
 ## Como a partida funciona: ciclo de palavras
 
 Modo padrão ("uma por vez"): em cada etapa passam as 48 palavras, uma por portão, e a pessoa **pega** a palavra
