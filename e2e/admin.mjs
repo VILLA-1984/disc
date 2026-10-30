@@ -9,6 +9,7 @@
 import assert from 'node:assert/strict';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import zlib from 'node:zlib';
 import { chromium } from 'playwright-core';
 
 const base = process.env.RUA_URL ?? 'http://127.0.0.1:3100';
@@ -194,6 +195,89 @@ await placas.click('button[type=submit]');
 await placas.locator('#cartao.aberto').waitFor({ timeout: 30000 });
 assert.match(await placas.textContent('#cartao-corpo'), /aparecem duas palavras/, 'abertura do modo de duas palavras');
 assert.match(await placas.textContent('#cartao-corpo'), /passar pelos portões desta etapa|completar todos os portões/);
+
+// ------------------------------------------------------------------ logo
+// PNG de teste (faixa azul 240x72) montado na hora, sem depender de arquivo no disco.
+function pngFaixa(largura, altura, [r, g, b]) {
+    const linhas = Buffer.alloc((largura * 3 + 1) * altura);
+
+    for (let y = 0; y < altura; y++) {
+        const inicio = y * (largura * 3 + 1);
+
+        for (let x = 0; x < largura; x++) {
+            linhas.set([r, g, b], inicio + 1 + x * 3);
+        }
+    }
+
+    const bloco = (tipo, dados) => {
+        const cabeca = Buffer.alloc(4);
+        cabeca.writeUInt32BE(dados.length);
+        const corpo = Buffer.concat([Buffer.from(tipo), dados]);
+        const crc = Buffer.alloc(4);
+        crc.writeUInt32BE(zlib.crc32(corpo));
+
+        return Buffer.concat([cabeca, corpo, crc]);
+    };
+    const ihdr = Buffer.alloc(13);
+    ihdr.writeUInt32BE(largura, 0);
+    ihdr.writeUInt32BE(altura, 4);
+    ihdr.set([8, 2, 0, 0, 0], 8);
+
+    return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), bloco('IHDR', ihdr), bloco('IDAT', zlib.deflateSync(linhas)), bloco('IEND', Buffer.alloc(0))]);
+}
+
+const enviarLogo = (conteudo, nome, cookieSessao) => {
+    const form = new FormData();
+    form.append('arquivo', new Blob([conteudo]), nome);
+
+    return fetch(`${base}/api/admin/logo`, { method: 'POST', headers: cookieSessao ? { Cookie: cookieSessao } : {}, body: form });
+};
+
+assert.equal((await fetch(`${base}/api/logo`)).status, 404, 'sem logo enviada, a imagem nao existe');
+assert.equal((await enviarLogo(pngFaixa(8, 8, [0, 0, 0]), 'logo.png')).status, 401, 'sem sessao nao envia logo');
+assert.equal((await fetch(`${base}/api/admin/logo`, { method: 'DELETE' })).status, 401, 'sem sessao nao remove logo');
+const svg = await enviarLogo(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'), 'logo.png', sessao);
+assert.equal(svg.status, 422, 'SVG e recusado, mesmo com nome de PNG');
+assert.equal((await enviarLogo(Buffer.alloc(1024 * 1024 + 1, 1), 'grande.png', sessao)).status, 422, 'arquivo grande demais e recusado');
+
+// Pela tela: enviar, ver a previa e a tela inicial, trocar e remover.
+await admin.reload();
+await admin.getByRole('heading', { name: 'Gerenciamento do teste' }).waitFor();
+assert.equal(await admin.getByText('Nenhuma logo enviada').count(), 1);
+await admin.setInputFiles('#arquivo-logo', { name: 'logo.png', mimeType: 'image/png', buffer: pngFaixa(240, 72, [13, 71, 161]) });
+await admin.getByText(/Logo atualizada/).waitFor({ timeout: 15000 });
+await admin.getByRole('img', { name: 'Logo atual' }).waitFor();
+await admin.screenshot({ path: join(pasta, 'admin-5-logo.png'), fullPage: true });
+
+const resposta = await fetch(`${base}/api/logo`);
+assert.equal(resposta.status, 200);
+assert.equal(resposta.headers.get('content-type'), 'image/png');
+assert.equal(resposta.headers.get('x-content-type-options'), 'nosniff');
+assert.match(resposta.headers.get('content-security-policy') ?? '', /sandbox/);
+
+const inicio = await novaPagina({ width: 1180, height: 900 });
+await inicio.goto(base);
+await inicio.locator('img.logo-abertura').waitFor();
+assert.ok(await inicio.evaluate(() => document.querySelector('img.logo-abertura').naturalWidth === 240), 'a logo enviada carrega na tela inicial');
+await inicio.screenshot({ path: join(pasta, 'logo-1-inicio-desktop.png') });
+const celular = await novaPagina({ width: 390, height: 800 });
+await celular.goto(base);
+await celular.locator('img.logo-abertura').waitFor();
+await celular.screenshot({ path: join(pasta, 'logo-2-inicio-celular.png') });
+
+await admin.setInputFiles('#arquivo-logo', { name: 'outra.png', mimeType: 'image/png', buffer: pngFaixa(120, 40, [239, 108, 0]) });
+await admin.getByText(/Logo atualizada/).waitFor({ timeout: 15000 });
+await inicio.reload();
+await inicio.locator('img.logo-abertura').waitFor();
+assert.ok(await inicio.evaluate(() => document.querySelector('img.logo-abertura').naturalWidth === 120), 'a logo trocada aparece (sem ficar a antiga em cache)');
+
+await admin.getByRole('button', { name: 'Remover a logo' }).click();
+await admin.getByText('Logo removida.').waitFor({ timeout: 15000 });
+assert.equal((await fetch(`${base}/api/logo`)).status, 404, 'depois de remover, a imagem some');
+await inicio.reload();
+await inicio.getByRole('heading', { name: 'Teste de Perfil DISC' }).waitFor();
+assert.equal(await inicio.locator('img.logo-abertura').count(), 0, 'sem logo, a tela inicial volta ao normal');
+console.log('logo: envio, formatos e tamanho recusados, troca, remocao e tela inicial OK.');
 
 // ------------------------------------------------------------------ voltar ao padrao
 await admin.getByRole('button', { name: 'Voltar ao padrão' }).click();

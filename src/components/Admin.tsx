@@ -3,11 +3,13 @@
 import { useMemo, useState } from 'react';
 import { LIMITES, type ChaveTexto, type Configuracao, type TextoDefinicao } from '@/lib/configuracao';
 import type { Catalogo } from '@/server/configuracao';
+import AdminLogo from './AdminLogo';
 
 type Props = {
     configInicial: Configuracao;
     catalogo: Catalogo;
     textos: TextoDefinicao[];
+    logoInicial: number | null;
 };
 
 const ROTULO_MOBILIDADE: Record<string, string> = {
@@ -24,7 +26,7 @@ type Lista = 'avatares' | 'cenarios' | 'meios';
 type Mensagem = { tipo: 'ok' | 'erro' | 'pendente'; texto: string };
 
 /** Area de gerenciamento: o que fica liberado, o que fica visivel, quantas palavras marcar e os textos do jogo. */
-export default function Admin({ configInicial, catalogo, textos }: Props) {
+export default function Admin({ configInicial, catalogo, textos, logoInicial }: Props) {
     const [config, setConfig] = useState<Configuracao>(configInicial);
     const [salvo, setSalvo] = useState<Configuracao>(configInicial);
     const [ocupado, setOcupado] = useState(false);
@@ -224,6 +226,8 @@ export default function Admin({ configInicial, catalogo, textos }: Props) {
                     <button type="button" className="admin-link" onClick={sair}>Sair</button>
                 </p>
             </div>
+
+            <AdminLogo versaoInicial={logoInicial} />
 
             <section className="admin-secao" aria-labelledby="secao-cenarios">
                 <h2 id="secao-cenarios">Cenários e meios de locomoção</h2>

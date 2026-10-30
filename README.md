@@ -53,6 +53,9 @@ aparelhos entre si: teste antes com um celular, ou leve um roteador próprio.
 Quem aplica o teste configura o jogo sem mexer no código. Entra com o usuário e a senha do super admin (`USER_AREA_ADM` e `PASS_AREA_ADM`; cookie assinado, vale 8 horas;
 sem a variável, a área fica desativada) e define:
 
+- **Logo**: enviar, trocar ou remover. Aparece no alto da tela inicial e, menor, no cabeçalho do jogo. Só PNG, JPEG ou WebP de até
+  1 MB (o formato é conferido pelos bytes do arquivo; SVG é recusado de propósito). Fica no mesmo banco da configuração, não no
+  disco, e não é afetada por “Voltar ao padrão”.
 - **Cenários e meios de locomoção** liberados (Rua, Rio, Céu, Neve, Trilhos e os meios de cada um). Se só sobra um cenário, a
   escolha some; se só sobra um meio no cenário, também.
 - **Avatares** liberados. A tela recusa combinações impossíveis (por exemplo, só avatares de moto num cenário em que moto não vai).
