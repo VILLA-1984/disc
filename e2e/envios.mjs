@@ -33,9 +33,12 @@ assert.ok(usuario && senha, 'defina USER_AREA_ADM e PASS_AREA_ADM no .env');
 
 const json = (rota, corpo, cabecalhos = {}) => fetch(base + rota, { method: 'POST', headers: { 'Content-Type': 'application/json', ...cabecalhos }, body: JSON.stringify(corpo) });
 
+// O jogo so abre dentro de um evento: o teste cria o seu e joga nele.
+let slugEvento = '';
+
 /** Joga uma partida inteira pela API: pega uma de cada tres palavras e conclui. Devolve a resposta de /api/concluir. */
 async function jogarPelaApi(corpoIniciar) {
-    const iniciada = await (await json('/api/iniciar', corpoIniciar)).json();
+    const iniciada = await (await json('/api/iniciar', { ...corpoIniciar, evento: slugEvento })).json();
     assert.ok(iniciada.ciclo, `a partida devia vir em ciclo: ${JSON.stringify(iniciada).slice(0, 120)}`);
     const escolhas = [];
 
@@ -74,6 +77,11 @@ assert.ok([307, 308].includes(redirecionado.status) && redirecionado.headers.get
 console.log('acesso: sem sessao e cookie falso recusados; /whatsaap redireciona.');
 
 // ------------------------------------------------------------------ partidas
+const entrada = await json('/api/admin/login', { usuario, senha });
+const cookieApi = (entrada.headers.get('set-cookie') ?? '').split(';')[0];
+const criadoEvento = await json('/api/admin/eventos', { nome: `Envios E2E ${Date.now().toString(36)}` }, { Cookie: cookieApi });
+assert.equal(criadoEvento.status, 201, 'criar o evento de teste');
+slugEvento = (await criadoEvento.json()).evento.slug;
 // Nome unico por rodada: o banco do servidor de teste guarda as rodadas anteriores.
 const nomeJoana = `Joana ${Date.now().toString(36)}`;
 const joana = await jogarPelaApi({ nome: nomeJoana, whatsapp: '(65) 99999-1111' });

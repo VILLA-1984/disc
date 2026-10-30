@@ -40,7 +40,7 @@ function Logo({ logo, alt, className }: { logo: LogoEmUso | null | undefined; al
     return <img className={`${className}${logo.escuro ? ' logo-sobre-escuro' : ''}`} src={logo.src} alt={alt} />;
 }
 
-export default function Partida({ qr, config, logo, totaisInicio, evento = null }: { qr?: React.ReactNode; config: Configuracao; logo?: LogoEmUso | null; totaisInicio?: Totais | null; evento?: { slug: string; nome: string } | null }) {
+export default function Partida({ qr, config, logo, totaisInicio, evento }: { qr?: React.ReactNode; config: Configuracao; logo?: LogoEmUso | null; totaisInicio?: Totais | null; evento: { slug: string; nome: string } }) {
     // Titulos e explicacoes editaveis na area de gerenciamento (/admin).
     const titulo = textoDe(config.textos, 'titulo_geral');
     const introducao = textoDe(config.textos, 'cadastro_intro');
@@ -92,7 +92,7 @@ export default function Partida({ qr, config, logo, totaisInicio, evento = null 
         try {
             const dados = await chamar<{ token: string; etapas?: Etapas; ciclo?: Ciclo }>(
                 '/api/iniciar',
-                { ...(querReceber ? { nome: nomeLimpo, whatsapp } : { anonimo: true }), ...(evento ? { evento: evento.slug } : {}) },
+                { ...(querReceber ? { nome: nomeLimpo, whatsapp } : { anonimo: true }), evento: evento.slug },
             );
             setAnonimo(!querReceber);
             token.current = dados.token;
@@ -130,7 +130,7 @@ export default function Partida({ qr, config, logo, totaisInicio, evento = null 
                 ciclo,
                 config,
                 // O painel de totais so e oferecido ao jogo quando a area de gerenciamento o deixa visivel.
-                totais: config.mostrarTotais ? () => fetch(evento ? `/api/totais?evento=${encodeURIComponent(evento.slug)}` : '/api/totais', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)) : undefined,
+                totais: config.mostrarTotais ? () => fetch(`/api/totais?evento=${encodeURIComponent(evento.slug)}`, { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)) : undefined,
                 concluir,
                 aoFinalizar: (resposta: Resultado) => {
                     setResultado(resposta);
@@ -151,7 +151,7 @@ export default function Partida({ qr, config, logo, totaisInicio, evento = null 
                 <div className="abertura">
                 <Logo logo={logo} alt={titulo} className="logo-abertura" />
                 <section className="painel" aria-labelledby="titulo-cadastro">
-                    {evento && <p className="evento-rotulo">{evento.nome}</p>}
+                    <p className="evento-rotulo">{evento.nome}</p>
                     <h2 id="titulo-cadastro">{titulo}</h2>
                     {introducao && <p>{introducao}</p>}
 
@@ -242,7 +242,7 @@ export default function Partida({ qr, config, logo, totaisInicio, evento = null 
                     </p>
                 </section>
                 {qr}
-                {totaisInicio && <TotaisInicio inicial={totaisInicio} evento={evento?.slug} />}
+                {totaisInicio && <TotaisInicio inicial={totaisInicio} evento={evento.slug} />}
                 </div>
             )}
 

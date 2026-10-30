@@ -48,10 +48,16 @@ aparelhos entre si: teste antes com um celular, ou leve um roteador próprio.
 - O botão "Próxima pessoa", na tela final, volta à abertura para o próximo participante.
 - O endereço é calculado a cada abertura da página: se a rede mudar, recarregue a página para gerar outro QR.
 
-## Área de gerenciamento (`/admin`)
+## Painel da equipe (`/admin`) e configurações do jogo (`/admin/jogo`)
 
-Quem aplica o teste configura o jogo sem mexer no código. Entra com o usuário e a senha do super admin (`USER_AREA_ADM` e `PASS_AREA_ADM`; cookie assinado, vale 8 horas;
-sem a variável, a área fica desativada) e define:
+`/admin` é o **painel da equipe**: o ponto de partida, com os ícones dos quatro perfis, um resumo (eventos ligados,
+resultados a enviar, pessoas sem cadastro agora, partidas antigas sem evento), um botão para cada área (Configurações do
+jogo, Eventos, Envio de resultados, Abrir o jogo e Manual) e os links de Jogo e Telão dos eventos que estão ligados. Ele
+**não carrega a configuração do jogo**: ela fica em `/admin/jogo`, aberta por link.
+
+Em `/admin/jogo`, quem aplica o teste configura o jogo sem mexer no código. Entra com o usuário e a senha do super admin
+(`USER_AREA_ADM` e `PASS_AREA_ADM`; cookie assinado, vale 8 horas, e vale em todas as telas da equipe; sem as variáveis, a
+área fica desativada) e define:
 
 - **Logo**: enviar, trocar ou remover. Aparece no alto da tela inicial e, menor, no cabeçalho do jogo. Só PNG, JPEG ou WebP de até
   1 MB (o formato é conferido pelos bytes do arquivo; SVG é recusado de propósito). Fica no mesmo banco da configuração, não no
@@ -93,7 +99,7 @@ apagado sozinho em 5 minutos (veja "Envio dos resultados").
 ## Como a partida funciona: ciclo de palavras
 
 Modo padrão ("uma por vez"): em cada etapa passam as 48 palavras, uma por portão, e a pessoa **pega** a palavra
-ou **deixa passar**. As pegas saem do jogo; as deixadas voltam na volta seguinte, até completar o número configurado por etapa (padrão 12, em `/admin`; eram 24)
+ou **deixa passar**. As pegas saem do jogo; as deixadas voltam na volta seguinte, até completar o número configurado por etapa (padrão 12, em `/admin/jogo`; eram 24)
 (`RUA_ESCOLHER`, de 12 a `palavras − 12`). As duas etapas usam as mesmas palavras, com perguntas diferentes
 (natural × adaptado).
 
@@ -105,7 +111,7 @@ ou **deixa passar**. As pegas saem do jogo; as deixadas voltam na volta seguinte
 - As regras estão em `src/jogo/ciclo.js`, o **mesmo arquivo** usado pelo navegador (para saber qual palavra vem agora)
   e pelo servidor (que refaz a partida a partir das decisões e confere). O servidor DISC em PHP tem uma cópia
   dessas regras: mudou uma, mude a outra.
-- O modo das placas é escolhido em `/admin` (“Placas dos portões”): uma palavra e “Deixar passar” (ciclo, padrão) ou duas palavras, uma em cada placa (escolha forçada, em que “palavras por etapa” vira “portões por etapa”, de 6 a 24).
+- O modo das placas é escolhido em `/admin/jogo` (“Placas dos portões”): uma palavra e “Deixar passar” (ciclo, padrão) ou duas palavras, uma em cada placa (escolha forçada, em que “palavras por etapa” vira “portões por etapa”, de 6 a 24).
 - O minimapa (largada, chegada e posição) fica no canto superior direito do jogo.
 
 ## Cenários
@@ -153,11 +159,11 @@ palavras escolhidas**: de quem se cadastrou, ligado ao cadastro; de quem jogou s
 
 ## Navegação da equipe (navbar)
 
-As três telas da equipe (`/admin`, `/eventos` e `/whatsapp`) compartilham uma barra de navegação fixa no alto, com **todos os
-links do sistema em formato de botão**: Gerenciamento, Eventos, Envio de resultados, Abrir o jogo e Manual (os dois últimos
-abrem em outra aba) e **Sair**, que encerra a sessão nas três. A tela atual fica em destaque (`aria-current="page"`). No
-celular (até 980 px) a barra vira um **menu sanduíche** com botões grandes, que fecha com Esc, com um toque fora dele e ao
-navegar. Quem não entrou não vê a barra, só o login. Código: `src/components/NavAdmin.tsx`.
+As telas da equipe (`/admin`, `/admin/jogo`, `/eventos` e `/whatsapp`) compartilham uma barra de navegação fixa no alto, com
+**todos os links do sistema em formato de botão**: Início, Configurações, Eventos, Envio de resultados, Abrir o jogo e Manual
+(os dois últimos abrem em outra aba) e **Sair**, que encerra a sessão em todas. A tela atual fica em destaque
+(`aria-current="page"`). No celular (até 1100 px) a barra vira um **menu sanduíche** com botões grandes, que fecha com Esc,
+com um toque fora dele e ao navegar. Quem não entrou não vê a barra, só o login. Código: `src/components/NavAdmin.tsx`.
 
 ## Eventos (`/eventos`)
 
@@ -170,8 +176,12 @@ ranking**, o seu link com QR code e a sua tela de telão, e pode ser **ligado e 
 - **Jogo do evento**: `/e/<slug>`. A tela inicial mostra o nome do evento, o ranking **do evento** e o QR code dele. A partida
   entra no ranking do evento (o evento viaja no token assinado da partida; o navegador não consegue trocá-lo).
 - **Desligado**: `/e/<slug>` mostra um aviso e `POST /api/iniciar` responde 409; o ranking e o telão continuam visíveis.
-- **Sem evento**: a raiz `/` continua funcionando e tem o seu ranking à parte. As partidas feitas antes dos eventos
-  existirem ficam nele (o banco ganha a coluna `evento_id` sozinho, sem perder nada).
+- **O jogo nunca abre solto: toda partida pertence a um evento.** `POST /api/iniciar` sem evento responde **422**, e com
+  evento inexistente, 404. A raiz `/` **não abre jogo**: só oferece a **escolha do evento** (aparecem os que estão ligados;
+  sem nenhum ligado, avisa para procurar a equipe). O link e o QR code de cada evento levam direto a ele.
+- **Partidas antigas**: as feitas antes dos eventos existirem continuam contadas como "sem evento" (só histórico, aparece no
+  resumo do painel; o banco ganha a coluna `evento_id` sozinho, sem perder nada). Uma partida já em andamento na hora da
+  publicação, com o token antigo, ainda conclui e entra nessa conta.
 - A lista mostra quantas partidas cada evento já contou e atualiza sozinha.
 - API (só com a sessão): `GET/POST/PATCH /api/admin/eventos`. Pública: `GET /api/totais?evento=<slug>` (só contadores).
 
@@ -233,11 +243,11 @@ URL). Defina quem acessa o banco e por quanto tempo os cadastros são mantidos.
 | `RUA_SEGREDO` | Segredo da assinatura do token. Sem ela, é gerado em `data/.segredo`. Em produção com mais de uma instância, defina a mesma em todas. |
 | `RUA_DADOS` | Pasta dos dados (padrão `./data`). |
 | `RUA_BANCO` | Caminho do arquivo SQLite (padrão `<RUA_DADOS>/participantes.db`). |
-| `USER_AREA_ADM` / `PASS_AREA_ADM` | Usuário e senha do super admin da área de gerenciamento (`/admin`). **Sem os dois a área fica desativada.** Defina também no Vercel. |
-| `RUA_ESCOLHER` | Só o ponto de partida de "palavras por etapa" quando nada foi salvo em `/admin` (padrão 12). O valor em vigor é o de `/admin`. |
+| `USER_AREA_ADM` / `PASS_AREA_ADM` | Usuário e senha do super admin das telas da equipe (`/admin`, `/eventos`, `/whatsapp`). **Sem os dois a área fica desativada.** Defina também no Vercel. |
+| `RUA_ESCOLHER` | Só o ponto de partida de "palavras por etapa" quando nada foi salvo em `/admin/jogo` (padrão 12). O valor em vigor é o de `/admin/jogo`. |
 | `RUA_PALAVRAS` | Quantas palavras entram na partida (padrão: a lista toda, 48; de 8 a 48). Menor que a lista: sorteia esse tanto por pessoa, repartido entre os quatro fatores (14 = 4, 4, 3 e 3), as mesmas nas duas etapas. |
-| `RUA_MODO` | Só o valor inicial do modo das placas, antes de alguém salvar a escolha em `/admin`: `pares` = duas palavras por portão; sem valor, ciclo. |
-| `RUA_PORTOES` | Não é mais usada: os portões por etapa vêm de `/admin` (“Portões por etapa”). |
+| `RUA_MODO` | Só o valor inicial do modo das placas, antes de alguém salvar a escolha em `/admin/jogo`: `pares` = duas palavras por portão; sem valor, ciclo. |
+| `RUA_PORTOES` | Não é mais usada: os portões por etapa vêm de `/admin/jogo` (“Portões por etapa”). |
 | `RUA_URL_PUBLICA` | Endereço público do jogo, usado no QR code (ex.: `https://jogo.exemplo.com.br`). Sem ela, o QR usa o IP do computador na rede. |
 
 ## Atenção: lista de palavras

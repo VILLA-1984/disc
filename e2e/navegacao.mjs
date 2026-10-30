@@ -1,5 +1,5 @@
 /**
- * Teste de ponta a ponta da navbar das telas da equipe (/admin, /eventos e /whatsapp): todos os links em formato de
+ * Teste de ponta a ponta do painel da equipe (/admin) e da navbar das telas da equipe (/admin, /admin/jogo, /eventos e /whatsapp): todos os links em formato de
  * botao, a tela atual em destaque, navegar entre as telas, "Sair", e o menu sanduiche no celular (abrir, fechar com Esc,
  * fechar com toque fora, fechar ao navegar, barra fixa no alto). Requer o servidor em RUA_URL (padrao
  * http://127.0.0.1:3100) com USER_AREA_ADM e PASS_AREA_ADM no .env.
@@ -44,18 +44,73 @@ assert.equal(await pagina.locator('.nav-admin').count(), 0, 'sem login, sem navb
 await pagina.fill('#usuario-admin', env.USER_AREA_ADM);
 await pagina.fill('#senha-admin', env.PASS_AREA_ADM);
 await pagina.getByRole('button', { name: 'Entrar' }).click();
-await pagina.getByRole('heading', { name: 'Gerenciamento do teste' }).waitFor({ timeout: 15000 });
+await pagina.getByRole('heading', { name: 'Painel da equipe', level: 1 }).waitFor({ timeout: 15000 });
+
+// ------------------------------------------------------------------ painel (/admin)
+// O painel nao carrega a configuracao do jogo: ela e uma tela a parte, aberta por link.
+assert.equal(await pagina.locator('#palavras-por-etapa').count(), 0, 'o painel nao e a tela de configuracao');
+assert.deepEqual(
+    (await pagina.getByRole('list', { name: 'Os quatro perfis do teste' }).locator('li').allTextContents()).sort(),
+    ['Gato', 'Lobo', 'Tubarão', 'Águia'].sort(),
+    'os icones dos quatro perfis',
+);
+assert.equal(await pagina.locator('.equipe-perfis svg').count(), 4);
+
+const resumo = await pagina.getByRole('list', { name: 'Resumo' }).locator('li').allTextContents();
+assert.equal(resumo.length, 4, 'quatro numeros de resumo');
+assert.ok(resumo.some((t) => /Eventos ligados/.test(t)) && resumo.some((t) => /Resultados a enviar/.test(t)));
+
+const areas = pagina.getByRole('list', { name: 'Áreas do sistema' });
+
+for (const [titulo, href] of [['Configurações do jogo', '/admin/jogo'], ['Eventos', '/eventos'], ['Envio de resultados', '/whatsapp'], ['Abrir o jogo', '/'], ['Manual', '/manual']]) {
+    const area = areas.getByRole('link', { name: new RegExp(`^${titulo}`) });
+    assert.equal(await area.getAttribute('href'), href, `area "${titulo}"`);
+}
+
+assert.equal(await areas.getByRole('link', { name: /^Abrir o jogo/ }).getAttribute('target'), '_blank');
+assert.equal(await areas.getByRole('link', { name: /^Manual/ }).getAttribute('target'), '_blank');
+assert.equal(await areas.getByRole('link', { name: /^Eventos/ }).getAttribute('target'), null, 'as areas da equipe abrem na mesma aba');
+
+// Links dos eventos ligados: cria um evento e confere que ele aparece com Jogo e Telao
+const sessao = (await contexto.cookies()).map((c) => `${c.name}=${c.value}`).join('; ');
+const nomeEvento = `Painel E2E ${Date.now().toString(36)}`;
+const criado = await fetch(`${base}/api/admin/eventos`, { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: sessao }, body: JSON.stringify({ nome: nomeEvento }) });
+assert.equal(criado.status, 201);
+const { evento } = await criado.json();
+await pagina.reload();
+await pagina.getByRole('heading', { name: 'Painel da equipe', level: 1 }).waitFor();
+const linha = pagina.locator('.equipe-eventos li', { hasText: nomeEvento });
+await linha.waitFor();
+assert.equal(await linha.getByRole('link', { name: 'Jogo' }).getAttribute('href'), `/e/${evento.slug}`);
+assert.equal(await linha.getByRole('link', { name: 'Telão' }).getAttribute('href'), `/e/${evento.slug}/telao`);
+assert.equal(await linha.getByRole('link', { name: 'Telão' }).getAttribute('target'), '_blank');
+await pagina.screenshot({ path: join(pasta, 'nav-0-painel.png'), fullPage: true });
+
+// Desligado, o evento sai da lista de ligados
+await fetch(`${base}/api/admin/eventos`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Cookie: sessao }, body: JSON.stringify({ id: evento.id, ativo: false }) });
+await pagina.reload();
+await pagina.getByRole('heading', { name: 'Painel da equipe', level: 1 }).waitFor();
+assert.equal(await pagina.locator('.equipe-eventos li', { hasText: nomeEvento }).count(), 0, 'evento desligado nao aparece nos ligados');
+
+// "Configurações do jogo" e um link: a tela de configuracao abre so quando se clica
+await areas.getByRole('link', { name: /^Configurações do jogo/ }).click();
+await pagina.getByRole('heading', { name: 'Configurações do jogo', level: 1 }).waitFor({ timeout: 15000 });
+assert.equal(new URL(pagina.url()).pathname, '/admin/jogo');
+await pagina.locator('#palavras-por-etapa').waitFor();
+await link(pagina, 'Início').click();
+await pagina.getByRole('heading', { name: 'Painel da equipe', level: 1 }).waitFor({ timeout: 15000 });
+console.log('painel: icones dos perfis, resumo, areas em links, links dos eventos ligados e a configuracao so ao clicar OK.');
 
 // ------------------------------------------------------------------ computador
-for (const nome of ['Gerenciamento', 'Eventos', 'Envio de resultados', 'Abrir o jogo', 'Manual']) {
+for (const nome of ['Início', 'Configurações', 'Eventos', 'Envio de resultados', 'Abrir o jogo', 'Manual']) {
     assert.ok(await link(pagina, nome).isVisible(), `link "${nome}" visivel`);
 }
 
 assert.ok(await menu(pagina).getByRole('button', { name: 'Sair' }).isVisible(), 'botao Sair visivel');
 assert.ok(!(await pagina.getByRole('button', { name: 'Abrir o menu' }).isVisible()), 'no computador nao ha menu sanduiche');
-assert.equal(await link(pagina, 'Gerenciamento').getAttribute('aria-current'), 'page', 'a tela atual fica marcada');
+assert.equal(await link(pagina, 'Início').getAttribute('aria-current'), 'page', 'a tela atual fica marcada');
 assert.equal(await link(pagina, 'Eventos').getAttribute('aria-current'), null);
-assert.ok(await link(pagina, 'Gerenciamento').evaluate((el) => el.classList.contains('atual')));
+assert.ok(await link(pagina, 'Início').evaluate((el) => el.classList.contains('atual')));
 
 // O jogo e o manual abrem em outra aba, sem tirar a equipe da tela.
 for (const [nome, href] of [['Abrir o jogo', '/'], ['Manual', '/manual']]) {
@@ -75,7 +130,7 @@ await pagina.screenshot({ path: join(pasta, 'nav-1-desktop-admin.png') });
 await link(pagina, 'Eventos').click();
 await pagina.getByRole('heading', { name: 'Eventos', exact: true }).waitFor({ timeout: 15000 });
 assert.equal(await link(pagina, 'Eventos').getAttribute('aria-current'), 'page');
-assert.equal(await link(pagina, 'Gerenciamento').getAttribute('aria-current'), null, 'so a tela atual fica marcada');
+assert.equal(await link(pagina, 'Início').getAttribute('aria-current'), null, 'so a tela atual fica marcada');
 await pagina.screenshot({ path: join(pasta, 'nav-2-desktop-eventos.png') });
 
 await link(pagina, 'Envio de resultados').click();
@@ -83,10 +138,16 @@ await pagina.getByRole('heading', { name: 'Envio de resultados', level: 1 }).wai
 assert.equal(await link(pagina, 'Envio de resultados').getAttribute('aria-current'), 'page');
 assert.equal(new URL(pagina.url()).pathname, '/whatsapp');
 
-await link(pagina, 'Gerenciamento').click();
-await pagina.getByRole('heading', { name: 'Gerenciamento do teste' }).waitFor({ timeout: 15000 });
+await link(pagina, 'Configurações').click();
+await pagina.getByRole('heading', { name: 'Configurações do jogo', level: 1 }).waitFor({ timeout: 15000 });
+assert.equal(new URL(pagina.url()).pathname, '/admin/jogo');
+assert.equal(await link(pagina, 'Configurações').getAttribute('aria-current'), 'page');
+assert.equal(await link(pagina, 'Início').getAttribute('aria-current'), null, '/admin e /admin/jogo sao telas diferentes');
+
+await link(pagina, 'Início').click();
+await pagina.getByRole('heading', { name: 'Painel da equipe', level: 1 }).waitFor({ timeout: 15000 });
 assert.equal(new URL(pagina.url()).pathname, '/admin');
-console.log('computador: links em botoes, tela atual marcada, navegacao entre as tres telas e barra fixa OK.');
+console.log('computador: links em botoes, tela atual marcada, navegacao entre as telas e barra fixa OK.');
 
 // ------------------------------------------------------------------ celular (menu sanduiche)
 const celular = await (await navegador.newContext({ viewport: { width: 390, height: 844 } })).newPage();
@@ -107,7 +168,7 @@ await sanduiche.click();
 await celular.getByRole('button', { name: 'Fechar o menu' }).waitFor();
 assert.equal(await celular.getByRole('button', { name: 'Fechar o menu' }).getAttribute('aria-expanded'), 'true');
 
-for (const nome of ['Gerenciamento', 'Eventos', 'Envio de resultados', 'Abrir o jogo', 'Manual']) {
+for (const nome of ['Início', 'Configurações', 'Eventos', 'Envio de resultados', 'Abrir o jogo', 'Manual']) {
     assert.ok(await link(celular, nome).isVisible(), `aberto, "${nome}" aparece`);
 }
 
@@ -116,14 +177,14 @@ assert.equal(await link(celular, 'Eventos').getAttribute('aria-current'), 'page'
 await celular.screenshot({ path: join(pasta, 'nav-4-celular-aberto.png') });
 
 // cada botao ocupa a largura toda e e grande o bastante para o toque
-const caixa = await link(celular, 'Gerenciamento').boundingBox();
+const caixa = await link(celular, 'Início').boundingBox();
 assert.ok(caixa.height >= 44, `botao com altura de toque (${caixa.height}px)`);
 assert.ok(caixa.width > 300, 'botao na largura do menu');
 
 // fechar com Esc
 await celular.keyboard.press('Escape');
 await celular.getByRole('button', { name: 'Abrir o menu' }).waitFor();
-assert.ok(!(await link(celular, 'Gerenciamento').isVisible()), 'Esc fecha o menu');
+assert.ok(!(await link(celular, 'Início').isVisible()), 'Esc fecha o menu');
 
 // fechar com toque fora
 await celular.getByRole('button', { name: 'Abrir o menu' }).click();
@@ -134,8 +195,8 @@ assert.ok(!(await link(celular, 'Manual').isVisible()), 'toque fora fecha o menu
 
 // navegar fecha o menu e a barra continua no alto depois de rolar
 await celular.getByRole('button', { name: 'Abrir o menu' }).click();
-await link(celular, 'Gerenciamento').click();
-await celular.getByRole('heading', { name: 'Gerenciamento do teste' }).waitFor({ timeout: 15000 });
+await link(celular, 'Início').click();
+await celular.getByRole('heading', { name: 'Painel da equipe', level: 1 }).waitFor({ timeout: 15000 });
 await celular.getByRole('button', { name: 'Abrir o menu' }).waitFor();
 assert.ok(!(await link(celular, 'Eventos').isVisible()), 'ao navegar o menu fecha');
 assert.equal(new URL(celular.url()).pathname, '/admin', 'a pagina e a nova');

@@ -6,22 +6,22 @@ import { logoEmUso } from '@/server/logo';
 import { montarTotais } from '@/server/totais';
 
 /**
- * Tela inicial do jogo, a mesma da raiz e dos eventos. Num evento, o ranking mostrado e o do evento e o QR code leva ao
- * endereco dele; na raiz, vale o ranking das partidas sem evento.
+ * Tela inicial do jogo de um evento: o ranking mostrado e o do evento e o QR code leva ao endereco dele. O jogo so abre
+ * por aqui (a raiz so oferece a escolha do evento).
  */
-export default async function PaginaInicial({ evento = null }: { evento?: Evento | null }) {
+export default async function PaginaInicial({ evento }: { evento: Evento }) {
     const [config, logo] = await Promise.all([carregarConfiguracao(), logoEmUso()]);
     // O ranking da tela inicial vem pronto do servidor; se o banco falhar, a tela abre sem ele.
-    const totais = config.mostrarTotaisInicio ? await montarTotais(evento?.id ?? null).catch(() => null) : null;
+    const totais = config.mostrarTotaisInicio ? await montarTotais(evento.id).catch(() => null) : null;
 
     return (
         <main className="pagina">
             <Partida
-                qr={<QrAbertura caminho={evento ? `/e/${evento.slug}` : ''} />}
+                qr={<QrAbertura caminho={`/e/${evento.slug}`} />}
                 config={config}
                 logo={logo}
                 totaisInicio={totais}
-                evento={evento ? { slug: evento.slug, nome: evento.nome } : null}
+                evento={{ slug: evento.slug, nome: evento.nome }}
             />
         </main>
     );

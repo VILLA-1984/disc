@@ -215,7 +215,7 @@ export default function Admin({ configInicial, catalogo, textos, escolhaLogo, ve
     return (
         <div className="admin">
             <div className="admin-topo">
-                <h1>Gerenciamento do teste</h1>
+                <h1>Configurações do jogo</h1>
             </div>
 
             <AdminLogo escolhaInicial={escolhaLogo} versaoInicial={versaoLogo} />

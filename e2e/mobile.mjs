@@ -9,6 +9,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { chromium } from 'playwright-core';
+import { eventoDeTeste } from './comum.mjs';
 
 const base = process.env.RUA_URL ?? 'http://127.0.0.1:3100';
 const pasta = process.argv[2] ?? 'e2e/capturas-mobile';
@@ -42,7 +43,7 @@ async function tela(nome) {
     console.log('ok', nome);
 }
 
-await pagina.goto(base);
+await pagina.goto(`${base}/e/${(await eventoDeTeste(base, 'Celular E2E')).slug}`);
 await pagina.getByRole('heading', { name: 'Teste de Perfil DISC' }).waitFor();
 await tela('m-0-abertura');
 

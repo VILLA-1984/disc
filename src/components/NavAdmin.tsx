@@ -3,47 +3,23 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import { IcConfig, IcEventos, IcInicio, IcJogo, IcManual, IcResultados, IcSair } from './IconesEquipe';
 
 type Item = { href: string; rotulo: string; icone: React.ReactNode; novaAba?: boolean };
 
-const Icone = ({ children }: { children: React.ReactNode }) => (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>
-);
-
 /** Todas as telas e links do sistema, na ordem em que a equipe costuma usar. */
 const ITENS: Item[] = [
-    {
-        href: '/admin',
-        rotulo: 'Gerenciamento',
-        icone: <Icone><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1" /><circle cx="15" cy="6" r="2" /><circle cx="9" cy="12" r="2" /><circle cx="17" cy="18" r="2" /></Icone>,
-    },
-    {
-        href: '/eventos',
-        rotulo: 'Eventos',
-        icone: <Icone><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></Icone>,
-    },
-    {
-        href: '/whatsapp',
-        rotulo: 'Envio de resultados',
-        icone: <Icone><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" /></Icone>,
-    },
-    {
-        href: '/',
-        rotulo: 'Abrir o jogo',
-        novaAba: true,
-        icone: <Icone><path d="M8 5l11 7-11 7z" /></Icone>,
-    },
-    {
-        href: '/manual',
-        rotulo: 'Manual',
-        novaAba: true,
-        icone: <Icone><path d="M5 4h10a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z" /><path d="M5 17a3 3 0 0 1 3-3h10" /></Icone>,
-    },
+    { href: '/admin', rotulo: 'Início', icone: <IcInicio /> },
+    { href: '/admin/jogo', rotulo: 'Configurações', icone: <IcConfig /> },
+    { href: '/eventos', rotulo: 'Eventos', icone: <IcEventos /> },
+    { href: '/whatsapp', rotulo: 'Envio de resultados', icone: <IcResultados /> },
+    { href: '/', rotulo: 'Abrir o jogo', icone: <IcJogo />, novaAba: true },
+    { href: '/manual', rotulo: 'Manual', icone: <IcManual />, novaAba: true },
 ];
 
 /**
- * Barra de navegacao das telas da equipe (gerenciamento, eventos e envio de resultados): os links em formato de botao,
- * a tela atual em destaque e, no celular, um menu sanduiche. "Sair" encerra a sessao nas tres telas.
+ * Barra de navegacao das telas da equipe (painel, configuracoes, eventos e envio de resultados): os links em formato de
+ * botao, a tela atual em destaque e, no celular, um menu sanduiche. "Sair" encerra a sessao em todas elas.
  */
 export default function NavAdmin() {
     const caminho = usePathname();
@@ -89,7 +65,7 @@ export default function NavAdmin() {
     return (
         <header className="nav-admin" ref={raiz}>
             <div className="nav-admin-barra">
-                <Link className="nav-marca" href="/admin" aria-label="Teste de Perfil DISC: área da equipe">
+                <Link className="nav-marca" href="/admin" aria-label="Teste de Perfil DISC: painel da equipe">
                     <svg viewBox="0 0 64 64" width="30" height="30" aria-hidden="true">
                         <rect width="64" height="64" rx="14" fill="#fff" fillOpacity="0.12" />
                         <rect x="10" y="10" width="20" height="20" rx="4" fill="#e34948" />
@@ -132,7 +108,7 @@ export default function NavAdmin() {
                     })}
 
                     <button type="button" className="nav-botao nav-botao--sair" onClick={sair}>
-                        <Icone><path d="M9 4H5v16h4M16 8l4 4-4 4M20 12H9" /></Icone>
+                        <IcSair />
                         <span>Sair</span>
                     </button>
                 </nav>

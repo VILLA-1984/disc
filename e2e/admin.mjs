@@ -1,5 +1,5 @@
 /**
- * Teste de ponta a ponta da area de gerenciamento (/admin): acesso por senha, salvar a configuracao, e conferir
+ * Teste de ponta a ponta das configuracoes do jogo (/admin/jogo): acesso por senha, salvar a configuracao, e conferir
  * no jogo que ela vale (cenarios e avatares liberados, minimapa, barra de progresso, ranking, palavras por etapa e
  * textos). Requer o servidor em RUA_URL (padrao http://127.0.0.1:3100) com USER_AREA_ADM e PASS_AREA_ADM no .env e, de
  * preferencia, RUA_DADOS apontando para uma pasta temporaria e RUA_BANCO_LOCAL=1 (nao grava no Turso).
@@ -54,6 +54,16 @@ const origemFalsa = await fetch(`${base}/api/admin/config`, {
 assert.equal(origemFalsa.status, 403, 'pedido de outro site e recusado mesmo com o cookie');
 console.log('acesso: sem sessao, cookie falso, senha errada e origem falsa recusados; senha certa entra.');
 
+// O jogo so abre dentro de um evento: este teste cria o seu e joga nele.
+const criadoEvento = await fetch(`${base}/api/admin/eventos`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: cookie.split(';')[0] },
+    body: JSON.stringify({ nome: `Admin E2E ${Date.now().toString(36)}` }),
+});
+assert.equal(criadoEvento.status, 201, 'criar o evento de teste');
+const slugEvento = (await criadoEvento.json()).evento.slug;
+const urlEvento = `${base}/e/${slugEvento}`;
+
 // ------------------------------------------------------------------ gerenciamento (navegador)
 const navegador = await chromium.launch({
     channel: 'msedge',
@@ -70,7 +80,7 @@ const novaPagina = async (viewport = { width: 1180, height: 900 }) => {
 };
 
 const admin = await novaPagina();
-await admin.goto(`${base}/admin`);
+await admin.goto(`${base}/admin/jogo`);
 await admin.locator('#senha-admin').waitFor();
 await admin.fill('#usuario-admin', usuario);
 await admin.fill('#senha-admin', 'errada');
@@ -78,7 +88,7 @@ await admin.getByRole('button', { name: 'Entrar' }).click();
 await admin.getByText('Usuário ou senha incorretos.').waitFor({ timeout: 10000 });
 await admin.fill('#senha-admin', senha);
 await admin.getByRole('button', { name: 'Entrar' }).click();
-await admin.getByRole('heading', { name: 'Gerenciamento do teste' }).waitFor({ timeout: 15000 });
+await admin.getByRole('heading', { name: 'Configurações do jogo' }).waitFor({ timeout: 15000 });
 await admin.screenshot({ path: join(pasta, 'admin-1-padrao.png'), fullPage: true });
 
 assert.equal(await admin.locator('#palavras-por-etapa').inputValue(), '12', 'comeca em 12 palavras por etapa');
@@ -116,7 +126,7 @@ await admin.screenshot({ path: join(pasta, 'admin-2-salvo.png'), fullPage: true 
 
 // A configuracao foi para o banco: recarregar a tela mostra o que foi salvo.
 await admin.reload();
-await admin.getByRole('heading', { name: 'Gerenciamento do teste' }).waitFor();
+await admin.getByRole('heading', { name: 'Configurações do jogo' }).waitFor();
 assert.equal(await admin.locator('#palavras-por-etapa').inputValue(), '8');
 assert.equal(await admin.getByRole('checkbox', { name: /^Minimapa/ }).isChecked(), false);
 assert.equal(await admin.getByRole('checkbox', { name: /^Neve/ }).isChecked(), false);
@@ -125,7 +135,7 @@ console.log('gerenciamento: avisos de combinacao impossivel, salvar e recarregar
 
 // ------------------------------------------------------------------ o jogo obedece
 const jogador = await novaPagina({ width: 1180, height: 900 });
-await jogador.goto(base);
+await jogador.goto(urlEvento);
 await jogador.getByRole('heading', { name: 'Teste de Perfil Comportamental' }).waitFor();
 await jogador.check('#receber-nao');
 await jogador.click('button[type=submit]');
@@ -159,7 +169,7 @@ assert.equal(await jogador.locator('.rua-totais li').count(), 0, 'sem a lista po
 assert.ok(await jogador.locator('.rua-totais').isVisible(), 'o painel de totais (so o total) continua');
 await jogador.screenshot({ path: join(pasta, 'admin-4-jogo-sem-mapa.png') });
 
-const partida = await (await chamar('/api/iniciar', { anonimo: true })).json();
+const partida = await (await chamar('/api/iniciar', { anonimo: true, evento: slugEvento })).json();
 assert.equal(partida.ciclo.escolher, 8, 'o servidor sorteia a partida com 8 palavras por etapa');
 console.log('jogo: titulo, avatares, cenarios, minimapa, barra, ranking e 8 palavras por etapa obedecem a configuracao.');
 
@@ -168,7 +178,7 @@ const sessao = cookie.split(';')[0];
 const atual = await (await fetch(`${base}/api/admin/config`, { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: sessao }, body: JSON.stringify({ restaurar: true }) })).json();
 const emPares = await chamar('/api/admin/config', { config: { ...atual.config, modoPlacas: 'pares', palavrasPorEtapa: 9 } }, sessao);
 assert.equal(emPares.status, 200, 'salva o modo de duas palavras');
-const rodada = await (await chamar('/api/iniciar', { anonimo: true })).json();
+const rodada = await (await chamar('/api/iniciar', { anonimo: true, evento: slugEvento })).json();
 assert.equal(rodada.ciclo, undefined, 'no modo de duas palavras nao ha ciclo');
 assert.equal(rodada.etapas.length, 2);
 assert.equal(rodada.etapas[0].length, 9, '9 portoes por etapa');
@@ -178,7 +188,7 @@ console.log('modo das placas: duas palavras por portao (9 portoes) e limite maxi
 
 // A tela de gerenciamento mostra o modo salvo, com os textos e o limite do modo.
 await admin.reload();
-await admin.getByRole('heading', { name: 'Gerenciamento do teste' }).waitFor();
+await admin.getByRole('heading', { name: 'Configurações do jogo' }).waitFor();
 assert.ok(await admin.getByRole('radio', { name: /Duas palavras, uma em cada placa/ }).isChecked(), 'o modo salvo aparece marcado');
 assert.equal(await admin.locator('#palavras-por-etapa').getAttribute('max'), '24', 'duas palavras por portao: maximo 24');
 assert.equal(await admin.getByText('Explicação do jogo (duas palavras por portão)').count(), 1, 'so os textos do modo de duas palavras');
@@ -189,7 +199,7 @@ assert.equal(await admin.getByText('Regra de quantas palavras pegar').count(), 1
 
 // No jogo, o cartao de abertura usa o texto do modo de duas palavras.
 const placas = await novaPagina();
-await placas.goto(base);
+await placas.goto(urlEvento);
 await placas.check('#receber-nao');
 await placas.click('button[type=submit]');
 await placas.locator('#cartao.aberto').waitFor({ timeout: 30000 });
@@ -246,7 +256,7 @@ assert.equal((await enviarLogo(Buffer.alloc(1024 * 1024 + 1, 1), 'grande.png', s
 
 // Pela tela: enviar, ver a previa e a tela inicial, trocar e remover.
 await admin.reload();
-await admin.getByRole('heading', { name: 'Gerenciamento do teste' }).waitFor();
+await admin.getByRole('heading', { name: 'Configurações do jogo' }).waitFor();
 assert.ok(await admin.getByRole('radio', { name: /^Genérica/ }).isChecked(), 'comeca na logo generica');
 assert.equal(await admin.getByRole('radio', { name: /^Enviada por você/ }).count(), 0, 'sem imagem enviada, nao ha a opcao enviada');
 
@@ -333,7 +343,7 @@ console.log('logo: logos fixas, envio, formatos e tamanho recusados, troca, remo
 
 // ------------------------------------------------------------------ ranking na tela inicial
 const ranking = await novaPagina({ width: 1180, height: 900 });
-await ranking.goto(base);
+await ranking.goto(urlEvento);
 await ranking.locator('.totais-inicio').waitFor();
 assert.match(await ranking.textContent('.totais-inicio-geral'), /Total geral\s*\d+/, 'o total geral fica no alto');
 assert.deepEqual(
@@ -347,7 +357,7 @@ assert.ok(await ranking.evaluate(() => [...document.querySelectorAll('.totais-in
 await ranking.screenshot({ path: join(pasta, 'ranking-1-inicio-desktop.png') });
 
 const rankingCelular = await novaPagina({ width: 390, height: 900 });
-await rankingCelular.goto(base);
+await rankingCelular.goto(urlEvento);
 await rankingCelular.locator('.totais-inicio').waitFor();
 await rankingCelular.screenshot({ path: join(pasta, 'ranking-2-inicio-celular.png'), fullPage: true });
 
@@ -371,12 +381,12 @@ assert.equal(await admin.locator('#palavras-por-etapa').inputValue(), '12');
 const outro = await novaPagina();
 await outro.goto(base);
 await outro.getByRole('heading', { name: 'Teste de Perfil DISC' }).waitFor();
-assert.equal((await (await chamar('/api/iniciar', { anonimo: true })).json()).ciclo.escolher, 12, 'de volta a 12 palavras por etapa');
+assert.equal((await (await chamar('/api/iniciar', { anonimo: true, evento: slugEvento })).json()).ciclo.escolher, 12, 'de volta a 12 palavras por etapa');
 
 // ------------------------------------------------------------------ sair
 await admin.getByRole('button', { name: 'Sair' }).click();
 await admin.locator('#senha-admin').waitFor({ timeout: 15000 }); // a pagina recarrega e pede a senha de novo
-assert.equal(await admin.getByRole('heading', { name: 'Gerenciamento do teste' }).count(), 0, 'depois de sair, o formulario some');
+assert.equal(await admin.getByRole('heading', { name: 'Configurações do jogo', level: 1 }).count(), 0, 'depois de sair, o formulario some');
 assert.equal((await chamar('/api/admin/config', { restaurar: true })).status, 401, 'e a gravacao volta a ser recusada');
 
 assert.deepEqual(erros, [], `erros no navegador: ${erros.join(' | ')}`);

@@ -9,6 +9,7 @@
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { chromium } from 'playwright-core';
+import { eventoDeTeste } from './comum.mjs';
 
 const base = process.env.RUA_URL ?? 'http://127.0.0.1:3100';
 const pasta = process.argv[2] ?? 'public/manual';
@@ -35,7 +36,8 @@ const jogo = pagina.locator('.rua-app');
 const cartao = pagina.locator('#cartao.aberto');
 
 // 1. Abertura (com o QR code), cadastro e erro de numero
-await pagina.goto(base);
+const urlEvento = `${base}/e/${(await eventoDeTeste(base, 'Manual')).slug}`;
+await pagina.goto(urlEvento);
 await painel.waitFor();
 await pagina.locator('.qr-abertura').waitFor();
 await foto('00-abertura')(pagina.locator('.abertura'));
@@ -105,7 +107,7 @@ const celular = await (await navegador.newContext({
     hasTouch: true,
 })).newPage();
 await celular.addInitScript(() => { window.open = () => ({}); });
-await celular.goto(base);
+await celular.goto(urlEvento);
 await celular.check('#receber-sim');
 await celular.fill('#nome', 'Maria da Silva');
 await celular.fill('#whatsapp', '65999990000');

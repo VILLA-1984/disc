@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { chromium } from 'playwright-core';
+import { eventoDeTeste } from './comum.mjs';
 
 const base = process.env.RUA_URL ?? 'http://127.0.0.1:3100';
 const pasta = process.argv[2] ?? 'e2e/capturas';
@@ -32,11 +33,15 @@ await pagina.addInitScript(() => {
     window.open = (url) => { window.__abertos.push(url); return {}; };
 });
 
+// O jogo so abre dentro de um evento: o teste cria o seu.
+const evento = await eventoDeTeste(base, 'Partida E2E');
+const urlEvento = `${base}/e/${evento.slug}`;
+
 // Totais do painel antes da partida (para conferir, no fim, que esta partida foi contada uma vez).
-const totais0 = await (await fetch(`${base}/api/totais`)).json();
+const totais0 = await (await fetch(`${base}/api/totais?evento=${evento.slug}`)).json();
 
 // ------------------------------------------------------------------ cadastro
-await pagina.goto(base);
+await pagina.goto(urlEvento);
 await pagina.getByRole('heading', { name: 'Teste de Perfil DISC' }).waitFor();
 await pagina.screenshot({ path: join(pasta, 'e2e-0-cadastro.png') });
 
@@ -205,7 +210,7 @@ if (anonimo) {
 }
 
 // A partida concluida foi contada uma unica vez: +1 no total e +1 em exatamente um animal.
-const totais1 = await (await fetch(`${base}/api/totais`)).json();
+const totais1 = await (await fetch(`${base}/api/totais?evento=${evento.slug}`)).json();
 assert.equal(totais1.total, totais0.total + 1, 'o total devia subir 1');
 const mudaram = totais1.animais.filter((a, i) => a.total !== totais0.animais[i].total);
 assert.equal(mudaram.length, 1, 'so um animal devia mudar');

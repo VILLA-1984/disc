@@ -14,26 +14,26 @@ import { assinar } from '@/server/token';
 export async function POST(request: Request) {
     const corpo = (await request.json().catch(() => null)) as { nome?: unknown; whatsapp?: unknown; anonimo?: unknown; evento?: unknown } | null;
 
-    // Partida num evento: o evento precisa existir e estar ligado. Sem o campo, a partida e "sem evento".
-    let eventoId: number | null = null;
-
-    if (corpo?.evento !== undefined && corpo.evento !== null) {
-        const situacao = await eventoParaJogar(corpo.evento).catch(() => null);
-
-        if (situacao === null) {
-            return Response.json({ erro: 'Não foi possível conferir o evento agora. Tente de novo em instantes.' }, { status: 503 });
-        }
-
-        if (situacao.situacao === 'inexistente') {
-            return Response.json({ erro: 'Evento não encontrado.' }, { status: 404 });
-        }
-
-        if (situacao.situacao === 'inativo') {
-            return Response.json({ erro: 'Este evento não está recebendo participantes agora.' }, { status: 409 });
-        }
-
-        eventoId = situacao.evento.id;
+    // Toda partida pertence a um evento: sem evento, nao ha jogo. O evento precisa existir e estar ligado.
+    if (corpo?.evento === undefined || corpo.evento === null) {
+        return Response.json({ erro: 'Abra o jogo pelo link ou pelo QR code de um evento.' }, { status: 422 });
     }
+
+    const situacao = await eventoParaJogar(corpo.evento).catch(() => null);
+
+    if (situacao === null) {
+        return Response.json({ erro: 'Não foi possível conferir o evento agora. Tente de novo em instantes.' }, { status: 503 });
+    }
+
+    if (situacao.situacao === 'inexistente') {
+        return Response.json({ erro: 'Evento não encontrado.' }, { status: 404 });
+    }
+
+    if (situacao.situacao === 'inativo') {
+        return Response.json({ erro: 'Este evento não está recebendo participantes agora.' }, { status: 409 });
+    }
+
+    const eventoId = situacao.evento.id;
 
     // Receber o resultado pelo WhatsApp e opcional: sem cadastro (anonimo) nada pessoal e pedido nem guardado.
     const anonimo = corpo?.anonimo === true;

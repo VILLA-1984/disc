@@ -139,10 +139,13 @@ assert.equal(noEvento.status, 200);
 assert.equal((await totais(slug)).total, 1, 'a partida contou no evento');
 assert.equal((await totais()).total, semEventoAntes, 'e nao contou no "sem evento"');
 
-const semEvento = await jogarPelaApi({ anonimo: true });
-assert.equal(semEvento.status, 200);
-assert.equal((await totais()).total, semEventoAntes + 1, 'partida sem evento conta no geral');
-assert.equal((await totais(slug)).total, 1, 'e nao no evento');
+// Nao existe jogo solto: sem evento, o servidor recusa a partida
+const solto = await json('/api/iniciar', { anonimo: true });
+assert.equal(solto.status, 422, 'partida sem evento e recusada');
+assert.match((await solto.json()).erro, /link ou pelo QR code de um evento/);
+assert.equal((await json('/api/iniciar', { anonimo: true, evento: null })).status, 422, 'evento nulo tambem');
+assert.equal((await totais()).total, semEventoAntes, 'nada contou fora de evento');
+assert.equal((await totais(slug)).total, 1, 'e o evento segue com a sua partida');
 
 // o resultado de quem jogou no evento continua indo para a equipe enviar
 assert.match(noEvento.corpo.envio.idExibicao, /^[A-HJKMNP-Z]{3}-[2-9]{3}$/);
@@ -170,11 +173,15 @@ assert.match(await jogo.textContent('.totais-inicio-geral'), /Total geral\s*1/, 
 assert.match(await jogo.getAttribute('.qr-codigo', 'aria-label'), new RegExp(`/e/${slug}$`), 'o QR code leva ao evento');
 await jogo.screenshot({ path: join(pasta, 'eventos-2-jogo-do-evento.png') });
 
+// A raiz nao abre jogo: so oferece a escolha do evento (os que estao ligados)
 const inicio = await contexto.newPage();
 await inicio.goto(base);
-await inicio.locator('.totais-inicio').waitFor();
-assert.equal(await inicio.locator('.evento-rotulo').count(), 0, 'a raiz nao e de nenhum evento');
-assert.match(await inicio.textContent('.totais-inicio-geral'), new RegExp(`Total geral\\s*${semEventoAntes + 1}`), 'a raiz mostra o ranking sem evento');
+const escolha = inicio.locator('.eventos-escolha');
+await escolha.waitFor();
+assert.equal(await inicio.locator('form, #nome, #receber-sim').count(), 0, 'a raiz nao abre jogo');
+assert.equal(await inicio.locator('.totais-inicio').count(), 0, 'a raiz nao tem ranking de jogo');
+assert.match(await escolha.locator(`a[href="/e/${slug}"]`).textContent(), /Feira E2E .* \(renomeado\)/, 'o evento ligado aparece na escolha');
+await inicio.screenshot({ path: join(pasta, 'eventos-7-raiz-escolha.png') });
 
 // ------------------------------------------------------------------ telao
 const telao = await (await navegador.newContext({ viewport: { width: 1920, height: 1080 } })).newPage();
@@ -243,6 +250,11 @@ await desligado.goto(`${base}/e/${slug}/telao`);
 await desligado.locator('.telao-ranking li').first().waitFor();
 assert.match(await desligado.textContent('.telao-sub'), /evento desligado/);
 assert.equal(await desligado.locator('.telao-lateral').count(), 0, 'evento desligado nao oferece QR code');
+
+// Evento desligado some da escolha da raiz
+await inicio.reload();
+await inicio.locator('.evento-escolha').first().waitFor().catch(() => undefined);
+assert.equal(await inicio.locator(`a[href="/e/${slug}"]`).count(), 0, 'evento desligado nao aparece na raiz');
 
 // Sair
 await pagina.getByRole('button', { name: 'Sair' }).click();

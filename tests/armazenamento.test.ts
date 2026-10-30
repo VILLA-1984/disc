@@ -10,6 +10,7 @@ beforeAll(() => {
     process.env.RUA_DADOS = pasta;
     delete process.env.RUA_SEGREDO;
     delete process.env.RUA_BANCO;
+    delete process.env.RUA_BANCO_LOCAL; // forcaria o sqlite local e esconderia o modo turso
     delete process.env.TURSO_DATABASE_URL;
     delete process.env.TURSO_AUTH_TOKEN;
 });
