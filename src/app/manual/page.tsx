@@ -17,7 +17,7 @@ const PASSOS: Passo[] = [
     {
         titulo: 'Abra o jogo pelo link ou pelo QR code do evento',
         imagem: '00-abertura.jpg',
-        legenda: 'Tela de abertura de um evento: cadastro à esquerda e QR code à direita. (O print mostra a tela de uma versão anterior.)',
+        legenda: 'Abertura de um evento: cadastro à esquerda, QR code do evento à direita e o ranking do evento embaixo.',
         texto: (
             <>
                 <p>O jogo <strong>sempre acontece dentro de um evento</strong>. Cada evento tem o seu link e o seu <strong>QR code</strong>: aponte a câmera do celular para ele e o jogo abre no aparelho, já no evento certo. No computador, a abertura do evento mostra esse QR code. Se você abrir o endereço principal, a tela só mostra os eventos disponíveis; toque em <strong>Participar</strong> no seu.</p>
@@ -28,7 +28,7 @@ const PASSOS: Passo[] = [
     {
         titulo: 'Escolha se quer receber o resultado',
         imagem: '01-cadastro.png',
-        legenda: 'Com "Sim, quero receber", aparecem os campos de nome e WhatsApp. (O print mostra a tela de uma versão anterior.)',
+        legenda: 'Com "Sim, quero receber", aparecem os campos de nome e WhatsApp.',
         texto: (
             <>
                 <p>Receber o resultado pelo WhatsApp é <strong>opcional</strong>. A tela pergunta <strong>“Quer receber o seu resultado pelo WhatsApp?”</strong>, e o botão só libera depois da sua escolha:</p>
@@ -65,12 +65,12 @@ const PASSOS: Passo[] = [
     {
         titulo: 'Escolha o avatar, a cor e a vista',
         imagem: '04-avatar.jpg',
-        legenda: 'Escolha do avatar, da cor da roupa e do jeito de ver a rua.',
+        legenda: 'Escolha do avatar, da cor da roupa, do cenário, de como ir (aqui, no Rio) e do jeito de ver o cenário.',
         texto: (
             <>
                 <p>Todos os avatares jogam do mesmo jeito; o nome é só um apelido. Escolha também a cor da roupa.</p>
-                <p>Em <strong>Onde você quer ir?</strong> escolha o cenário: a <strong>Rua</strong> (de cidade), o <strong>Rio</strong>, o <strong>Céu</strong>, a <strong>Neve</strong> ou os <strong>Trilhos</strong>. Onde há mais de um jeito de ir, aparece <strong>Como você quer ir?</strong>: no rio, por exemplo, de barco, veleiro, caiaque, moto aquática, boia de pato ou a nado; no céu, de avião, jato, helicóptero, asa delta ou parapente; na neve, de esqui, sit-ski ou trenó; nos trilhos, de locomotiva ou draisina. O cenário muda só o visual: as palavras, as regras e o resultado são os mesmos. Nem todo avatar vai em todo cenário ou meio (<strong>moto e táxi, por exemplo, não vão de barco nem pelo céu</strong>), e eles ficam apagados na lista. A equipe também pode liberar só alguns cenários e avatares em cada evento.</p>
-                <p>Em <strong>Como você quer ver a rua?</strong> há duas opções: <strong>Vista 3D</strong> (o avatar corre para a frente) e <strong>Vista lateral</strong> (o avatar corre para o lado, como num jogo clássico). Em telas pequenas, role o cartão para ver essa opção e o botão <strong>Começar</strong>.</p>
+                <p>Em <strong>Onde você quer correr?</strong> escolha o cenário: a <strong>Rua</strong> (de cidade), o <strong>Rio</strong>, o <strong>Céu</strong>, a <strong>Neve</strong> ou os <strong>Trilhos</strong>. Onde há mais de um jeito de ir, aparece <strong>Como você quer ir?</strong>: no rio, por exemplo, de barco, veleiro, caiaque, moto aquática, boia de pato ou a nado; no céu, de avião, jato, helicóptero, asa delta ou parapente; na neve, de esqui, sit-ski ou trenó; nos trilhos, de locomotiva ou draisina. O cenário muda só o visual: as palavras, as regras e o resultado são os mesmos. Nem todo avatar vai em todo cenário ou meio (<strong>moto e táxi, por exemplo, não vão de barco nem pelo céu</strong>), e eles ficam apagados na lista. A equipe também pode liberar só alguns cenários e avatares em cada evento.</p>
+                <p>Em <strong>Como você quer ver o cenário?</strong> há duas opções: <strong>Vista 3D</strong> (o avatar corre para a frente) e <strong>Vista lateral</strong> (o avatar corre para o lado, como num jogo clássico). Em telas pequenas, role o cartão para ver essa opção e o botão <strong>Começar</strong>.</p>
             </>
         ),
     },
@@ -94,7 +94,7 @@ const PASSOS: Passo[] = [
     {
         titulo: 'Pegue ou deixe passar em cada portão',
         imagem: '06-portao.jpg',
-        legenda: 'Imagem de uma versão anterior, com duas palavras; hoje uma placa traz a palavra e a outra, "Deixar passar".',
+        legenda: 'Um portão: de um lado a palavra, do outro "Deixar passar".',
         texto: (
             <>
                 <p>Normalmente, cada portão tem <strong>duas placas</strong>: uma com a palavra e outra com <strong>Deixar passar</strong> (se a equipe escolheu o modo de duas palavras, cada placa traz uma palavra diferente e você escolhe uma delas). A palavra alterna de lado a cada portão. Cada placa traz uma etiqueta do lado: <strong>← ESQUERDA</strong>, em azul, na placa da esquerda, e <strong>DIREITA →</strong>, em laranja, na da direita. Os botões embaixo do jogo têm as <strong>mesmas cores e ficam do mesmo lado</strong>: o azul à esquerda e o laranja à direita.</p>
@@ -149,7 +149,7 @@ const PASSOS: Passo[] = [
     {
         titulo: 'Fim do jogo: quem envia é a equipe',
         imagem: '09-enviar.png',
-        legenda: 'Tela final. (O print mostra a tela de uma versão anterior.)',
+        legenda: 'Fim do jogo de quem se cadastrou. Quem joga sem cadastro vê o ID no lugar do aviso de envio.',
         texto: (
             <>
                 <p>Depois do resultado, toque em <strong>Continuar</strong>. O jogador <strong>não envia nada pelo próprio celular</strong>: quem envia é a equipe, na tela <strong>/whatsapp</strong>.</p>

@@ -217,7 +217,7 @@ export default function Partida({ qr, config, logo, totaisInicio, evento }: { qr
                                         aria-invalid={erroWhatsapp ? true : undefined}
                                         onChange={(e) => setWhatsapp(mascararWhatsapp(e.target.value))}
                                     />
-                                    {erroWhatsapp ? <span className="erro-campo" role="alert">{erroWhatsapp}</span> : <small>DDD + número com 9 dígitos. Você poderá corrigir no final.</small>}
+                                    {erroWhatsapp ? <span className="erro-campo" role="alert">{erroWhatsapp}</span> : <small>DDD + número com 9 dígitos. Se o número estiver errado, avise a equipe no fim do jogo.</small>}
                                 </div>
                             </>
                         )}
@@ -225,8 +225,8 @@ export default function Partida({ qr, config, logo, totaisInicio, evento }: { qr
                         {querReceber !== null && (
                             <p className="aviso-dados">
                                 {querReceber
-                                    ? 'Guardamos só o seu nome e o seu WhatsApp, para enviar o resultado. As suas escolhas no jogo não ficam gravadas. O painel do jogo conta só quantas pessoas jogaram e quantas deram cada animal, sem identificar ninguém.'
-                                    : 'Sem cadastro: não guardamos nome nem telefone, e as suas escolhas no jogo também não ficam gravadas. No fim você ainda pode pedir o resultado pelo WhatsApp. O painel do jogo conta só quantas pessoas jogaram e quantas deram cada animal, sem identificar ninguém.'}
+                                    ? 'Guardamos o seu nome, o seu WhatsApp e um resumo do resultado (só as porcentagens por fator), para a equipe enviar. As palavras que você escolhe não ficam gravadas. O ranking conta só quantas pessoas jogaram e quantas deram cada animal, sem identificar ninguém.'
+                                    : 'Sem cadastro: não guardamos nome nem telefone, e as palavras que você escolhe não ficam gravadas. No fim aparece um ID: se quiser receber o resultado pelo WhatsApp, informe-o à equipe em até 5 minutos; depois disso o resultado é apagado. O ranking conta só quantas pessoas jogaram e quantas deram cada animal, sem identificar ninguém.'}
                             </p>
                         )}
 

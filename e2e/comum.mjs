@@ -4,6 +4,7 @@
  */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { criarCiclo } from '../src/jogo/ciclo.js';
 
 export function lerEnv() {
     const env = {};
@@ -34,15 +35,42 @@ export async function entrarComoEquipe(base) {
     return (resposta.headers.get('set-cookie') ?? '').split(';')[0];
 }
 
-/** Cria um evento (ligado) com nome unico e devolve { id, slug, nome, cookie }. */
-export async function eventoDeTeste(base, prefixo = 'Teste E2E') {
+/** Cria um evento (ligado) e devolve { id, slug, nome, cookie }. Por padrao o nome leva um sufixo unico; com { exato: true }, nao. */
+export async function eventoDeTeste(base, prefixo = 'Teste E2E', { exato = false } = {}) {
     const cookie = await entrarComoEquipe(base);
     const resposta = await fetch(`${base}/api/admin/eventos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Cookie: cookie },
-        body: JSON.stringify({ nome: `${prefixo} ${Date.now().toString(36)}` }),
+        body: JSON.stringify({ nome: exato ? prefixo : `${prefixo} ${Date.now().toString(36)}` }),
     });
     assert.equal(resposta.status, 201, 'criar o evento de teste');
 
     return { ...(await resposta.json()).evento, cookie };
+}
+
+/**
+ * Joga uma partida inteira pela API (sem navegador) e conclui: pega uma palavra a cada tres, a partir de `deslocamento`
+ * (0, 1 ou 2), o que muda o resultado. Devolve a resposta de /api/concluir.
+ */
+export async function jogarPelaApi(base, corpoIniciar, deslocamento = 0) {
+    const json = (rota, corpo) => fetch(base + rota, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo) });
+    const iniciada = await (await json('/api/iniciar', corpoIniciar)).json();
+    assert.ok(iniciada.ciclo, `a partida devia vir em ciclo: ${JSON.stringify(iniciada).slice(0, 120)}`);
+    const escolhas = [];
+
+    iniciada.ciclo.etapas.forEach((ordens, stage) => {
+        const etapa = criarCiclo(ordens, iniciada.ciclo.escolher);
+        let i = 0;
+
+        for (let id = etapa.proximo(); id !== null; id = etapa.proximo()) {
+            const take = (i++ + deslocamento) % 3 === 0;
+            etapa.registrar(take);
+            escolhas.push({ stage, take, ms: 400 });
+        }
+    });
+
+    const concluida = await json('/api/concluir', { token: iniciada.token, escolhas });
+    assert.equal(concluida.status, 200, 'concluir a partida');
+
+    return concluida.json();
 }
