@@ -258,7 +258,7 @@ export default function Partida({ qr, config, logo, totaisInicio, evento }: { qr
             )}
 
             {fase === 'envio' && resultado && (
-                <FimDoJogo nome={nome.trim()} whatsapp={whatsapp} resultado={resultado} anonimo={anonimo} />
+                <FimDoJogo nome={nome.trim()} whatsapp={whatsapp} resultado={resultado} anonimo={anonimo} evento={evento} />
             )}
         </>
     );
@@ -281,7 +281,7 @@ function tempoRestante(ms: number): string {
  * Fim do jogo: o animal e o que acontece com o resultado. Quem se cadastrou recebe o resultado pela equipe (tela
  * /whatsapp); quem jogou sem cadastro ve um ID para informar a equipe, e o resultado e apagado em poucos minutos.
  */
-function FimDoJogo({ nome, whatsapp, resultado, anonimo }: { nome: string; whatsapp: string; resultado: Resultado; anonimo: boolean }) {
+function FimDoJogo({ nome, whatsapp, resultado, anonimo, evento }: { nome: string; whatsapp: string; resultado: Resultado; anonimo: boolean; evento: { slug: string } }) {
     const animal = resolverAnimais(resultado.natural.percentual).principal;
     const envio = resultado.envio ?? null;
     const [fim] = useState(() => (envio?.restanteMs != null ? Date.now() + envio.restanteMs : null));
@@ -343,7 +343,7 @@ function FimDoJogo({ nome, whatsapp, resultado, anonimo }: { nome: string; whats
             )}
 
             <div className="botoes">
-                <button className="botao botao--discreto" type="button" onClick={() => window.location.assign('/')}>
+                <button className="botao botao--discreto" type="button" onClick={() => window.location.assign(`/e/${evento.slug}`)}>
                     Próxima pessoa
                 </button>
             </div>

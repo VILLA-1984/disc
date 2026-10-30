@@ -216,6 +216,12 @@ const mudaram = totais1.animais.filter((a, i) => a.total !== totais0.animais[i].
 assert.equal(mudaram.length, 1, 'so um animal devia mudar');
 assert.equal(mudaram[0].total, totais0.animais.find((a) => a.chave === mudaram[0].chave).total + 1);
 
+// "Proxima pessoa" volta a abertura do proprio evento (nao a escolha de evento)
+await pagina.getByRole('button', { name: 'Próxima pessoa' }).click();
+await pagina.waitForURL(`**/e/${evento.slug}`, { timeout: 15000 });
+await pagina.locator('.evento-rotulo').waitFor();
+assert.equal(new URL(pagina.url()).pathname, `/e/${evento.slug}`, 'a proxima pessoa continua no mesmo evento');
+
 assert.deepEqual(erros, [], `erros no navegador: ${erros.join(' | ')}`);
 await navegador.close();
 console.log(`OK (${modo}): ${anonimo ? 'sem cadastro' : 'cadastro validado'}, partida completa, "${titulo}", resultado guardado para a equipe.`);

@@ -15,12 +15,12 @@ type Passo = {
 
 const PASSOS: Passo[] = [
     {
-        titulo: 'Abra o jogo no celular ou no computador',
+        titulo: 'Abra o jogo pelo link ou pelo QR code do evento',
         imagem: '00-abertura.jpg',
-        legenda: 'Tela de abertura: cadastro à esquerda e QR code à direita.',
+        legenda: 'Tela de abertura de um evento: cadastro à esquerda e QR code à direita. (O print mostra a tela de uma versão anterior.)',
         texto: (
             <>
-                <p>No computador, a abertura mostra um <strong>QR code</strong>. Quem quiser jogar no próprio celular aponta a câmera para ele e o jogo abre no aparelho.</p>
+                <p>O jogo <strong>sempre acontece dentro de um evento</strong>. Cada evento tem o seu link e o seu <strong>QR code</strong>: aponte a câmera do celular para ele e o jogo abre no aparelho, já no evento certo. No computador, a abertura do evento mostra esse QR code. Se você abrir o endereço principal, a tela só mostra os eventos disponíveis; toque em <strong>Participar</strong> no seu.</p>
                 <p>O celular precisa estar na <strong>mesma rede Wi-Fi</strong> do computador que mostra o QR code. No celular, o QR code não aparece: a pessoa já está jogando nele.</p>
             </>
         ),
@@ -33,10 +33,10 @@ const PASSOS: Passo[] = [
             <>
                 <p>Receber o resultado pelo WhatsApp é <strong>opcional</strong>. A tela pergunta <strong>“Quer receber o seu resultado pelo WhatsApp?”</strong>, e o botão só libera depois da sua escolha:</p>
                 <ul>
-                    <li><strong>Sim, quero receber:</strong> digite o seu nome e o número do WhatsApp com DDD. A máscara <strong>(65) 99999-9999</strong> aparece enquanto você digita. Só o nome e o número ficam guardados, para o resultado ser enviado no fim.</li>
-                    <li><strong>Não, só quero jogar:</strong> nada é pedido nem guardado, e o botão vira <strong>Começar a jogar</strong>. Você vê o animal na tela e, no fim, ainda pode pedir o resultado pelo WhatsApp.</li>
+                    <li><strong>Sim, quero receber:</strong> digite o seu nome e o número do WhatsApp com DDD. A máscara <strong>(65) 99999-9999</strong> aparece enquanto você digita. Só o nome e o número ficam guardados, para a equipe enviar o resultado no fim.</li>
+                    <li><strong>Não, só quero jogar:</strong> nenhum nome nem telefone é pedido, e o botão vira <strong>Começar a jogar</strong>. Você vê o animal na tela e, no fim, recebe um <strong>ID</strong>: se mudar de ideia, diga o ID e o seu número à equipe em até 5 minutos.</li>
                 </ul>
-                <p>Em qualquer caso, as suas escolhas no jogo <strong>não são gravadas</strong>.</p>
+                <p>Em qualquer caso, as palavras que você escolhe <strong>não são gravadas</strong>: só um resumo do resultado, que a equipe usa para o envio.</p>
             </>
         ),
     },
@@ -47,7 +47,7 @@ const PASSOS: Passo[] = [
         texto: (
             <>
                 <p>O WhatsApp precisa de <strong>DDD + 9 dígitos</strong> (11 números no total). Se faltar algo, a tela explica o que é, e o jogo só começa depois de o número estar certo.</p>
-                <p>Digitou um número válido, mas errado? Sem problema: você poderá trocá-lo no final, antes de enviar.</p>
+                <p>Digitou um número válido, mas errado? Sem problema: avise a equipe, que corrige o número antes de enviar o resultado.</p>
             </>
         ),
     },
@@ -57,7 +57,7 @@ const PASSOS: Passo[] = [
         legenda: 'Apresentação do jogo, com os controles e as regras.',
         texto: (
             <>
-                <p>Você vai correr por uma rua, em duas etapas. Em cada portão aparece <strong>uma palavra</strong> de um lado e <strong>&quot;Deixar passar&quot;</strong> do outro: você pega a palavra se ela combina com você. Não há resposta certa ou errada.</p>
+                <p>Você vai percorrer um cenário, em duas etapas. Em cada portão aparece <strong>uma palavra</strong> de um lado e <strong>&quot;Deixar passar&quot;</strong> do outro: você pega a palavra se ela combina com você. Não há resposta certa ou errada. (Em alguns eventos a equipe prefere <strong>duas palavras diferentes</strong> por portão: aí você escolhe uma das duas.)</p>
                 <p>Não existe limite de tempo: o avatar espera pela sua escolha.</p>
             </>
         ),
@@ -69,7 +69,7 @@ const PASSOS: Passo[] = [
         texto: (
             <>
                 <p>Todos os avatares jogam do mesmo jeito; o nome é só um apelido. Escolha também a cor da roupa.</p>
-                <p>Em <strong>Onde você quer correr?</strong> escolha o cenário: a <strong>Rua</strong> (de cidade) ou o <strong>Rio</strong>, percorrido de barco, de colete salva-vidas. O cenário muda só o visual: as palavras, as regras e o resultado são os mesmos. Alguns avatares não vão em todos os cenários: <strong>moto e táxi não vão de barco</strong>, e ficam apagados na lista quando o Rio está marcado.</p>
+                <p>Em <strong>Onde você quer ir?</strong> escolha o cenário: a <strong>Rua</strong> (de cidade), o <strong>Rio</strong>, o <strong>Céu</strong>, a <strong>Neve</strong> ou os <strong>Trilhos</strong>. Onde há mais de um jeito de ir, aparece <strong>Como você quer ir?</strong>: no rio, por exemplo, de barco, veleiro, caiaque, moto aquática, boia de pato ou a nado; no céu, de avião, jato, helicóptero, asa delta ou parapente; na neve, de esqui, sit-ski ou trenó; nos trilhos, de locomotiva ou draisina. O cenário muda só o visual: as palavras, as regras e o resultado são os mesmos. Nem todo avatar vai em todo cenário ou meio (<strong>moto e táxi, por exemplo, não vão de barco nem pelo céu</strong>), e eles ficam apagados na lista. A equipe também pode liberar só alguns cenários e avatares em cada evento.</p>
                 <p>Em <strong>Como você quer ver a rua?</strong> há duas opções: <strong>Vista 3D</strong> (o avatar corre para a frente) e <strong>Vista lateral</strong> (o avatar corre para o lado, como num jogo clássico). Em telas pequenas, role o cartão para ver essa opção e o botão <strong>Começar</strong>.</p>
             </>
         ),
@@ -97,7 +97,7 @@ const PASSOS: Passo[] = [
         legenda: 'Imagem de uma versão anterior, com duas palavras; hoje uma placa traz a palavra e a outra, "Deixar passar".',
         texto: (
             <>
-                <p>Cada portão tem <strong>duas placas</strong>: uma com a palavra e outra com <strong>Deixar passar</strong>. A palavra alterna de lado a cada portão. Cada placa traz uma etiqueta do lado: <strong>← ESQUERDA</strong>, em azul, na placa da esquerda, e <strong>DIREITA →</strong>, em laranja, na da direita. Os botões embaixo do jogo têm as <strong>mesmas cores e ficam do mesmo lado</strong>: o azul à esquerda e o laranja à direita.</p>
+                <p>Normalmente, cada portão tem <strong>duas placas</strong>: uma com a palavra e outra com <strong>Deixar passar</strong> (se a equipe escolheu o modo de duas palavras, cada placa traz uma palavra diferente e você escolhe uma delas). A palavra alterna de lado a cada portão. Cada placa traz uma etiqueta do lado: <strong>← ESQUERDA</strong>, em azul, na placa da esquerda, e <strong>DIREITA →</strong>, em laranja, na da direita. Os botões embaixo do jogo têm as <strong>mesmas cores e ficam do mesmo lado</strong>: o azul à esquerda e o laranja à direita.</p>
                 <p>Quando o avatar chega ao portão e as palavras aparecem, escolha de um destes jeitos:</p>
                 <ul>
                     <li><strong>Toque ou clique na placa</strong> da palavra escolhida;</li>
@@ -157,7 +157,7 @@ const PASSOS: Passo[] = [
                     <li><strong>Quem se cadastrou:</strong> a tela diz que a equipe vai enviar o resultado para o WhatsApp informado (só o DDD e os quatro últimos dígitos aparecem). A equipe vê o resultado na lista e envia.</li>
                     <li><strong>Quem jogou sem cadastro:</strong> a tela mostra um <strong>ID</strong>, como <strong>ABC-123</strong>. Quem quiser receber o resultado diz o ID e o número à equipe. Se não quiser, é só seguir: o resultado é <strong>apagado sozinho em 5 minutos</strong>, e a tela mostra a contagem regressiva.</li>
                 </ul>
-                <p>Terminou? O botão <strong>Próxima pessoa</strong> volta à abertura, limpa a tela e deixa o jogo pronto para quem vem a seguir.</p>
+                <p>Terminou? O botão <strong>Próxima pessoa</strong> volta à abertura do evento, limpa a tela e deixa o jogo pronto para quem vem a seguir.</p>
             </>
         ),
     },
@@ -170,11 +170,11 @@ const PERGUNTAS: { pergunta: string; resposta: React.ReactNode }[] = [
     },
     {
         pergunta: 'O que é o quadro no canto esquerdo do jogo?',
-        resposta: 'É o painel de totais: mostra quantas pessoas já terminaram o jogo e quantas ficaram com cada animal (Tubarão, Águia, Gato, Lobo ou Equilibrado). São só contadores: não mostram nome nem telefone, e contam também quem jogou sem cadastro. No celular aparece só o total.',
+        resposta: 'É o painel de totais do evento: mostra quantas pessoas já terminaram o jogo naquele evento e quantas ficaram com cada animal (Tubarão, Águia, Gato, Lobo ou Equilibrado). São só contadores: não mostram nome nem telefone, e contam também quem jogou sem cadastro. O mesmo ranking aparece na abertura do evento e no telão. No celular aparece só o total.',
     },
     {
         pergunta: 'Preciso informar nome e telefone para jogar?',
-        resposta: 'Não. Na primeira tela, escolha “Não, só quero jogar”: nada pessoal é pedido nem guardado. No fim aparece um ID: se mudar de ideia, diga o ID e o número à equipe em até 5 minutos.',
+        resposta: 'Não. Na primeira tela, escolha “Não, só quero jogar”: nenhum nome nem telefone é pedido. No fim aparece um ID: se mudar de ideia, diga o ID e o número à equipe em até 5 minutos.',
     },
     {
         pergunta: 'Digitei o número errado no começo.',
@@ -183,6 +183,10 @@ const PERGUNTAS: { pergunta: string; resposta: React.ReactNode }[] = [
     {
         pergunta: 'O WhatsApp não abriu na tela de envio (/whatsapp).',
         resposta: 'Use o link “Toque aqui para abrir o WhatsApp” que aparece no aviso da tela. Alguns navegadores bloqueiam a abertura de nova aba.',
+    },
+    {
+        pergunta: 'Abri o endereço e não consigo jogar: só aparece uma lista (ou um aviso).',
+        resposta: 'O jogo só abre dentro de um evento. Se aparece uma lista, toque em “Participar” no seu evento. Se aparece “Nenhum evento está recebendo participantes agora” ou “Este evento não está recebendo participantes”, o evento está desligado ou ainda não foi criado: procure a equipe.',
     },
     {
         pergunta: 'Aparece que o navegador não consegue exibir o jogo.',
@@ -203,11 +207,11 @@ export default function Manual() {
         <main className="pagina manual">
             <div className="cabecalho">
                 <h1>Manual de uso</h1>
-                <Link href="/">Voltar ao jogo</Link>
+                <Link href="/">Escolher o evento</Link>
             </div>
 
             <p className="manual-intro">
-                O <strong>Teste de Perfil DISC</strong> é uma versão em jogo do teste comportamental DISC do SENAC-MT. A pessoa corre por uma rua e, em cada portão, escolhe uma entre duas palavras. No fim, descobre o seu animal e, se quiser, recebe o resultado pelo WhatsApp, enviado pela equipe.
+                O <strong>Teste de Perfil DISC</strong> é uma versão em jogo do teste comportamental DISC do SENAC-MT. A pessoa percorre um cenário (rua, rio, céu, neve ou trilhos) e, em cada portão, escolhe entre as palavras que aparecem. No fim, descobre o seu animal e, se quiser, recebe o resultado pelo WhatsApp, enviado pela equipe.
             </p>
 
             <nav className="manual-indice" aria-label="Neste manual">
@@ -245,14 +249,25 @@ export default function Manual() {
             </div>
 
             <div className="manual-bloco">
+                <h3>A área da equipe</h3>
+                <ul>
+                    <li>Entre em <strong>/admin</strong> com o usuário e a senha da equipe. O <strong>Painel da equipe</strong> mostra um resumo (eventos ligados, resultados a enviar, pessoas sem cadastro) e um botão para cada área. Uma barra no alto, com menu sanduíche no celular, leva a todas elas: <strong>Início</strong>, <strong>Configurações</strong>, <strong>Eventos</strong>, <strong>Envio de resultados</strong>, o jogo e este manual.</li>
+                    <li><strong>Configurações</strong> (<strong>/admin/jogo</strong>): quais avatares, cenários e meios ficam liberados, o que aparece na tela (ranking, minimapa, barra de progresso), quantas palavras por etapa, se cada portão traz uma palavra e “Deixar passar” ou duas palavras, a logo e os textos.</li>
+                    <li><strong>Eventos</strong> (<strong>/eventos</strong>): crie cada evento, com o seu ranking, link, QR code e telão, e ligue ou desligue quando quiser.</li>
+                    <li><strong>Envio de resultados</strong> (<strong>/whatsapp</strong>): enviar o resultado pelo WhatsApp, descrito abaixo.</li>
+                    <li>No <strong>telão</strong> (<strong>/e/nome-do-evento/telao</strong>, sem login), acrescente <code>?intervalo=30</code> ao endereço para mudar de quanto em quanto tempo um animal ganha a tela (de 5 a 300 segundos; o padrão é 20).</li>
+                </ul>
+            </div>
+
+            <div className="manual-bloco">
                 <h3>Montar o estande (QR code para jogar no celular)</h3>
                 <ul>
                     <li>No computador do estande, rode <code>npm run feira</code>. Ele compila o jogo e o deixa acessível a outros aparelhos da rede, na porta 3000.</li>
-                    <li>Abra <code>http://localhost:3000</code> nesse computador. O QR code da abertura usa sozinho o endereço do computador na rede (por exemplo <code>http://192.168.0.20:3000</code>).</li>
+                    <li>Entre na área da equipe (<code>http://localhost:3000/admin</code>), crie o evento em <strong>Eventos</strong> e abra o jogo dele nesse computador (<code>/e/nome-do-evento</code>). O QR code da abertura usa sozinho o endereço do computador na rede (por exemplo <code>http://192.168.0.20:3000/e/nome-do-evento</code>).</li>
                     <li>Computador e celulares precisam estar na <strong>mesma rede Wi-Fi</strong>. Redes de eventos costumam isolar os aparelhos entre si: teste antes com um celular. Uma alternativa segura é levar um roteador próprio ou usar o ponto de acesso de um celular.</li>
                     <li>Na primeira execução, o Windows pergunta se o Node.js pode receber conexões: permita na <strong>rede privada</strong>. Sem isso, o celular não consegue abrir o endereço.</li>
                     <li>Se o jogo estiver hospedado na internet, defina <code>RUA_URL_PUBLICA</code> com o endereço real e o QR code passa a usá-lo.</li>
-                    <li>Se a rede mudar (outro Wi-Fi), o endereço muda: reabra a página no computador para o QR code ser gerado de novo.</li>
+                    <li>Se a rede mudar (outro Wi-Fi), o endereço muda: reabra a página do evento no computador para o QR code ser gerado de novo.</li>
                 </ul>
             </div>
 
@@ -272,7 +287,7 @@ export default function Manual() {
                 <ul>
                     <li>Ficam salvos <strong>nome e WhatsApp</strong>, e só de quem escolhe receber o resultado, com as datas de cadastro e de correção, e o <strong>resumo do resultado</strong> (as porcentagens por fator, sem as palavras escolhidas) para a equipe enviar. O banco é o <strong>Turso</strong> (nuvem; é o que o Vercel usa) ou um SQLite embutido no servidor (<code>data/participantes.db</code>, o modo da feira).</li>
                     <li>Quem joga sem cadastro não deixa registro de pessoa: guarda-se só o resumo do resultado e um ID, por <strong>5 minutos</strong>, e depois tudo é apagado. O número que a equipe digita para enviar a um anônimo <strong>nunca é gravado</strong>.</li>
-                    <li>O painel de totais do jogo usa um contador à parte: para cada partida concluída guarda só um <strong>código aleatório</strong> (para ela não contar duas vezes) e o <strong>animal</strong> do resultado, com ou sem cadastro. Nada disso identifica alguém. A lista pública está em <code>/api/totais</code>.</li>
+                    <li>O painel de totais do jogo usa um contador à parte: para cada partida concluída guarda só um <strong>código aleatório</strong> (para ela não contar duas vezes), o <strong>evento</strong> e o <strong>animal</strong> do resultado, com ou sem cadastro. Nada disso identifica alguém. A lista pública está em <code>/api/totais</code>.</li>
                     <li>Para exportar os cadastros: <code>npm run exportar &gt; participantes.csv</code>.</li>
                     <li>São dados pessoais (LGPD). Defina quem acessa o arquivo, por quanto tempo ele é mantido e faça backup da pasta <code>data</code> se os cadastros importarem.</li>
                 </ul>
@@ -290,7 +305,7 @@ export default function Manual() {
             </div>
 
             <p className="manual-fim">
-                <Link className="botao" href="/">Começar o jogo</Link>
+                <Link className="botao" href="/">Escolher o evento e jogar</Link>
             </p>
         </main>
     );
