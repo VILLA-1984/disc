@@ -63,6 +63,17 @@ export const CENARIOS = {
         motivo: 'Moto e táxi não andam sobre trilhos.',
         aceita: (mobilidade) => !['moto', 'taxi'].includes(mobilidade),
     },
+    espaco: {
+        nome: 'Espaço',
+        descricao: 'Uma viagem espacial entre estrelas, planetas e asteroides.',
+        verbo: 'viajar',
+        comeco: 'Decolar',
+        fim: 'da viagem espacial',
+        acelerar: 'acelerar a nave',
+        percurso: 'pelo espaço',
+        motivo: 'Moto e táxi não viajam pelo espaço.',
+        aceita: (mobilidade) => !['moto', 'taxi'].includes(mobilidade),
+    },
 };
 
 const SOBE_NO_BARCO = ['anda', 'bengala', 'andador', 'cadeira', 'cadeira-corrida'];
@@ -237,6 +248,53 @@ export const MEIOS = {
         bracos: 2.5, // maos para cima, nos comandos da vela
         aceita: (mobilidade) => SOBE_NO_BARCO.includes(mobilidade),
         textos: {},
+    },
+    // Espaco. A nave, o foguete e o disco voador levam o avatar sentado, sem os apoios (cadeira, bengala e andador
+    // ficam na base); o astronauta flutua em pe, com mochila a jato.
+    nave: {
+        cenario: 'espaco',
+        nome: 'Nave espacial',
+        descricao: 'Numa nave com cúpula de vidro, asas e dois propulsores. Os apoios ficam na base.',
+        motivo: 'Moto e táxi não viajam pelo espaço.',
+        aceita: (mobilidade) => SOBE_NO_BARCO.includes(mobilidade),
+        semApoio: true,
+        base: 0.5,
+        bracos: 0.7,
+        textos: { verbo: 'pilotar', comeco: 'Decolar', acelerar: 'acelerar a nave' },
+    },
+    foguete: {
+        cenario: 'espaco',
+        nome: 'Foguete',
+        descricao: 'Num foguete listrado, numa bolha de vidro, com fogo saindo atrás. Os apoios ficam na base.',
+        motivo: 'Moto e táxi não viajam pelo espaço.',
+        aceita: (mobilidade) => SOBE_NO_BARCO.includes(mobilidade),
+        semApoio: true,
+        base: 0.5,
+        bracos: 0.6,
+        textos: { verbo: 'decolar', comeco: 'Decolar', acelerar: 'acelerar o foguete' },
+    },
+    'disco-voador': {
+        cenario: 'espaco',
+        nome: 'Disco voador',
+        descricao: 'Sob a cúpula de um disco voador, com luzes girando na borda. Os apoios ficam na base.',
+        motivo: 'Moto e táxi não viajam pelo espaço.',
+        aceita: (mobilidade) => SOBE_NO_BARCO.includes(mobilidade),
+        semApoio: true,
+        base: 0.6,
+        bracos: 0.5,
+        textos: { verbo: 'voar', comeco: 'Decolar', acelerar: 'acelerar o disco' },
+    },
+    astronauta: {
+        cenario: 'espaco',
+        nome: 'Astronauta',
+        descricao: 'Flutuando em pé, de capacete e mochila a jato. Os apoios (cadeira, bengala, andador) ficam na base.',
+        motivo: 'Moto e táxi não viajam pelo espaço.',
+        aceita: (mobilidade) => SOBE_NO_BARCO.includes(mobilidade),
+        semApoio: true,
+        sentado: false,
+        base: 0.5,
+        bracos: 0.55,
+        textos: { verbo: 'flutuar', comeco: 'Começar a flutuar', acelerar: 'ligar o jato' },
     },
 };
 

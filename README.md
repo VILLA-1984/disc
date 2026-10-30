@@ -4,7 +4,7 @@ Jogo de escolhas do teste DISC do SENAC-MT, como projeto independente (Next.js).
 WhatsApp, joga as duas etapas, vê o animal do resultado e recebe o resultado pelo WhatsApp, enviado pela equipe.
 
 Nasceu do formato "jogo" do sistema DISC (`../disc`): mesma lista de palavras, mesma pontuação e mesmo front
-(three.js). A diferença é que aqui o servidor é Next.js e **nada do teste é gravado**.
+(three.js). A diferença é que aqui o servidor é Next.js e **as palavras escolhidas nunca são gravadas** (só um resumo do resultado, para a equipe enviar).
 
 ## Como rodar
 
@@ -38,7 +38,7 @@ O texto do manual está em `src/app/manual/page.tsx`.
 npm run feira   # compila e sobe na porta 3000, acessível a outros aparelhos da rede (-H 0.0.0.0)
 ```
 
-Abra `http://localhost:3000` no computador do estande. A tela de abertura mostra um **QR code** (só em tela
+Crie o evento em `/eventos` e abra o jogo dele (`/e/<evento>`) no computador do estande. A abertura do evento mostra um **QR code** (só em tela
 larga) com o endereço do computador na rede, por exemplo `http://192.168.0.20:3000`; quem escaneia joga no
 próprio celular. Celular e computador precisam estar na **mesma rede Wi-Fi**, e o Windows precisa permitir o
 Node.js na rede privada (o aviso do firewall aparece na primeira execução). Redes de eventos costumam isolar os
@@ -62,7 +62,7 @@ Em `/admin/jogo`, quem aplica o teste configura o jogo sem mexer no código. Ent
 - **Logo**: enviar, trocar ou remover. Aparece no alto da tela inicial e, menor, no cabeçalho do jogo. Só PNG, JPEG ou WebP de até
   1 MB (o formato é conferido pelos bytes do arquivo; SVG é recusado de propósito). Fica no mesmo banco da configuração, não no
   disco, e não é afetada por “Voltar ao padrão”.
-- **Cenários e meios de locomoção** liberados (Rua, Rio, Céu, Neve, Trilhos e os meios de cada um). Se só sobra um cenário, a
+- **Cenários e meios de locomoção** liberados (Rua, Rio, Céu, Neve, Trilhos, Espaço e os meios de cada um). Se só sobra um cenário, a
   escolha some; se só sobra um meio no cenário, também.
 - **Avatares** liberados. A tela recusa combinações impossíveis (por exemplo, só avatares de moto num cenário em que moto não vai).
 - **Ranking na tela inicial**: abaixo do cartão de abertura, o total geral no alto e, por animal (Tubarão, Águia, Gato, Lobo e Equilibrado), o ícone, o nome e a quantidade, do que tem mais pessoas para o que tem menos. Liga e desliga no gerenciamento; são só contadores, sem dado pessoal.

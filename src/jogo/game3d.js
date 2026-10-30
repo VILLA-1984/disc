@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { criarAvatar3D } from './avatars.js';
 import { continuos } from './audio.js';
+import { criarEspacoVivo, criarVeiculoEspacial, construirEspaco } from './espaco.js';
 import { MEIOS, construirCeu, construirNeve, construirRio, construirTrilhos, criarAeronave, criarBarco, criarNevasca, criarPassaros, criarPeixes, criarVeiculoNeve, criarVeiculoTrilho } from './cenarios.js';
 
 /**
@@ -119,6 +120,11 @@ const CLIMAS = {
         nome: 'Chuvoso', ceuTopo: '#566476', ceuBase: '#a7b2be', nevoa: '#97a3b0', alcance: 0.62,
         luz: 0.98, direta: 0.18, sol: 0, nuvem: 1, nuvemCor: '#7d8896', chuva: 1, vento: 0.15, asfalto: '#27313d', agua: '#3d5a6e', solo: '#3f6e4c', neve: '#cfd8e2', nuvemVelocidade: 1.2,
     },
+    // Espaco: nao ha tempo (sol, chuva, vento): o ceu e preto e o clima nunca muda.
+    espaco: {
+        nome: 'Espaço', ceuTopo: '#01020a', ceuBase: '#0a1233', nevoa: '#050a22', alcance: 2.6,
+        luz: 1.05, direta: 1.25, sol: 0, nuvem: 0, nuvemCor: '#000000', chuva: 0, vento: 0, asfalto: '#01020a', agua: '#01020a', solo: '#01020a', neve: '#01020a', nuvemVelocidade: 0,
+    },
     vento: {
         nome: 'Ventania', ceuTopo: '#86bde8', ceuBase: '#e6f0fa', nevoa: '#d3e5f4', alcance: 1,
         luz: 1.45, direta: 1.15, sol: 0.85, nuvem: 0.9, nuvemCor: '#f2f6fb', chuva: 0, vento: 1, asfalto: '#3b4a5c', agua: '#3a8bbd', solo: '#5aa25c', neve: '#eef3f9', nuvemVelocidade: 7,
@@ -133,6 +139,7 @@ const ICONES_CLIMA = {
     nublado: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 1 1 .6-7.95A5.5 5.5 0 0 1 18 11a3.5 3.5 0 0 1-.5 7z"/></svg>',
     chuva: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 15a4 4 0 1 1 .6-7.95A5.5 5.5 0 0 1 18 8a3.5 3.5 0 0 1-.5 7"/><path d="M8 18l-1 3M12 18l-1 3M16 18l-1 3"/></svg>',
     vento: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8"/></svg>',
+    espaco: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 17v4M17 19h4"/></svg>',
 };
 
 /** Gradiente do ceu em um canvas que pode ser redesenhado quando o clima muda. */
@@ -286,7 +293,7 @@ function desenharPlaca(canvas, palavra, estado, dica) {
 export function criarJogo3D(opcoes) {
     const { parent, etapas, rotulosEtapas = [], reduzirMovimento = false } = opcoes;
     const modo = opcoes.modo === 'lateral' ? 'lateral' : '3d';
-    const cenario = ['rio', 'ar', 'neve', 'trilhos'].includes(opcoes.cenario) ? opcoes.cenario : 'rua'; // ver cenarios.js
+    const cenario = ['rio', 'ar', 'neve', 'trilhos', 'espaco'].includes(opcoes.cenario) ? opcoes.cenario : 'rua'; // ver cenarios.js
     const cfg = CONFIG[modo];
     const velocidadeBase = reduzirMovimento ? VELOCIDADE.reduzida : VELOCIDADE.normal;
 
@@ -382,8 +389,11 @@ export function criarJogo3D(opcoes) {
     const ferrovia = cenario === 'trilhos'
         ? construirTrilhos({ cena, lados, adicionarMovel, arvores, sorteio, periodo: PERIODO, zTras: Z_TRAS })
         : null;
-    const mundo = rio ?? aereo ?? gelo ?? ferrovia; // cenario sem rua nem predios (rio, ceu, neve ou trilhos)
-    const estrada = rio ? rio.agua : (aereo ? aereo.solo : (gelo ? gelo.solo : (ferrovia ? ferrovia.solo : new THREE.Mesh(new THREE.BoxGeometry(LARGURA_ESTRADA, 0.1, 420, 1, 1, 140), new THREE.MeshLambertMaterial({ color: 0x3b4a5c })))));
+    const espacial = cenario === 'espaco'
+        ? construirEspaco({ cena, lados, adicionarMovel, sorteio, periodo: PERIODO, zTras: Z_TRAS, modo })
+        : null;
+    const mundo = rio ?? aereo ?? gelo ?? ferrovia ?? espacial; // cenario sem rua nem predios (rio, ceu, neve, trilhos ou espaco)
+    const estrada = rio ? rio.agua : (aereo ? aereo.solo : (gelo ? gelo.solo : (ferrovia ? ferrovia.solo : (espacial ? espacial.solo : new THREE.Mesh(new THREE.BoxGeometry(LARGURA_ESTRADA, 0.1, 420, 1, 1, 140), new THREE.MeshLambertMaterial({ color: 0x3b4a5c }))))));
 
     if (!mundo) {
         estrada.position.set(0, -0.05, -170);
@@ -480,7 +490,7 @@ export function criarJogo3D(opcoes) {
     // No rio e no ceu o avatar segue o mesmo, mas num veiculo (barco, veleiro, aviao, jato, helicoptero, asa
     // delta, parapente): no rio de colete salva-vidas, sentado no banco. O veiculo e filho do avatar: acompanha
     // troca de pista, inclinacao e salto; a escala inversa mantem o tamanho real.
-    const meioEscolhido = opcoes.meio ?? (rio ? 'barco' : (aereo ? 'aviao' : (gelo ? 'treno' : (ferrovia ? 'locomotiva' : undefined))));
+    const meioEscolhido = opcoes.meio ?? (rio ? 'barco' : (aereo ? 'aviao' : (gelo ? 'treno' : (ferrovia ? 'locomotiva' : (espacial ? 'nave' : undefined)))));
     const infoMeio = MEIOS[meioEscolhido] ?? {};
     const ALTURA_CONVES = infoMeio.base ?? 0.34;
     const sentadoNoMeio = infoMeio.sentado !== false; // a asa delta pendura o avatar em pe
@@ -494,7 +504,7 @@ export function criarJogo3D(opcoes) {
     };
     const specAvatar = rio
         ? { ...opcoes.avatar, colete: true, noBarco: true, ...tracosDoMeio }
-        : ((aereo || gelo || ferrovia) ? { ...opcoes.avatar, noBarco: sentadoNoMeio, ...tracosDoMeio } : opcoes.avatar);
+        : ((aereo || gelo || ferrovia || espacial) ? { ...opcoes.avatar, noBarco: sentadoNoMeio, ...tracosDoMeio } : opcoes.avatar);
     const avatar = criarAvatar3D(specAvatar);
     avatar.grupo.position.set(0, 0, 0);
     cena.add(avatar.grupo);
@@ -502,7 +512,7 @@ export function criarJogo3D(opcoes) {
         ? criarBarco(meioEscolhido, modo)
         : (aereo
             ? criarAeronave(meioEscolhido, modo)
-            : (gelo ? criarVeiculoNeve(meioEscolhido) : (ferrovia ? criarVeiculoTrilho(meioEscolhido, modo) : null)));
+            : (gelo ? criarVeiculoNeve(meioEscolhido) : (ferrovia ? criarVeiculoTrilho(meioEscolhido, modo) : (espacial ? criarVeiculoEspacial(meioEscolhido, modo) : null))));
 
     if (barco) {
         barco.grupo.scale.setScalar(1 / avatar.grupo.scale.x);
@@ -513,10 +523,11 @@ export function criarJogo3D(opcoes) {
     const peixes = rio && !reduzirMovimento ? criarPeixes({ cena, sorteio }) : null;
     const passaros = aereo && !reduzirMovimento ? criarPassaros({ cena, sorteio }) : null;
     const nevasca = gelo && !reduzirMovimento ? criarNevasca({ cena, sorteio }) : null;
+    const espacoVivo = espacial && !reduzirMovimento ? criarEspacoVivo({ cena, sorteio, planetas: espacial.planetas, modo }) : null;
 
     // Som do meio de locomocao: motor no barco, aviao, jato e helicoptero; veleiro, asa delta e parapente
     // so tem o ar do turbo.
-    const semMotor = ['veleiro', 'caiaque', 'boia-pato', 'nado', 'asa-delta', 'parapente', 'esqui', 'sit-ski', 'treno'].includes(meioEscolhido);
+    const semMotor = ['veleiro', 'caiaque', 'boia-pato', 'nado', 'asa-delta', 'parapente', 'esqui', 'sit-ski', 'treno', 'astronauta'].includes(meioEscolhido);
     const somDoMeio = mundo ? (meioEscolhido === 'draisina' ? 'rodas' : (semMotor ? 'passos' : 'motor')) : avatar.info.som;
     curvarObjeto(cena);
 
@@ -584,6 +595,10 @@ export function criarJogo3D(opcoes) {
 
     /** Proximo clima: sempre diferente do atual, sorteado de forma reproduzivel. */
     function proximoClima() {
+        if (cenario === 'espaco') {
+            return; // no espaco o clima nunca muda
+        }
+
         const outros = Object.keys(CLIMAS).filter((c) => c !== nomeClima);
         escolherClima(outros[Math.floor(sorteio() * outros.length)]);
     }
@@ -694,7 +709,7 @@ export function criarJogo3D(opcoes) {
     const hudBarraPreenchimento = hudBarra.querySelector('i');
     hudClimaEl.className = 'rua-hud-clima-item';
     hud.querySelector('.rua-hud-clima').appendChild(hudClimaEl);
-    escolherClima('sol');
+    escolherClima(cenario === 'espaco' ? 'espaco' : 'sol');
 
     // Velocimetro: so para quem se desloca sobre rodas (moto, taxi, cadeiras).
     const velocimetro = !mundo && avatar.info.rodas ? criarVelocimetro(parent, avatar.info) : null;
@@ -1223,6 +1238,7 @@ export function criarJogo3D(opcoes) {
         peixes?.atualizar(dt, dz);
         passaros?.atualizar(dt, dz);
         nevasca?.atualizar(dt, dz);
+        espacoVivo?.atualizar(dt, dz);
 
         if (!mundo && velocidade / velocidadeBase > 0.3 && Math.floor(fase / Math.PI) !== faseDoUltimoPasso) {
             faseDoUltimoPasso = Math.floor(fase / Math.PI);
@@ -1244,7 +1260,7 @@ export function criarJogo3D(opcoes) {
         }
 
         // No rio o barco flutua e no ar a aeronave sobe e desce de leve (mais devagar e mais amplo).
-        const alturaBase = mundo ? ALTURA_CONVES + (reduzirMovimento ? 0 : Math.sin(agoraSeg * (aereo ? 1.4 : 2.1)) * (aereo ? 0.07 : ((gelo || ferrovia) ? 0.008 : 0.035))) : 0;
+        const alturaBase = mundo ? ALTURA_CONVES + (reduzirMovimento ? 0 : Math.sin(agoraSeg * (aereo || espacial ? 1.4 : 2.1)) * (aereo || espacial ? 0.07 : ((gelo || ferrovia) ? 0.008 : 0.035))) : 0;
 
         if (saltoRestante > 0) {
             saltoRestante = Math.max(0, saltoRestante - dt);

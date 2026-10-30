@@ -69,7 +69,7 @@ const PASSOS: Passo[] = [
         texto: (
             <>
                 <p>Todos os avatares jogam do mesmo jeito; o nome é só um apelido. Escolha também a cor da roupa.</p>
-                <p>Em <strong>Onde você quer correr?</strong> escolha o cenário: a <strong>Rua</strong> (de cidade), o <strong>Rio</strong>, o <strong>Céu</strong>, a <strong>Neve</strong> ou os <strong>Trilhos</strong>. Onde há mais de um jeito de ir, aparece <strong>Como você quer ir?</strong>: no rio, por exemplo, de barco, veleiro, caiaque, moto aquática, boia de pato ou a nado; no céu, de avião, jato, helicóptero, asa delta ou parapente; na neve, de esqui, sit-ski ou trenó; nos trilhos, de locomotiva ou draisina. O cenário muda só o visual: as palavras, as regras e o resultado são os mesmos. Nem todo avatar vai em todo cenário ou meio (<strong>moto e táxi, por exemplo, não vão de barco nem pelo céu</strong>), e eles ficam apagados na lista. A equipe também pode liberar só alguns cenários e avatares em cada evento.</p>
+                <p>Em <strong>Onde você quer correr?</strong> escolha o cenário: a <strong>Rua</strong> (de cidade), o <strong>Rio</strong>, o <strong>Céu</strong>, a <strong>Neve</strong>, os <strong>Trilhos</strong> ou o <strong>Espaço</strong>. Onde há mais de um jeito de ir, aparece <strong>Como você quer ir?</strong>: no rio, por exemplo, de barco, veleiro, caiaque, moto aquática, boia de pato ou a nado; no céu, de avião, jato, helicóptero, asa delta ou parapente; na neve, de esqui, sit-ski ou trenó; nos trilhos, de locomotiva ou draisina; no espaço, de nave, foguete, disco voador ou flutuando como astronauta. O cenário muda só o visual: as palavras, as regras e o resultado são os mesmos. Nem todo avatar vai em todo cenário ou meio (<strong>moto e táxi, por exemplo, não vão de barco, pelo céu nem pelo espaço</strong>), e eles ficam apagados na lista. A equipe também pode liberar só alguns cenários e avatares em cada evento.</p>
                 <p>Em <strong>Como você quer ver o cenário?</strong> há duas opções: <strong>Vista 3D</strong> (o avatar corre para a frente) e <strong>Vista lateral</strong> (o avatar corre para o lado, como num jogo clássico). Em telas pequenas, role o cartão para ver essa opção e o botão <strong>Começar</strong>.</p>
             </>
         ),
@@ -211,7 +211,7 @@ export default function Manual() {
             </div>
 
             <p className="manual-intro">
-                O <strong>Teste de Perfil DISC</strong> é uma versão em jogo do teste comportamental DISC do SENAC-MT. A pessoa percorre um cenário (rua, rio, céu, neve ou trilhos) e, em cada portão, escolhe entre as palavras que aparecem. No fim, descobre o seu animal e, se quiser, recebe o resultado pelo WhatsApp, enviado pela equipe.
+                O <strong>Teste de Perfil DISC</strong> é uma versão em jogo do teste comportamental DISC do SENAC-MT. A pessoa percorre um cenário (rua, rio, céu, neve, trilhos ou espaço) e, em cada portão, escolhe entre as palavras que aparecem. No fim, descobre o seu animal e, se quiser, recebe o resultado pelo WhatsApp, enviado pela equipe.
             </p>
 
             <nav className="manual-indice" aria-label="Neste manual">

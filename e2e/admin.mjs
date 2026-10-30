@@ -109,7 +109,7 @@ await admin.getByRole('checkbox', { name: /^Rafa/ }).uncheck();
 await admin.getByRole('checkbox', { name: /^Ana/ }).check();
 await admin.getByRole('checkbox', { name: /^Gabriel/ }).check();
 
-for (const nome of [/^Céu/, /^Neve/, /^Trilhos/]) {
+for (const nome of [/^Céu/, /^Neve/, /^Trilhos/, /^Espaço/]) {
     await admin.getByRole('checkbox', { name: nome }).uncheck();
 }
 

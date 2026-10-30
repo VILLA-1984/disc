@@ -46,7 +46,7 @@ describe('configuracao de fabrica', () => {
     it('o catalogo traz os cenarios do jogo e os avatares compativeis de cada meio', () => {
         const catalogo = montarCatalogo();
 
-        expect(catalogo.cenarios.map((c) => c.chave)).toEqual(['rua', 'rio', 'ar', 'neve', 'trilhos']);
+        expect(catalogo.cenarios.map((c) => c.chave)).toEqual(['rua', 'rio', 'ar', 'neve', 'trilhos', 'espaco']);
         expect(catalogo.cenarios.find((c) => c.chave === 'rua')?.temMeios).toBe(false);
         expect(catalogo.cenarios.find((c) => c.chave === 'rio')?.temMeios).toBe(true);
 
@@ -58,6 +58,30 @@ describe('configuracao de fabrica', () => {
         expect(motoAquatica.avatares.every((id) => ['anda', 'bengala', 'moto'].includes(mobilidade(id) ?? ''))).toBe(true);
         expect(sitSki.avatares.every((id) => mobilidade(id) === 'cadeira')).toBe(true);
         expect(sitSki.avatares.length).toBeGreaterThan(0);
+    });
+
+    it('o espaco tem os seus quatro meios; moto e taxi nao vao, e quem usa cadeira vai sem os apoios', () => {
+        const catalogo = montarCatalogo();
+        const espaco = catalogo.cenarios.find((c) => c.chave === 'espaco')!;
+        const mobilidade = (id: string) => catalogo.avatares.find((a) => a.id === id)?.mobilidade ?? '';
+
+        expect(espaco.temMeios).toBe(true);
+        expect(catalogo.meios.filter((m) => m.cenario === 'espaco').map((m) => m.chave)).toEqual(['nave', 'foguete', 'disco-voador', 'astronauta']);
+        expect(espaco.avatares.some((id) => ['moto', 'taxi'].includes(mobilidade(id)))).toBe(false);
+        expect(espaco.avatares.some((id) => mobilidade(id) === 'cadeira')).toBe(true);
+
+        for (const meio of catalogo.meios.filter((m) => m.cenario === 'espaco')) {
+            expect(meio.avatares.length, meio.chave).toBeGreaterThan(0);
+            expect(meio.avatares.some((id) => ['moto', 'taxi'].includes(mobilidade(id))), meio.chave).toBe(false);
+        }
+    });
+
+    it('um cenario do espaco ligado precisa de pelo menos um meio ligado', () => {
+        const base = configuracaoPadrao();
+        const semMeios = validar({ ...base, meios: base.meios.filter((m) => !['nave', 'foguete', 'disco-voador', 'astronauta'].includes(m)) });
+
+        expect(semMeios.ok).toBe(false);
+        expect(!semMeios.ok && semMeios.erro).toMatch(/Espaço/);
     });
 });
 
