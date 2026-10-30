@@ -7,6 +7,8 @@ import { textoDe, type Configuracao } from '@/lib/configuracao';
 import type { LogoEmUso } from '@/lib/logos';
 import { montarMensagem, type Resumo } from '@/lib/mensagem';
 import { linkWhatsapp, mascararWhatsapp, normalizarWhatsapp, problemaNoWhatsapp } from '@/lib/whatsapp';
+import type { Totais } from '@/server/totais';
+import TotaisInicio from './TotaisInicio';
 
 type Fase = 'cadastro' | 'jogo' | 'envio';
 type Etapas = { cima: { id: number; word: string }; baixo: { id: number; word: string } }[][];
@@ -63,7 +65,7 @@ function Logo({ logo, alt, className }: { logo: LogoEmUso | null | undefined; al
     return <img className={`${className}${logo.escuro ? ' logo-sobre-escuro' : ''}`} src={logo.src} alt={alt} />;
 }
 
-export default function Partida({ qr, config, logo }: { qr?: React.ReactNode; config: Configuracao; logo?: LogoEmUso | null }) {
+export default function Partida({ qr, config, logo, totaisInicio }: { qr?: React.ReactNode; config: Configuracao; logo?: LogoEmUso | null; totaisInicio?: Totais | null }) {
     // Titulos e explicacoes editaveis na area de gerenciamento (/admin).
     const titulo = textoDe(config.textos, 'titulo_geral');
     const introducao = textoDe(config.textos, 'cadastro_intro');
@@ -264,6 +266,7 @@ export default function Partida({ qr, config, logo }: { qr?: React.ReactNode; co
                     </p>
                 </section>
                 {qr}
+                {totaisInicio && <TotaisInicio inicial={totaisInicio} />}
                 </div>
             )}
 

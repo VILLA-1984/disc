@@ -59,6 +59,7 @@ sem a variável, a área fica desativada) e define:
 - **Cenários e meios de locomoção** liberados (Rua, Rio, Céu, Neve, Trilhos e os meios de cada um). Se só sobra um cenário, a
   escolha some; se só sobra um meio no cenário, também.
 - **Avatares** liberados. A tela recusa combinações impossíveis (por exemplo, só avatares de moto num cenário em que moto não vai).
+- **Ranking na tela inicial**: abaixo do cartão de abertura, o total geral no alto e, por animal (Tubarão, Águia, Gato, Lobo e Equilibrado), o ícone, o nome e a quantidade, do que tem mais pessoas para o que tem menos. Liga e desliga no gerenciamento; são só contadores, sem dado pessoal.
 - **O que aparece na tela**: painel de totais, lista por perfil (ranking dos animais, do mais ao menos frequente), minimapa e barra
   de progresso.
 - **Palavras por etapa** (de 6 a 36; padrão 12).

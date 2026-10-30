@@ -1,5 +1,4 @@
-import { ANIMAIS } from '@/jogo/animais-dados.js';
-import { lerTotais } from '@/server/db';
+import { montarTotais } from '@/server/totais';
 
 // Sempre fresco: o painel do jogo mostra quantas pessoas ja jogaram.
 export const dynamic = 'force-dynamic';
@@ -10,11 +9,7 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET() {
     try {
-        const { total, porAnimal } = await lerTotais();
-        const animais = Object.values(ANIMAIS).map((a) => ({ chave: a.chave, nome: a.nome, cor: a.cor, total: porAnimal[a.chave] ?? 0 }));
-        animais.push({ chave: 'equilibrado', nome: 'Equilibrado', cor: '#8a97a8', total: porAnimal.equilibrado ?? 0 });
-
-        return Response.json({ total, animais }, { headers: { 'Cache-Control': 'no-store' } });
+        return Response.json(await montarTotais(), { headers: { 'Cache-Control': 'no-store' } });
     } catch (erro) {
         console.error('Falha ao ler os totais:', erro);
 

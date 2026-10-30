@@ -143,6 +143,8 @@ export type Configuracao = {
     mostrarTotais: boolean;
     /** Lista por perfil (animal), em ordem de quantidade, dentro do painel de totais. */
     mostrarRanking: boolean;
+    /** Ranking na tela inicial: total geral e, por animal, o icone, o nome e a quantidade. */
+    mostrarTotaisInicio: boolean;
     mostrarMinimapa: boolean;
     mostrarProgresso: boolean;
     /** Como as palavras aparecem nas placas: uma palavra e "Deixar passar", ou duas palavras (escolha forcada). */

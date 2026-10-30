@@ -331,6 +331,38 @@ await inicio.locator('img.logo-abertura').waitFor();
 assert.match(await inicio.getAttribute('img.logo-abertura', 'src'), /logo-generica\.png$/);
 console.log('logo: logos fixas, envio, formatos e tamanho recusados, troca, remocao e tela inicial OK.');
 
+// ------------------------------------------------------------------ ranking na tela inicial
+const ranking = await novaPagina({ width: 1180, height: 900 });
+await ranking.goto(base);
+await ranking.locator('.totais-inicio').waitFor();
+assert.match(await ranking.textContent('.totais-inicio-geral'), /Total geral\s*\d+/, 'o total geral fica no alto');
+assert.deepEqual(
+    (await ranking.locator('.totais-inicio-nome').allTextContents()).sort(),
+    ['Equilibrado', 'Gato', 'Lobo', 'Tubarão', 'Águia'].sort(),
+    'um item por perfil, com o nome do animal',
+);
+assert.equal(await ranking.locator('.totais-inicio-lista li svg').count(), 5, 'cada perfil tem o seu icone');
+// nome antes do total, em cada item
+assert.ok(await ranking.evaluate(() => [...document.querySelectorAll('.totais-inicio-lista li')].every((li) => li.children[1].className === 'totais-inicio-nome' && li.children[2].tagName === 'B')));
+await ranking.screenshot({ path: join(pasta, 'ranking-1-inicio-desktop.png') });
+
+const rankingCelular = await novaPagina({ width: 390, height: 900 });
+await rankingCelular.goto(base);
+await rankingCelular.locator('.totais-inicio').waitFor();
+await rankingCelular.screenshot({ path: join(pasta, 'ranking-2-inicio-celular.png'), fullPage: true });
+
+// Desligar no gerenciamento tira o ranking da tela inicial (o painel do jogo e uma opcao a parte).
+const cfg = (await (await fetch(`${base}/api/admin/config`, { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: sessao }, body: JSON.stringify({ restaurar: true }) })).json()).config;
+assert.equal(cfg.mostrarTotaisInicio, true, 'de fabrica o ranking aparece');
+assert.equal((await chamar('/api/admin/config', { config: { ...cfg, mostrarTotaisInicio: false } }, sessao)).status, 200);
+await ranking.reload();
+await ranking.getByRole('heading', { name: 'Teste de Perfil DISC' }).waitFor();
+assert.equal(await ranking.locator('.totais-inicio').count(), 0, 'com o ranking desligado, nada aparece');
+assert.equal((await chamar('/api/admin/config', { config: { ...cfg, mostrarTotaisInicio: true } }, sessao)).status, 200);
+await ranking.reload();
+await ranking.locator('.totais-inicio').waitFor();
+console.log('ranking na tela inicial: total geral, nome e icone por animal, ligar e desligar OK.');
+
 // ------------------------------------------------------------------ voltar ao padrao
 await admin.getByRole('button', { name: 'Voltar ao padrão' }).click();
 await admin.getByText('Tudo voltou ao padrão de fábrica.').waitFor({ timeout: 15000 });

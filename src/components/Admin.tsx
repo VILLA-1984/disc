@@ -294,8 +294,8 @@ export default function Admin({ configInicial, catalogo, textos, escolhaLogo, ve
             </section>
 
             <section className="admin-secao" aria-labelledby="secao-tela">
-                <h2 id="secao-tela">O que aparece na tela do jogo</h2>
-                <p>Escolha o que a pessoa vê enquanto joga.</p>
+                <h2 id="secao-tela">O que aparece na tela</h2>
+                <p>Escolha o que a pessoa vê na tela inicial e enquanto joga.</p>
 
                 <div className="admin-grade">
                     <label className={`admin-opcao${config.mostrarTotais ? ' marcada' : ''}`}>
@@ -305,6 +305,10 @@ export default function Admin({ configInicial, catalogo, textos, escolhaLogo, ve
                     <label className={`admin-opcao${config.mostrarRanking && config.mostrarTotais ? ' marcada' : ''}${config.mostrarTotais ? '' : ' desabilitada'}`}>
                         <input type="checkbox" checked={config.mostrarRanking} disabled={!config.mostrarTotais} onChange={(e) => definir('mostrarRanking', e.target.checked)} />
                         <span><strong>Lista por perfil</strong><small>ranking dos animais, dentro do painel de totais (só aparece no computador)</small></span>
+                    </label>
+                    <label className={`admin-opcao${config.mostrarTotaisInicio ? ' marcada' : ''}`}>
+                        <input type="checkbox" checked={config.mostrarTotaisInicio} onChange={(e) => definir('mostrarTotaisInicio', e.target.checked)} />
+                        <span><strong>Ranking na tela inicial</strong><small>total geral e, por animal, o ícone, o nome e a quantidade de pessoas, abaixo do cartão de abertura</small></span>
                     </label>
                     <label className={`admin-opcao${config.mostrarMinimapa ? ' marcada' : ''}`}>
                         <input type="checkbox" checked={config.mostrarMinimapa} onChange={(e) => definir('mostrarMinimapa', e.target.checked)} />

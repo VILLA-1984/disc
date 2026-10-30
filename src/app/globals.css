@@ -154,10 +154,32 @@ body {
 .qr-abertura .qr-endereco { margin: 0 0 6px; font-weight: 700; font-size: 1.05rem; color: var(--marinho); overflow-wrap: anywhere; }
 .qr-abertura .qr-aviso { margin: 0; font-size: 0.9rem; }
 
+/* Ranking na tela inicial: total geral no alto e, por animal, icone, nome e quantidade. */
+.totais-inicio {
+    width: 100%;
+    max-width: 480px;
+    margin: 16px auto 0;
+    padding: 16px 18px 14px;
+    background: #fff;
+    border: 1px solid var(--borda);
+    border-radius: 14px;
+    box-shadow: 0 8px 28px rgba(13, 43, 78, 0.08);
+}
+
+.totais-inicio-geral { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 10px; padding-bottom: 10px; border-bottom: 1px solid var(--borda); color: var(--marinho); font-weight: 700; }
+.totais-inicio-geral strong { font-size: 1.6rem; font-variant-numeric: tabular-nums; }
+.totais-inicio-lista { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; }
+.totais-inicio-lista li { display: grid; grid-template-columns: 28px auto auto; justify-content: start; align-items: center; gap: 8px; }
+.totais-inicio-lista svg { width: 28px; height: 28px; }
+.totais-inicio-nome { overflow-wrap: anywhere; font-weight: 600; color: var(--marinho); }
+.totais-inicio-lista b { font-variant-numeric: tabular-nums; color: var(--marinho); font-size: 1.05rem; }
+
 /* O QR so faz sentido em tela grande (o computador do estande); no celular a pessoa ja esta jogando nele. */
 @media (min-width: 900px) {
     .abertura { display: grid; grid-template-columns: minmax(0, 480px) minmax(0, 380px); gap: 32px; justify-content: center; align-items: start; margin-top: 6vh; }
     .abertura .painel { margin: 0; }
+    .totais-inicio { grid-column: 1 / -1; max-width: none; margin: 0; }
+    .totais-inicio-lista { grid-template-columns: repeat(5, minmax(0, 1fr)); }
     .logo-abertura { grid-column: 1 / -1; justify-self: center; margin: 0 auto -8px; max-height: 110px; }
     .qr-abertura { display: block; }
 }
