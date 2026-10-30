@@ -210,24 +210,12 @@ export default function Admin({ configInicial, catalogo, textos, escolhaLogo, ve
         }
     }
 
-    async function sair() {
-        await fetch('/api/admin/sair', { method: 'POST' }).catch(() => undefined);
-        window.location.reload();
-    }
-
     const avisosDe = (onde: string) => avisos.filter((a) => a.onde === onde);
 
     return (
         <div className="admin">
             <div className="admin-topo">
                 <h1>Gerenciamento do teste</h1>
-                <p>
-                    <a href="/" target="_blank" rel="noopener noreferrer">Abrir o jogo</a>
-                    {' · '}
-                    <a href="/whatsapp">Envio de resultados</a>
-                    {' · '}
-                    <button type="button" className="admin-link" onClick={sair}>Sair</button>
-                </p>
             </div>
 
             <AdminLogo escolhaInicial={escolhaLogo} versaoInicial={versaoLogo} />

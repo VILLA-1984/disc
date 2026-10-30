@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import AdminLogin from '@/components/AdminLogin';
 import Eventos from '@/components/Eventos';
+import NavAdmin from '@/components/NavAdmin';
 import { adminAtivo, sessaoAdminValida } from '@/server/admin';
 import { enderecoAtual } from '@/server/enderecoAtual';
 import { listarEventos } from '@/server/eventos';
@@ -53,8 +54,11 @@ export default async function PaginaEventos() {
     const endereco = await enderecoAtual();
 
     return (
-        <main className="pagina">
-            <Eventos inicial={eventos} base={endereco?.url ?? ''} />
-        </main>
+        <>
+            <NavAdmin />
+            <main className="pagina">
+                <Eventos inicial={eventos} base={endereco?.url ?? ''} />
+            </main>
+        </>
     );
 }

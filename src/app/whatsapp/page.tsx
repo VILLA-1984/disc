@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import AdminLogin from '@/components/AdminLogin';
 import Envios from '@/components/Envios';
+import NavAdmin from '@/components/NavAdmin';
 import { adminAtivo, sessaoAdminValida } from '@/server/admin';
 import { listarEnvios } from '@/server/envios';
 
@@ -50,8 +51,11 @@ export default async function PaginaWhatsapp() {
     }
 
     return (
-        <main className="pagina">
-            <Envios inicial={inicial} />
-        </main>
+        <>
+            <NavAdmin />
+            <main className="pagina">
+                <Envios inicial={inicial} />
+            </main>
+        </>
     );
 }

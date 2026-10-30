@@ -172,11 +172,6 @@ export default function Envios({ inicial }: { inicial: ListaDeEnvios }) {
         await carregar();
     }
 
-    async function sair() {
-        await fetch('/api/admin/sair', { method: 'POST' }).catch(() => undefined);
-        window.location.reload();
-    }
-
     const numeroDe = (chave: string, padrao: string) => numeros[chave] ?? padrao;
     const definirNumero = (chave: string, valor: string) => setNumeros((atual) => ({ ...atual, [chave]: mascararWhatsapp(valor) }));
 
@@ -185,11 +180,7 @@ export default function Envios({ inicial }: { inicial: ListaDeEnvios }) {
             <div className="admin-topo">
                 <h1>Envio de resultados</h1>
                 <p>
-                    <a href="/admin">Gerenciamento</a>
-                    {' · '}
                     <button type="button" className="admin-link" onClick={carregar}>Atualizar agora</button>
-                    {' · '}
-                    <button type="button" className="admin-link" onClick={sair}>Sair</button>
                 </p>
             </div>
 

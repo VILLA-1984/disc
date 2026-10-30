@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Admin from '@/components/Admin';
 import AdminLogin from '@/components/AdminLogin';
+import NavAdmin from '@/components/NavAdmin';
 import { TEXTOS } from '@/lib/configuracao';
 import { adminAtivo, sessaoAdminValida } from '@/server/admin';
 import { carregarConfiguracao, montarCatalogo } from '@/server/configuracao';
@@ -34,8 +35,11 @@ export default async function PaginaAdmin() {
     }
 
     return (
-        <main className="pagina">
-            <Admin configInicial={await carregarConfiguracao()} catalogo={montarCatalogo()} textos={TEXTOS} escolhaLogo={await lerEscolha()} versaoLogo={await versaoDaLogo()} />
-        </main>
+        <>
+            <NavAdmin />
+            <main className="pagina">
+                <Admin configInicial={await carregarConfiguracao()} catalogo={montarCatalogo()} textos={TEXTOS} escolhaLogo={await lerEscolha()} versaoLogo={await versaoDaLogo()} />
+            </main>
+        </>
     );
 }

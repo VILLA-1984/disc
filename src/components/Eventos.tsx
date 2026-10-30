@@ -138,11 +138,6 @@ export default function Eventos({ inicial, base }: { inicial: Evento[]; base: st
         }
     }
 
-    async function sair() {
-        await fetch('/api/admin/sair', { method: 'POST' }).catch(() => undefined);
-        window.location.reload();
-    }
-
     const ligados = eventos.filter((e) => e.ativo).length;
 
     return (
@@ -150,13 +145,7 @@ export default function Eventos({ inicial, base }: { inicial: Evento[]; base: st
             <div className="admin-topo">
                 <h1>Eventos</h1>
                 <p>
-                    <a href="/admin">Gerenciamento</a>
-                    {' · '}
-                    <a href="/whatsapp">Envio de resultados</a>
-                    {' · '}
                     <button type="button" className="admin-link" onClick={carregar}>Atualizar agora</button>
-                    {' · '}
-                    <button type="button" className="admin-link" onClick={sair}>Sair</button>
                 </p>
             </div>
 

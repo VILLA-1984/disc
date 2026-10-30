@@ -151,6 +151,14 @@ palavras escolhidas**: de quem se cadastrou, ligado ao cadastro; de quem jogou s
    WhatsApp informado (só o DDD e os 4 últimos dígitos aparecem); quem jogou sem cadastro vê o ID e a contagem do prazo.
    **O jogador não envia nada pelo próprio celular.**
 
+## Navegação da equipe (navbar)
+
+As três telas da equipe (`/admin`, `/eventos` e `/whatsapp`) compartilham uma barra de navegação fixa no alto, com **todos os
+links do sistema em formato de botão**: Gerenciamento, Eventos, Envio de resultados, Abrir o jogo e Manual (os dois últimos
+abrem em outra aba) e **Sair**, que encerra a sessão nas três. A tela atual fica em destaque (`aria-current="page"`). No
+celular (até 980 px) a barra vira um **menu sanduíche** com botões grandes, que fecha com Esc, com um toque fora dele e ao
+navegar. Quem não entrou não vê a barra, só o login. Código: `src/components/NavAdmin.tsx`.
+
 ## Eventos (`/eventos`)
 
 Tela da equipe (mesmo usuário e senha) para criar os eventos em que o teste é aplicado. **Cada evento tem o seu próprio
