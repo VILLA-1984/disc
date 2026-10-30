@@ -2,6 +2,7 @@ import { normalizarWhatsapp, problemaNoWhatsapp } from '@/lib/whatsapp';
 import { escolherPorEtapa, montarCiclo, tamanhoDoPool } from '@/server/ciclo';
 import { carregarConfiguracao } from '@/server/configuracao';
 import { criarParticipante } from '@/server/db';
+import { eventoParaJogar } from '@/server/eventos';
 import { montarRodada, portoesPorEtapa, RodadaInvalida } from '@/server/gameRound';
 import { PALAVRA_POR_ID, PALAVRAS } from '@/server/palavras';
 import { assinar } from '@/server/token';
@@ -11,7 +12,28 @@ import { assinar } from '@/server/token';
  * O modo das placas vem da configuracao: ciclo (uma palavra e "Deixar passar") ou pares (duas palavras por portao).
  */
 export async function POST(request: Request) {
-    const corpo = (await request.json().catch(() => null)) as { nome?: unknown; whatsapp?: unknown; anonimo?: unknown } | null;
+    const corpo = (await request.json().catch(() => null)) as { nome?: unknown; whatsapp?: unknown; anonimo?: unknown; evento?: unknown } | null;
+
+    // Partida num evento: o evento precisa existir e estar ligado. Sem o campo, a partida e "sem evento".
+    let eventoId: number | null = null;
+
+    if (corpo?.evento !== undefined && corpo.evento !== null) {
+        const situacao = await eventoParaJogar(corpo.evento).catch(() => null);
+
+        if (situacao === null) {
+            return Response.json({ erro: 'Não foi possível conferir o evento agora. Tente de novo em instantes.' }, { status: 503 });
+        }
+
+        if (situacao.situacao === 'inexistente') {
+            return Response.json({ erro: 'Evento não encontrado.' }, { status: 404 });
+        }
+
+        if (situacao.situacao === 'inativo') {
+            return Response.json({ erro: 'Este evento não está recebendo participantes agora.' }, { status: 409 });
+        }
+
+        eventoId = situacao.evento.id;
+    }
 
     // Receber o resultado pelo WhatsApp e opcional: sem cadastro (anonimo) nada pessoal e pedido nem guardado.
     const anonimo = corpo?.anonimo === true;
@@ -73,11 +95,11 @@ export async function POST(request: Request) {
         // So as palavras desta partida vao ao navegador (cada volta traz todas elas, entao a primeira ordem as lista).
         const palavras = Object.fromEntries(ciclo.etapas[0][0].map((id) => [id, PALAVRA_POR_ID.get(id)!.word]));
 
-        return Response.json({ token: assinar(participanteId, ciclo), ciclo: { ...ciclo, palavras } });
+        return Response.json({ token: assinar(participanteId, ciclo, Date.now(), eventoId), ciclo: { ...ciclo, palavras } });
     }
 
     const palavra = (id: number) => ({ id, word: PALAVRA_POR_ID.get(id)!.word });
     const etapas = rodada!.map((portoes) => portoes.map((p) => ({ cima: palavra(p.top), baixo: palavra(p.bottom) })));
 
-    return Response.json({ token: assinar(participanteId, rodada!), etapas });
+    return Response.json({ token: assinar(participanteId, rodada!, Date.now(), eventoId), etapas });
 }

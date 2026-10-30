@@ -151,6 +151,34 @@ palavras escolhidas**: de quem se cadastrou, ligado ao cadastro; de quem jogou s
    WhatsApp informado (só o DDD e os 4 últimos dígitos aparecem); quem jogou sem cadastro vê o ID e a contagem do prazo.
    **O jogador não envia nada pelo próprio celular.**
 
+## Eventos (`/eventos`)
+
+Tela da equipe (mesmo usuário e senha) para criar os eventos em que o teste é aplicado. **Cada evento tem o seu próprio
+ranking**, o seu link com QR code e a sua tela de telão, e pode ser **ligado e desligado**.
+
+- **Criar**: informe o nome; o evento nasce ligado, com um endereço gerado do nome (`Feira de Tecnologia 2026` vira
+  `feira-de-tecnologia-2026`; nome repetido ganha `-2`, `-3`). **Renomear** não muda o endereço, então links e QR codes já
+  impressos continuam valendo.
+- **Jogo do evento**: `/e/<slug>`. A tela inicial mostra o nome do evento, o ranking **do evento** e o QR code dele. A partida
+  entra no ranking do evento (o evento viaja no token assinado da partida; o navegador não consegue trocá-lo).
+- **Desligado**: `/e/<slug>` mostra um aviso e `POST /api/iniciar` responde 409; o ranking e o telão continuam visíveis.
+- **Sem evento**: a raiz `/` continua funcionando e tem o seu ranking à parte. As partidas feitas antes dos eventos
+  existirem ficam nele (o banco ganha a coluna `evento_id` sozinho, sem perder nada).
+- A lista mostra quantas partidas cada evento já contou e atualiza sozinha.
+- API (só com a sessão): `GET/POST/PATCH /api/admin/eventos`. Pública: `GET /api/totais?evento=<slug>` (só contadores).
+
+### Telão (`/e/<slug>/telao`)
+
+Página só de exibição, **sem login**, para ficar aberta no telão: o ranking do evento em tela cheia (botão **Tela cheia**,
+no canto, ou F11) e o QR code do evento. **De tempos em tempos um animal ganha a tela com animação própria**: o tubarão
+nada entre ondas, a águia voa e plana entre nuvens, o gato pula e se espreguiça e o lobo uiva para a lua, cada um com o seu
+som ("Nhac!", "Iiiih!", "Miau!", "Auuuu!"). Quando chega **um resultado novo**, o animal dele ganha a tela na hora ("Mais um
+Gato!"). O ranking atualiza a cada 5 segundos.
+
+- `?intervalo=<segundos>` muda de quanto em quanto tempo um animal ganha a tela (de 5 a 300; padrão 20).
+- Quem prefere menos movimento (`prefers-reduced-motion`) vê o animal parado, sem deslocamentos.
+- Evento desligado continua no telão, avisando "evento desligado" e sem o QR code.
+
 ## Envio dos resultados (`/whatsapp`)
 
 Tela da equipe, com o **mesmo usuário e senha** do gerenciamento (`USER_AREA_ADM` e `PASS_AREA_ADM`; a sessão vale nas
@@ -217,6 +245,7 @@ portões por etapa.
   as funções `concluir` e `aoFinalizar`.
 - `src/server/`: sorteio dos portões (`gameRound.ts`), pontuação, token, banco e lista de palavras.
 - `src/lib/`: regras do número de WhatsApp e texto da mensagem (usadas no navegador e no servidor).
+- `src/server/eventos.ts`: eventos (endereço, ligar/desligar, quem pode jogar); `src/components/Telao.tsx`: o telão.
 - `src/server/envios.ts`: resultados guardados para a equipe (ID, prazo de 5 minutos, lista, enviado, descartar).
 - `src/app/`: páginas e rotas da API. `src/components/Partida.tsx` conduz cadastro, jogo e envio.
 

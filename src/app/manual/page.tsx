@@ -260,6 +260,7 @@ export default function Manual() {
                 <h3>No dia da aplicação</h3>
                 <ul>
                     <li>Use um navegador atual com WebGL (o jogo foi testado no Edge, no computador). O jogo aceita toque, mas teste antes no aparelho que será usado. Peça para ligar o som.</li>
+                    <li>Para cada evento, crie-o em <strong>/eventos</strong>: ele ganha o seu link com QR code (<strong>/e/nome-do-evento</strong>), o seu ranking e uma tela de <strong>telão</strong> (<strong>/e/nome-do-evento/telao</strong>), que fica aberta mostrando o ranking e, de tempos em tempos, um animal em destaque com animação. Desligue o evento ao terminar.</li>
                     <li>Deixe a tela <strong>/whatsapp</strong> aberta em um aparelho da equipe (entre com o mesmo usuário e senha do gerenciamento). Ela lista quem terminou o jogo; o botão <strong>Enviar pelo WhatsApp</strong> abre a conversa com a mensagem pronta e <strong>quem toca em Enviar é a equipe</strong>, na conta do aparelho usado. O WhatsApp não permite envio automático sem a API paga da Meta.</li>
                     <li>Quem se cadastrou aparece em <strong>Com cadastro</strong>, com o botão de marcar como enviado. Quem jogou sem cadastro aparece em <strong>Sem cadastro</strong>, pelo ID, com uma barra que mostra quanto falta para o resultado ser apagado (5 minutos). Se a pessoa não quiser receber, use <strong>Descartar resultado</strong>.</li>
                 </ul>

@@ -10,7 +10,7 @@ import type { Rodada } from './gameRound';
  */
 
 /** r = portoes em pares; c = ciclo de palavras (uma por vez). Cada partida tem so um dos dois. */
-export type Carga = { p: number; r?: Rodada; c?: RodadaCiclo; e: number; n?: string };
+export type Carga = { p: number; r?: Rodada; c?: RodadaCiclo; e: number; n?: string; v?: number };
 
 const VALIDADE_MS = 6 * 60 * 60 * 1000;
 
@@ -54,12 +54,17 @@ function assinatura(corpo: string): Buffer {
     return createHmac('sha256', segredo()).update(corpo).digest();
 }
 
-export function assinar(participanteId: number, rodada: Rodada | RodadaCiclo, agora = Date.now()): string {
+export function assinar(participanteId: number, rodada: Rodada | RodadaCiclo, agora = Date.now(), eventoId: number | null = null): string {
     // `n`: codigo aleatorio da partida; o contador de partidas concluidas o usa para nunca contar a mesma duas vezes.
     const n = randomBytes(9).toString('base64url');
+    // `v`: evento em que a partida foi jogada (o ranking do evento conta por ele); ausente = sem evento.
     const carga: Carga = Array.isArray(rodada)
         ? { p: participanteId, r: rodada, e: agora + VALIDADE_MS, n }
         : { p: participanteId, c: rodada, e: agora + VALIDADE_MS, n };
+
+    if (eventoId !== null) {
+        carga.v = eventoId;
+    }
     const corpo = Buffer.from(JSON.stringify(carga), 'utf8').toString('base64url');
 
     return `${corpo}.${assinatura(corpo).toString('base64url')}`;
@@ -88,7 +93,9 @@ export function verificar(token: unknown, agora = Date.now()): Carga | null {
 
         const temRodada = Array.isArray(carga.r) || Array.isArray(carga.c?.etapas);
 
-        return Number.isInteger(carga.p) && temRodada && carga.e > agora ? carga : null;
+        const eventoValido = carga.v === undefined || (Number.isInteger(carga.v) && carga.v > 0);
+
+        return Number.isInteger(carga.p) && temRodada && eventoValido && carga.e > agora ? carga : null;
     } catch {
         return null;
     }

@@ -55,6 +55,20 @@ const CRIAR_TABELA_PARTIDAS = `
     )
 `;
 
+/**
+ * Eventos em que o teste e aplicado. Cada evento tem o proprio ranking (as partidas contadas guardam o evento) e pode
+ * ser ligado ou desligado. Sem dados pessoais.
+ */
+const CRIAR_TABELA_EVENTOS = `
+    CREATE TABLE IF NOT EXISTS eventos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        slug TEXT NOT NULL UNIQUE,
+        nome TEXT NOT NULL,
+        ativo INTEGER NOT NULL DEFAULT 1,
+        criado_em INTEGER NOT NULL
+    )
+`;
+
 /** Configuracao do jogo (area de gerenciamento): uma linha por chave, com o valor em JSON. Sem dados pessoais. */
 const CRIAR_TABELA_CONFIGURACOES = `
     CREATE TABLE IF NOT EXISTS configuracoes (
@@ -138,6 +152,14 @@ function abrir(): Promise<Armazenamento> {
         await armazenamento.escrever(CRIAR_TABELA_PARTIDAS, []);
         await armazenamento.escrever(CRIAR_TABELA_CONFIGURACOES, []);
         await armazenamento.escrever(CRIAR_TABELA_RESULTADOS, []);
+        await armazenamento.escrever(CRIAR_TABELA_EVENTOS, []);
+
+        // Bancos criados antes dos eventos: acrescenta a coluna do evento (partidas antigas ficam "sem evento").
+        const colunas = await armazenamento.ler('PRAGMA table_info(partidas_contadas)', []);
+
+        if (!colunas.some((coluna) => coluna.name === 'evento_id')) {
+            await armazenamento.escrever('ALTER TABLE partidas_contadas ADD COLUMN evento_id INTEGER', []);
+        }
 
         return armazenamento;
     })().catch((erro) => {
@@ -176,15 +198,23 @@ export async function atualizarWhatsapp(id: number, whatsapp: string): Promise<b
  * Conta uma partida concluida (com ou sem cadastro). O codigo vem do token da partida, entao reenviar o mesmo
  * resultado nao conta de novo. Devolve true quando foi contada agora.
  */
-export async function registrarPartida(codigo: string, animal: string): Promise<boolean> {
-    const { alteradas } = await (await abrir()).escrever('INSERT OR IGNORE INTO partidas_contadas (codigo, animal) VALUES (?, ?)', [codigo, animal]);
+export async function registrarPartida(codigo: string, animal: string, eventoId: number | null = null): Promise<boolean> {
+    const { alteradas } = await (await abrir()).escrever(
+        'INSERT OR IGNORE INTO partidas_contadas (codigo, animal, evento_id) VALUES (?, ?, ?)',
+        [codigo, animal, eventoId as number],
+    );
 
     return alteradas > 0;
 }
 
-/** Quantas partidas foram concluidas e quantas deram cada animal (chave do animal -> total). */
-export async function lerTotais(): Promise<{ total: number; porAnimal: Record<string, number> }> {
-    const linhas = await (await abrir()).ler('SELECT animal, COUNT(*) AS n FROM partidas_contadas GROUP BY animal', []);
+/**
+ * Quantas partidas foram concluidas e quantas deram cada animal (chave do animal -> total), de um evento ou, com
+ * null, das partidas feitas sem evento (inclui todas as de antes dos eventos existirem).
+ */
+export async function lerTotais(eventoId: number | null = null): Promise<{ total: number; porAnimal: Record<string, number> }> {
+    const linhas = eventoId === null
+        ? await (await abrir()).ler('SELECT animal, COUNT(*) AS n FROM partidas_contadas WHERE evento_id IS NULL GROUP BY animal', [])
+        : await (await abrir()).ler('SELECT animal, COUNT(*) AS n FROM partidas_contadas WHERE evento_id = ? GROUP BY animal', [eventoId]);
     const porAnimal: Record<string, number> = {};
     let total = 0;
 
@@ -295,6 +325,73 @@ export async function marcarResultadoEnviado(id: number, enviadoEm: number | nul
 /** Descarta o resultado de quem jogou sem cadastro. Resultado de cadastrado nao se descarta por aqui. */
 export async function descartarResultadoAnonimo(id: number): Promise<boolean> {
     const { alteradas } = await (await abrir()).escrever('DELETE FROM resultados_envio WHERE id = ? AND participante_id IS NULL', [id]);
+
+    return alteradas > 0;
+}
+
+// ------------------------------------------------------------------ eventos
+
+export type LinhaEvento = { id: number; slug: string; nome: string; ativo: boolean; criado_em: number; total: number };
+
+const paraEvento = (linha: Linha): LinhaEvento => ({
+    id: Number(linha.id),
+    slug: String(linha.slug),
+    nome: String(linha.nome),
+    ativo: Number(linha.ativo) === 1,
+    criado_em: Number(linha.criado_em),
+    total: Number(linha.total ?? 0),
+});
+
+const SELECT_EVENTO = `
+    SELECT e.id, e.slug, e.nome, e.ativo, e.criado_em, COUNT(p.codigo) AS total
+    FROM eventos e LEFT JOIN partidas_contadas p ON p.evento_id = e.id
+`;
+
+/** Falha (lanca erro) se o slug ja existir: quem chama escolhe outro. */
+export async function inserirEvento(slug: string, nome: string, criadoEm: number): Promise<number> {
+    const { id } = await (await abrir()).escrever('INSERT INTO eventos (slug, nome, ativo, criado_em) VALUES (?, ?, 1, ?)', [slug, nome, criadoEm]);
+
+    return id;
+}
+
+/** Todos os eventos, do mais recente para o mais antigo, com quantas partidas cada um ja contou. */
+export async function listarEventosComTotal(): Promise<LinhaEvento[]> {
+    const linhas = await (await abrir()).ler(`${SELECT_EVENTO} GROUP BY e.id ORDER BY e.criado_em DESC, e.id DESC`, []);
+
+    return linhas.map(paraEvento);
+}
+
+export async function eventoPorSlug(slug: string): Promise<LinhaEvento | undefined> {
+    const [linha] = await (await abrir()).ler(`${SELECT_EVENTO} WHERE e.slug = ? GROUP BY e.id`, [slug]);
+
+    return linha ? paraEvento(linha) : undefined;
+}
+
+export async function eventoPorId(id: number): Promise<LinhaEvento | undefined> {
+    const [linha] = await (await abrir()).ler(`${SELECT_EVENTO} WHERE e.id = ? GROUP BY e.id`, [id]);
+
+    return linha ? paraEvento(linha) : undefined;
+}
+
+export async function atualizarEvento(id: number, campos: { nome?: string; ativo?: boolean }): Promise<boolean> {
+    const partes: string[] = [];
+    const valores: (string | number)[] = [];
+
+    if (campos.nome !== undefined) {
+        partes.push('nome = ?');
+        valores.push(campos.nome);
+    }
+
+    if (campos.ativo !== undefined) {
+        partes.push('ativo = ?');
+        valores.push(campos.ativo ? 1 : 0);
+    }
+
+    if (partes.length === 0) {
+        return (await eventoPorId(id)) !== undefined;
+    }
+
+    const { alteradas } = await (await abrir()).escrever(`UPDATE eventos SET ${partes.join(', ')} WHERE id = ?`, [...valores, id]);
 
     return alteradas > 0;
 }

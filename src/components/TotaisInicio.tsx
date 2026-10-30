@@ -7,7 +7,7 @@ import type { Totais } from '@/server/totais';
 const ANIMAIS_POR_CHAVE = ANIMAIS as Record<string, { svgPath: string }>;
 
 /** Perfil equilibrado nao tem animal: uma balanca simples, na cor cinza do ranking. */
-function IconeEquilibrado({ cor }: { cor: string }) {
+export function IconeEquilibrado({ cor }: { cor: string }) {
     return (
         <svg viewBox="0 0 512 512" aria-hidden="true" fill={cor}>
             <path d="M232 64h48v36h112v40H280v236h104v40H128v-40h104V140H120v-40h112z" />
@@ -20,13 +20,13 @@ function IconeEquilibrado({ cor }: { cor: string }) {
  * Ranking na tela inicial: o total geral no alto e, embaixo, cada perfil com o icone, o nome e a quantidade, do que
  * tem mais pessoas para o que tem menos. Atualiza sozinho de tempos em tempos.
  */
-export default function TotaisInicio({ inicial }: { inicial: Totais }) {
+export default function TotaisInicio({ inicial, evento }: { inicial: Totais; evento?: string }) {
     const [dados, setDados] = useState(inicial);
 
     useEffect(() => {
         const temporizador = setInterval(async () => {
             try {
-                const resposta = await fetch('/api/totais', { cache: 'no-store' });
+                const resposta = await fetch(evento ? `/api/totais?evento=${encodeURIComponent(evento)}` : '/api/totais', { cache: 'no-store' });
 
                 if (resposta.ok) {
                     setDados((await resposta.json()) as Totais);
@@ -37,7 +37,7 @@ export default function TotaisInicio({ inicial }: { inicial: Totais }) {
         }, 30000);
 
         return () => clearInterval(temporizador);
-    }, []);
+    }, [evento]);
 
     // Ordena do maior para o menor; empate mantem a ordem recebida (D, I, S, C, equilibrado).
     const ranking = [...dados.animais].sort((a, b) => b.total - a.total);

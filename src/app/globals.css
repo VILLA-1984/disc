@@ -424,3 +424,140 @@ body {
 .envios-aba + .envios-aba { border-left: 0; }
 .envios-aba.ativa { color: #fff; background: var(--marinho); border-color: var(--marinho); }
 @media (prefers-reduced-motion: reduce) { .envio-prazo span { transition: none; } }
+
+.evento-rotulo { display: inline-block; margin: 0 0 8px; padding: 3px 12px; font-size: 0.82rem; font-weight: 700; color: var(--marinho); background: #eef3fb; border-radius: 999px; }
+
+/* ----------------------------------------------------------- tela de eventos (/eventos) */
+.evento-novo { display: flex; flex-wrap: wrap; gap: 10px; }
+.evento-novo input { flex: 1 1 260px; min-width: 0; padding: 11px 14px; font: inherit; border: 1px solid var(--borda); border-radius: 10px; }
+.evento-novo .botao { width: auto; margin: 0; padding: 11px 20px; }
+.evento { display: grid; grid-template-columns: minmax(0, 1fr) 132px; gap: 14px; padding: 14px; background: #fff; border: 1px solid var(--borda); border-radius: 12px; }
+.evento.desligado { background: #f7f8fb; }
+.evento.desligado .evento-topo strong { color: var(--suave); }
+.evento-corpo { display: grid; gap: 8px; min-width: 0; }
+.evento-topo { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.evento-topo strong { font-size: 1.15rem; color: var(--marinho); }
+.evento-topo input { flex: 1 1 220px; min-width: 0; padding: 8px 12px; font: inherit; border: 1px solid var(--borda); border-radius: 10px; }
+.evento-links { display: grid; gap: 6px; margin: 4px 0 0; }
+.evento-links > div { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; font-size: 0.9rem; }
+.evento-links dt { min-width: 52px; font-weight: 700; color: var(--marinho); }
+.evento-links dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.evento-qr { width: 132px; height: 132px; padding: 4px; background: #fff; border: 1px solid var(--borda); border-radius: 10px; }
+.evento-qr svg { display: block; width: 100%; height: 100%; }
+@media (max-width: 560px) {
+    .evento { grid-template-columns: minmax(0, 1fr); }
+    .evento-qr { justify-self: start; }
+}
+
+/* ----------------------------------------------------------- telao do evento (/e/<slug>/telao) */
+.telao {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2.4vh;
+    padding: 3vh 3vw;
+    overflow: hidden;
+    color: #fff;
+    background: radial-gradient(ellipse at 20% 0%, #14416f 0%, #0d2b4e 45%, #08182c 100%);
+}
+
+.telao-topo { display: flex; align-items: center; gap: 2vw; }
+.telao-logo { max-height: 9vh; max-width: 18vw; width: auto; height: auto; object-fit: contain; }
+.telao-titulo { flex: 1; min-width: 0; }
+.telao-evento { margin: 0; font-size: clamp(1.6rem, 4vw, 4rem); font-weight: 800; line-height: 1.1; text-wrap: balance; }
+.telao-sub { margin: 0.4vh 0 0; font-size: clamp(0.9rem, 1.6vw, 1.6rem); color: #b9cbe3; }
+.telao-geral { display: grid; justify-items: end; margin: 0; }
+.telao-geral span { font-size: clamp(0.9rem, 1.5vw, 1.5rem); color: #b9cbe3; text-transform: uppercase; letter-spacing: 0.12em; }
+.telao-geral strong { font-size: clamp(2.6rem, 8vw, 8rem); line-height: 1; font-variant-numeric: tabular-nums; animation: telao-pulo 0.9s ease-out; }
+
+.telao-corpo { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 3vw; align-items: stretch; }
+.telao-ranking { list-style: none; margin: 0; padding: 0; display: grid; grid-auto-rows: 1fr; gap: 1.6vh; min-height: 0; }
+.telao-ranking li { display: grid; grid-template-columns: 4.2vw 6vw minmax(0, 1fr) 9vw; align-items: center; gap: 1.6vw; padding: 0 2vw; background: rgba(255, 255, 255, 0.07); border-radius: 1.6vh; }
+.telao-pos { font-size: clamp(1.2rem, 2.6vw, 2.8rem); font-weight: 800; color: #b9cbe3; text-align: center; }
+.telao-icone { width: 100%; max-height: 10vh; aspect-ratio: 1; display: block; }
+.telao-linha { display: grid; gap: 0.8vh; min-width: 0; }
+.telao-nome { font-size: clamp(1.2rem, 2.8vw, 3rem); font-weight: 700; }
+.telao-barra { display: block; height: 1.6vh; background: rgba(255, 255, 255, 0.12); border-radius: 999px; overflow: hidden; }
+.telao-barra i { display: block; height: 100%; background: var(--cor); border-radius: 999px; transition: width 1s ease; }
+.telao-num { font-size: clamp(1.8rem, 5vw, 5.2rem); font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; animation: telao-pulo 0.9s ease-out; }
+.telao-lateral { align-self: center; }
+.telao-lateral .qr-abertura { display: block; width: 22vw; max-width: 360px; padding: 2vh 1.6vw; }
+.telao-lateral .qr-abertura h2 { font-size: clamp(1.1rem, 1.8vw, 1.8rem); }
+.telao-lateral .qr-abertura p { font-size: clamp(0.75rem, 1.1vw, 1.1rem); }
+
+.telao-tela-cheia { position: absolute; right: 1.2vw; bottom: 1.2vh; padding: 6px 14px; font: inherit; font-size: 0.85rem; color: #b9cbe3; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 999px; cursor: pointer; opacity: 0.35; transition: opacity 0.2s; }
+.telao-tela-cheia:hover, .telao-tela-cheia:focus-visible { opacity: 1; }
+
+@keyframes telao-pulo { 0% { transform: scale(1.35); color: var(--cor, #ffd166); } 100% { transform: scale(1); } }
+
+/* O destaque: um animal ocupa a tela por alguns segundos, com a sua propria animacao. */
+.telao-destaque {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    justify-items: center;
+    padding: 4vh 4vw 6vh;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--cor) 42%, #0d2b4e) 0%, #08182c 72%);
+    animation: telao-vida var(--duracao, 8s) ease both;
+}
+.telao-cena { position: relative; width: 100%; display: grid; place-items: center; min-height: 0; }
+.telao-animal { position: relative; z-index: 2; width: min(34vw, 48vh); height: auto; filter: drop-shadow(0 1.5vh 3vh rgba(0, 0, 0, 0.45)); }
+.telao-destaque-texto { text-align: center; max-width: 80vw; }
+.telao-destaque-motivo { margin: 0; font-size: clamp(0.9rem, 1.6vw, 1.6rem); letter-spacing: 0.18em; text-transform: uppercase; color: #ffd166; }
+.telao-destaque h2 { margin: 0.6vh 0; font-size: clamp(2.4rem, 7vw, 7.5rem); line-height: 1.05; color: #fff; text-wrap: balance; }
+.telao-destaque-frase { margin: 0; font-size: clamp(1.1rem, 2.4vw, 2.6rem); color: #e4edf8; }
+.telao-destaque-num { margin: 1.6vh 0 0; font-size: clamp(0.95rem, 1.8vw, 1.9rem); color: #b9cbe3; }
+.telao-destaque-num b { font-size: 1.4em; color: #fff; }
+
+.telao-som { position: absolute; z-index: 3; top: 4%; right: 20%; font-size: clamp(2rem, 5.5vw, 5.5rem); font-weight: 800; color: #fff; text-shadow: 0 0.4vh 2vh rgba(0, 0, 0, 0.5); animation: telao-som 1.2s cubic-bezier(.3, 1.6, .5, 1) 1.6s both, telao-flutua 2.4s ease-in-out 2.8s infinite alternate; }
+
+@keyframes telao-vida { 0% { opacity: 0; } 7% { opacity: 1; } 91% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes telao-som { 0% { transform: scale(0) rotate(-12deg); opacity: 0; } 100% { transform: scale(1) rotate(-6deg); opacity: 1; } }
+@keyframes telao-flutua { to { transform: translateY(-1.4vh) rotate(-2deg); } }
+
+/* Tubarao: nada da esquerda, balanca e some por tras das ondas */
+.telao-destaque--tubarao .telao-animal { animation: tubarao-nada 2.2s cubic-bezier(.2, .8, .3, 1) both, tubarao-balanca 2.6s ease-in-out 2.2s infinite alternate; }
+@keyframes tubarao-nada { 0% { transform: translateX(-75vw) rotate(-6deg); } 70% { transform: translateX(3vw) rotate(2deg); } 100% { transform: translateX(0) rotate(0); } }
+@keyframes tubarao-balanca { from { transform: translateY(0) rotate(-1.5deg); } to { transform: translateY(-1.8vh) rotate(2deg); } }
+.telao-onda { position: absolute; z-index: 3; left: -10%; width: 120%; height: 16vh; background: radial-gradient(circle at 50% 100%, transparent 56%, rgba(255, 255, 255, 0.22) 58%, rgba(255, 255, 255, 0.22) 64%, transparent 66%) 0 0 / 14vw 100% repeat-x; animation: onda-anda 5s linear infinite; }
+.telao-onda--a { bottom: 4%; }
+.telao-onda--b { bottom: -2%; opacity: 0.7; animation-direction: reverse; animation-duration: 7s; }
+@keyframes onda-anda { to { background-position-x: 14vw; } }
+
+/* Aguia: voa de cima, plana e as nuvens passam */
+.telao-destaque--aguia .telao-animal { animation: aguia-voa 2.4s cubic-bezier(.2, .8, .2, 1) both, aguia-plana 3.4s ease-in-out 2.4s infinite alternate; }
+@keyframes aguia-voa { 0% { transform: translate(55vw, -55vh) rotate(24deg) scale(0.4); opacity: 0; } 100% { transform: translate(0, 0) rotate(0) scale(1); opacity: 1; } }
+@keyframes aguia-plana { from { transform: translateY(0) rotate(-2deg); } to { transform: translateY(-2.4vh) rotate(3deg); } }
+.telao-nuvem { position: absolute; z-index: 1; width: 22vw; height: 7vh; background: rgba(255, 255, 255, 0.16); border-radius: 999px; filter: blur(0.6vh); animation: nuvem-passa 12s linear infinite; }
+.telao-nuvem--a { top: 14%; left: -25vw; }
+.telao-nuvem--b { top: 52%; left: -25vw; width: 16vw; animation-duration: 16s; animation-delay: -6s; }
+@keyframes nuvem-passa { to { transform: translateX(150vw); } }
+
+/* Gato: pula para dentro da tela e se espreguica */
+.telao-destaque--gato .telao-animal { animation: gato-pula 1.3s cubic-bezier(.3, 1.6, .5, 1) both, gato-espreguica 2.6s ease-in-out 1.3s infinite; transform-origin: 50% 90%; }
+@keyframes gato-pula { 0% { transform: translateY(26vh) scale(0); } 100% { transform: translateY(0) scale(1); } }
+@keyframes gato-espreguica { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.1, 0.92); } }
+
+/* Lobo: a lua sobe e ele uiva para ela */
+.telao-lua { position: absolute; z-index: 1; width: min(40vw, 54vh); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 38% 34%, #fffdf0 0%, #eef0d8 55%, #c8d3ea 100%); box-shadow: 0 0 6vh 1vh rgba(238, 240, 216, 0.45); animation: lua-sobe 2.4s ease-out both, lua-brilha 3s ease-in-out 2.4s infinite alternate; }
+@keyframes lua-sobe { 0% { transform: translateY(46vh) scale(0.6); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
+@keyframes lua-brilha { from { box-shadow: 0 0 5vh 0.6vh rgba(238, 240, 216, 0.35); } to { box-shadow: 0 0 10vh 3vh rgba(238, 240, 216, 0.6); } }
+.telao-destaque--lobo .telao-animal { animation: lobo-sobe 2s ease-out 0.6s both, lobo-uiva 2.6s ease-in-out 2.6s infinite alternate; transform-origin: 50% 80%; }
+@keyframes lobo-sobe { 0% { transform: translateY(34vh) rotate(0); opacity: 0; } 100% { transform: translateY(0) rotate(-8deg); opacity: 1; } }
+@keyframes lobo-uiva { from { transform: rotate(-8deg) translateY(0); } to { transform: rotate(-15deg) translateY(-1.2vh); } }
+
+@media (max-width: 800px) {
+    .telao-ranking li { grid-template-columns: 8vw 10vw minmax(0, 1fr) 14vw; }
+    .telao-corpo { grid-template-columns: minmax(0, 1fr); }
+    .telao-lateral { display: none; }
+}
+
+/* Quem prefere menos movimento ve o animal parado, sem deslocamentos nem brilho pulsando. */
+@media (prefers-reduced-motion: reduce) {
+    .telao-destaque, .telao-destaque *, .telao-geral strong, .telao-num { animation: none !important; }
+    .telao-barra i { transition: none; }
+}

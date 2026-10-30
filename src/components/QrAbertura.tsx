@@ -1,23 +1,20 @@
-import { headers } from 'next/headers';
 import QRCode from 'qrcode';
-import { enderecoDoJogo, ipDaRede } from '@/server/endereco';
+import { enderecoAtual } from '@/server/enderecoAtual';
 
-/** QR code da tela de abertura: quem escaneia joga no proprio celular. So aparece em telas largas. */
-export default async function QrAbertura() {
-    const cabecalhos = await headers();
-    const endereco = enderecoDoJogo({
-        publica: process.env.RUA_URL_PUBLICA,
-        host: cabecalhos.get('x-forwarded-host') ?? cabecalhos.get('host'),
-        protocolo: cabecalhos.get('x-forwarded-proto'),
-        ip: ipDaRede(),
-    });
+/**
+ * QR code da tela de abertura: quem escaneia joga no proprio celular. So aparece em telas largas. `caminho` leva ao
+ * endereco de um evento (/e/<slug>); sem ele, abre a tela inicial.
+ */
+export default async function QrAbertura({ caminho = '', titulo = 'Jogue no seu celular' }: { caminho?: string; titulo?: string }) {
+    const endereco = await enderecoAtual();
 
     if (!endereco) {
         return null;
     }
 
     // O SVG e gerado aqui, a partir do endereco: so contem formas, nenhum texto de entrada.
-    const svg = await QRCode.toString(endereco.url, {
+    const url = `${endereco.url}${caminho}`;
+    const svg = await QRCode.toString(url, {
         type: 'svg',
         margin: 1,
         errorCorrectionLevel: 'M',
@@ -26,10 +23,10 @@ export default async function QrAbertura() {
 
     return (
         <aside className="qr-abertura" aria-labelledby="qr-titulo">
-            <h2 id="qr-titulo">Jogue no seu celular</h2>
+            <h2 id="qr-titulo">{titulo}</h2>
             <p>Aponte a câmera do celular para o QR code.</p>
-            <div className="qr-codigo" role="img" aria-label={`QR code que abre ${endereco.url}`} dangerouslySetInnerHTML={{ __html: svg }} />
-            <p className="qr-endereco">{endereco.url}</p>
+            <div className="qr-codigo" role="img" aria-label={`QR code que abre ${url}`} dangerouslySetInnerHTML={{ __html: svg }} />
+            <p className="qr-endereco">{url}</p>
             {endereco.redeLocal && <p className="qr-aviso">O celular precisa estar na mesma rede Wi-Fi deste computador.</p>}
         </aside>
     );

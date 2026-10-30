@@ -11,13 +11,13 @@ import { verificar } from '@/server/token';
  * Conta a partida concluida no painel de totais: so o animal do resultado e um codigo aleatorio da partida, sem
  * nome nem telefone. Uma falha aqui nunca pode estragar o resultado de quem jogou.
  */
-async function contar(codigo: string | undefined, natural: { percentual: Record<string, number> }) {
+async function contar(codigo: string | undefined, natural: { percentual: Record<string, number> }, eventoId: number | null) {
     if (!codigo) {
         return; // token antigo, de antes do contador
     }
 
     try {
-        await registrarPartida(codigo, resolverAnimais(natural.percentual).principal?.chave ?? 'equilibrado');
+        await registrarPartida(codigo, resolverAnimais(natural.percentual).principal?.chave ?? 'equilibrado', eventoId);
     } catch (erro) {
         console.error('Falha ao contar a partida:', erro);
     }
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
             const etapas = resolverCiclo(carga.c, corpo?.escolhas);
             const natural = resumir(etapas[0].escolhidas, PALAVRAS);
             const adaptado = resumir(etapas[1].escolhidas, PALAVRAS);
-            await contar(carga.n, natural);
+            await contar(carga.n, natural, carga.v ?? null);
 
             return Response.json({
                 natural,
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
         const idsPorEtapa = [0, 1].map((etapa) => resolvidas.filter((r) => r.etapa === etapa).map((r) => r.escolhida));
         const natural = resumir(idsPorEtapa[0], PALAVRAS);
         const adaptado = resumir(idsPorEtapa[1], PALAVRAS);
-        await contar(carga.n, natural);
+        await contar(carga.n, natural, carga.v ?? null);
 
         return Response.json({ natural, adaptado, envio: await guardar(carga, natural, adaptado) });
     } catch (erro) {
