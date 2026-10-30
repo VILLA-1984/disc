@@ -101,7 +101,7 @@ ou **deixa passar**. As pegas saem do jogo; as deixadas voltam na volta seguinte
 - As regras estão em `src/jogo/ciclo.js`, o **mesmo arquivo** usado pelo navegador (para saber qual palavra vem agora)
   e pelo servidor (que refaz a partida a partir das decisões e confere). O servidor DISC em PHP tem uma cópia
   dessas regras: mudou uma, mude a outra.
-- `RUA_MODO=pares` volta ao formato antigo, com duas palavras por portão.
+- O modo das placas é escolhido em `/admin` (“Placas dos portões”): uma palavra e “Deixar passar” (ciclo, padrão) ou duas palavras, uma em cada placa (escolha forçada, em que “palavras por etapa” vira “portões por etapa”, de 6 a 24).
 - O minimapa (largada, chegada e posição) fica no canto superior direito do jogo.
 
 ## Cenários
@@ -177,8 +177,8 @@ URL). Defina quem acessa o banco e por quanto tempo os cadastros são mantidos.
 | `RUA_ADMIN_SENHA` | Senha da área de gerenciamento (`/admin`). **Sem ela a área fica desativada.** Defina também no Vercel. |
 | `RUA_ESCOLHER` | Só o ponto de partida de "palavras por etapa" quando nada foi salvo em `/admin` (padrão 12). O valor em vigor é o de `/admin`. |
 | `RUA_PALAVRAS` | Quantas palavras entram na partida (padrão: a lista toda, 48; de 8 a 48). Menor que a lista: sorteia esse tanto por pessoa, repartido entre os quatro fatores (14 = 4, 4, 3 e 3), as mesmas nas duas etapas. |
-| `RUA_MODO` | `pares` usa o formato antigo de duas palavras por portão; sem valor, usa o ciclo. |
-| `RUA_PORTOES` | Só no modo `pares`: portões por etapa, de 6 a 24 (padrão 12). |
+| `RUA_MODO` | Só o valor inicial do modo das placas, antes de alguém salvar a escolha em `/admin`: `pares` = duas palavras por portão; sem valor, ciclo. |
+| `RUA_PORTOES` | Não é mais usada: os portões por etapa vêm de `/admin` (“Portões por etapa”). |
 | `RUA_URL_PUBLICA` | Endereço público do jogo, usado no QR code (ex.: `https://jogo.exemplo.com.br`). Sem ela, o QR usa o IP do computador na rede. |
 
 ## Atenção: lista de palavras

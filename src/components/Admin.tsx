@@ -47,6 +47,21 @@ export default function Admin({ configInicial, catalogo, textos }: Props) {
         setMensagem(null);
     }
 
+    const emPares = config.modoPlacas === 'pares';
+    const maximo = emPares ? LIMITES.portoesMax : LIMITES.palavrasMax;
+
+    // Ao trocar de modo, o numero acompanha o limite do novo modo (duas palavras por portao tem maximo menor).
+    function mudarModo(modo: Configuracao['modoPlacas']) {
+        setConfig((atual) => ({
+            ...atual,
+            modoPlacas: modo,
+            palavrasPorEtapa: Number.isFinite(atual.palavrasPorEtapa) && modo === 'pares'
+                ? Math.min(atual.palavrasPorEtapa, LIMITES.portoesMax)
+                : atual.palavrasPorEtapa,
+        }));
+        setMensagem(null);
+    }
+
     // Combinacoes que o servidor recusaria, avisadas na hora (a validacao de verdade e a do servidor).
     const avisos = useMemo(() => {
         const lista: { onde: string; texto: string }[] = [];
@@ -297,9 +312,35 @@ export default function Admin({ configInicial, catalogo, textos }: Props) {
                 </div>
             </section>
 
+            <section className="admin-secao" aria-labelledby="secao-placas">
+                <h2 id="secao-placas">Placas dos portões</h2>
+                <p>Como as palavras aparecem em cada portão. A mudança vale para as próximas partidas.</p>
+
+                <div className="admin-grade" role="radiogroup" aria-labelledby="secao-placas">
+                    <label className={`admin-opcao${config.modoPlacas === 'ciclo' ? ' marcada' : ''}`}>
+                        <input type="radio" name="modo-placas" checked={config.modoPlacas === 'ciclo'} onChange={() => mudarModo('ciclo')} />
+                        <span>
+                            <strong>Uma palavra e “Deixar passar”</strong>
+                            <small>uma placa com a palavra e a outra com “Deixar passar”; a pessoa pega o que combina com ela e as palavras deixadas voltam depois</small>
+                        </span>
+                    </label>
+                    <label className={`admin-opcao${config.modoPlacas === 'pares' ? ' marcada' : ''}`}>
+                        <input type="radio" name="modo-placas" checked={config.modoPlacas === 'pares'} onChange={() => mudarModo('pares')} />
+                        <span>
+                            <strong>Duas palavras, uma em cada placa</strong>
+                            <small>cada placa traz uma palavra diferente e a pessoa é obrigada a escolher uma delas (escolha forçada)</small>
+                        </span>
+                    </label>
+                </div>
+            </section>
+
             <section className="admin-secao" aria-labelledby="secao-palavras">
-                <h2 id="secao-palavras">Palavras por etapa</h2>
-                <p>Quantas palavras a pessoa marca em cada uma das duas etapas. Quanto menor o número, mais curto o jogo.</p>
+                <h2 id="secao-palavras">{emPares ? 'Portões por etapa' : 'Palavras por etapa'}</h2>
+                <p>
+                    {emPares
+                        ? 'Quantos portões a pessoa atravessa em cada uma das duas etapas (uma escolha por portão). Quanto menor o número, mais curto o jogo.'
+                        : 'Quantas palavras a pessoa marca em cada uma das duas etapas. Quanto menor o número, mais curto o jogo.'}
+                </p>
 
                 <div className="admin-numero">
                     <input
@@ -307,13 +348,18 @@ export default function Admin({ configInicial, catalogo, textos }: Props) {
                         type="number"
                         inputMode="numeric"
                         min={LIMITES.palavrasMin}
-                        max={LIMITES.palavrasMax}
+                        max={maximo}
                         step={1}
                         value={Number.isFinite(config.palavrasPorEtapa) ? config.palavrasPorEtapa : ''}
-                        aria-label="Palavras por etapa"
+                        aria-label={emPares ? 'Portões por etapa' : 'Palavras por etapa'}
                         onChange={(e) => definir('palavrasPorEtapa', e.target.value === '' ? Number.NaN : Number(e.target.value))}
                     />
-                    <small>De {LIMITES.palavrasMin} a {LIMITES.palavrasMax}. O padrão é {LIMITES.palavrasPadrao}. As palavras que a pessoa deixa passar voltam numa nova volta até ela completar esse número.</small>
+                    <small>
+                        De {LIMITES.palavrasMin} a {maximo}. O padrão é {LIMITES.palavrasPadrao}.{' '}
+                        {emPares
+                            ? 'Cada portão usa duas palavras diferentes, por isso o máximo é menor.'
+                            : 'As palavras que a pessoa deixa passar voltam numa nova volta até ela completar esse número.'}
+                    </small>
                 </div>
             </section>
 
@@ -321,7 +367,7 @@ export default function Admin({ configInicial, catalogo, textos }: Props) {
                 <h2 id="secao-textos">Títulos e textos de explicação</h2>
                 <p>Edite o que aparece na tela. Deixe igual ao original para usar o texto padrão. Nas explicações, desmarque “Mostrar” para esconder o texto.</p>
 
-                {textos.map((definicao) => {
+                {textos.filter((definicao) => !definicao.modo || definicao.modo === config.modoPlacas).map((definicao) => {
                     const personalizado = config.textos[definicao.chave];
                     const mostrar = personalizado?.mostrar !== false;
                     const valor = valorDoTexto(definicao);

@@ -159,6 +159,39 @@ const partida = await (await chamar('/api/iniciar', { anonimo: true })).json();
 assert.equal(partida.ciclo.escolher, 8, 'o servidor sorteia a partida com 8 palavras por etapa');
 console.log('jogo: titulo, avatares, cenarios, minimapa, barra, ranking e 8 palavras por etapa obedecem a configuracao.');
 
+// ------------------------------------------------------------------ modo das placas (duas palavras por portao)
+const sessao = cookie.split(';')[0];
+const atual = await (await fetch(`${base}/api/admin/config`, { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: sessao }, body: JSON.stringify({ restaurar: true }) })).json();
+const emPares = await chamar('/api/admin/config', { config: { ...atual.config, modoPlacas: 'pares', palavrasPorEtapa: 9 } }, sessao);
+assert.equal(emPares.status, 200, 'salva o modo de duas palavras');
+const rodada = await (await chamar('/api/iniciar', { anonimo: true })).json();
+assert.equal(rodada.ciclo, undefined, 'no modo de duas palavras nao ha ciclo');
+assert.equal(rodada.etapas.length, 2);
+assert.equal(rodada.etapas[0].length, 9, '9 portoes por etapa');
+assert.notEqual(rodada.etapas[0][0].cima.id, rodada.etapas[0][0].baixo.id, 'cada placa traz uma palavra diferente');
+assert.equal((await chamar('/api/admin/config', { config: { ...atual.config, modoPlacas: 'pares', palavrasPorEtapa: 30 } }, sessao)).status, 422, 'portoes acima do maximo sao recusados');
+console.log('modo das placas: duas palavras por portao (9 portoes) e limite maximo OK.');
+
+// A tela de gerenciamento mostra o modo salvo, com os textos e o limite do modo.
+await admin.reload();
+await admin.getByRole('heading', { name: 'Gerenciamento do teste' }).waitFor();
+assert.ok(await admin.getByRole('radio', { name: /Duas palavras, uma em cada placa/ }).isChecked(), 'o modo salvo aparece marcado');
+assert.equal(await admin.locator('#palavras-por-etapa').getAttribute('max'), '24', 'duas palavras por portao: maximo 24');
+assert.equal(await admin.getByText('Explicação do jogo (duas palavras por portão)').count(), 1, 'so os textos do modo de duas palavras');
+assert.equal(await admin.getByText('Regra de quantas palavras pegar').count(), 0);
+await admin.getByRole('radio', { name: /Uma palavra e “Deixar passar”/ }).check();
+assert.equal(await admin.locator('#palavras-por-etapa').getAttribute('max'), '36');
+assert.equal(await admin.getByText('Regra de quantas palavras pegar').count(), 1, 'os textos do ciclo voltam');
+
+// No jogo, o cartao de abertura usa o texto do modo de duas palavras.
+const placas = await novaPagina();
+await placas.goto(base);
+await placas.check('#receber-nao');
+await placas.click('button[type=submit]');
+await placas.locator('#cartao.aberto').waitFor({ timeout: 30000 });
+assert.match(await placas.textContent('#cartao-corpo'), /aparecem duas palavras/, 'abertura do modo de duas palavras');
+assert.match(await placas.textContent('#cartao-corpo'), /passar pelos portões desta etapa|completar todos os portões/);
+
 // ------------------------------------------------------------------ voltar ao padrao
 await admin.getByRole('button', { name: 'Voltar ao padrão' }).click();
 await admin.getByText('Tudo voltou ao padrão de fábrica.').waitFor({ timeout: 15000 });

@@ -115,6 +115,24 @@ describe('validacao', () => {
         expect(r.ok && r.config.palavrasPorEtapa).toBe(valor);
     });
 
+    it('o modo das placas e ciclo por padrao e aceita so ciclo ou pares', () => {
+        expect(configuracaoPadrao().modoPlacas).toBe('ciclo');
+        // configuracao salva antes da opcao existir (sem o campo) continua valendo, no modo de fabrica
+        expect(validar(base()).ok && (validar(base()) as { config: { modoPlacas: string } }).config.modoPlacas).toBe('ciclo');
+        expect(recusa({ ...base(), modoPlacas: 'misto' })).toMatch(/Placas dos portões/);
+
+        const r = validar({ ...base(), modoPlacas: 'pares' });
+
+        expect(r.ok && r.config.modoPlacas).toBe('pares');
+    });
+
+    it('com duas palavras por portao o maximo por etapa e menor', () => {
+        expect(recusa({ ...base(), modoPlacas: 'pares', palavrasPorEtapa: LIMITES.portoesMax + 1 })).toMatch(/Portões por etapa/);
+        expect(validar({ ...base(), modoPlacas: 'pares', palavrasPorEtapa: LIMITES.portoesMax }).ok).toBe(true);
+        // o mesmo numero ainda vale no modo de uma palavra por vez
+        expect(validar({ ...base(), modoPlacas: 'ciclo', palavrasPorEtapa: LIMITES.portoesMax + 1 }).ok).toBe(true);
+    });
+
     it('guarda so textos conhecidos, aparados, e esconde so as explicacoes', () => {
         const r = validar({
             ...base(),

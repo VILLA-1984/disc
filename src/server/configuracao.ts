@@ -60,6 +60,7 @@ export function configuracaoPadrao(): Configuracao {
         mostrarRanking: true,
         mostrarMinimapa: true,
         mostrarProgresso: true,
+        modoPlacas: process.env.RUA_MODO === 'pares' ? 'pares' : 'ciclo',
         palavrasPorEtapa: palavras,
         textos: {},
     };
@@ -125,10 +126,23 @@ export function validar(entrada: unknown): Validacao {
         }
     }
 
-    const palavras = bruta.palavrasPorEtapa;
+    // Sem o campo (configuracao salva antes desta opcao existir), vale o modo de fabrica.
+    const modoPlacas = bruta.modoPlacas === undefined ? padrao.modoPlacas : bruta.modoPlacas;
 
-    if (typeof palavras !== 'number' || !Number.isInteger(palavras) || palavras < LIMITES.palavrasMin || palavras > LIMITES.palavrasMax) {
-        return { ok: false, erro: `Palavras por etapa: informe um número inteiro entre ${LIMITES.palavrasMin} e ${LIMITES.palavrasMax}.` };
+    if (modoPlacas !== 'ciclo' && modoPlacas !== 'pares') {
+        return { ok: false, erro: 'Placas dos portões: escolha uma palavra com "Deixar passar" ou duas palavras.' };
+    }
+
+    const palavras = bruta.palavrasPorEtapa;
+    const maximo = modoPlacas === 'pares' ? LIMITES.portoesMax : LIMITES.palavrasMax;
+
+    if (typeof palavras !== 'number' || !Number.isInteger(palavras) || palavras < LIMITES.palavrasMin || palavras > maximo) {
+        return {
+            ok: false,
+            erro: modoPlacas === 'pares'
+                ? `Portões por etapa: informe um número inteiro entre ${LIMITES.palavrasMin} e ${LIMITES.portoesMax}.`
+                : `Palavras por etapa: informe um número inteiro entre ${LIMITES.palavrasMin} e ${LIMITES.palavrasMax}.`,
+        };
     }
 
     const textos: Configuracao['textos'] = {};
@@ -171,6 +185,7 @@ export function validar(entrada: unknown): Validacao {
             mostrarRanking: booleano(bruta.mostrarRanking, padrao.mostrarRanking),
             mostrarMinimapa: booleano(bruta.mostrarMinimapa, padrao.mostrarMinimapa),
             mostrarProgresso: booleano(bruta.mostrarProgresso, padrao.mostrarProgresso),
+            modoPlacas,
             palavrasPorEtapa: palavras,
             textos,
         },

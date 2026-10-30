@@ -8,7 +8,7 @@ import { assinar } from '@/server/token';
 
 /**
  * Cadastra nome e WhatsApp, monta a partida no servidor e devolve so id e texto das palavras.
- * Modo padrao: ciclo (uma palavra por vez; RUA_MODO=pares volta aos portoes com duas palavras).
+ * O modo das placas vem da configuracao: ciclo (uma palavra e "Deixar passar") ou pares (duas palavras por portao).
  */
 export async function POST(request: Request) {
     const corpo = (await request.json().catch(() => null)) as { nome?: unknown; whatsapp?: unknown; anonimo?: unknown } | null;
@@ -31,17 +31,18 @@ export async function POST(request: Request) {
         }
     }
 
-    const emPares = process.env.RUA_MODO === 'pares';
     let rodada;
     let ciclo;
 
     try {
-        if (emPares) {
-            rodada = montarRodada(PALAVRAS, portoesPorEtapa(Number(process.env.RUA_PORTOES) || null));
+        // Modo das placas e quantidade por etapa vem da area de gerenciamento (padrao: ciclo, 12).
+        const { modoPlacas, palavrasPorEtapa } = await carregarConfiguracao();
+
+        if (modoPlacas === 'pares') {
+            // Duas palavras por portao: aqui "por etapa" e a quantidade de portoes.
+            rodada = montarRodada(PALAVRAS, portoesPorEtapa(palavrasPorEtapa));
         } else {
-            // Quantas palavras marcar por etapa vem da area de gerenciamento (padrao 12); a lista toda passa na
-            // partida, a menos que RUA_PALAVRAS peca um conjunto menor.
-            const { palavrasPorEtapa } = await carregarConfiguracao();
+            // A lista toda passa na partida, a menos que RUA_PALAVRAS peca um conjunto menor.
             const tamanho = tamanhoDoPool(PALAVRAS.length, Number(process.env.RUA_PALAVRAS) || null);
             ciclo = montarCiclo(PALAVRAS, escolherPorEtapa(tamanho, palavrasPorEtapa), undefined, tamanho);
         }

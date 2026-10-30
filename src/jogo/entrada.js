@@ -16,10 +16,6 @@ import { mostrarRelatorio } from './report.js';
  * Carregado sob demanda pela propria pagina (import dinamico), para nao pesar as demais telas.
  */
 
-const TEXTO_ETAPA = [
-    'Pense em como você é naturalmente, no dia a dia. Em cada portão, escolha a palavra que mais combina com você.',
-    'Agora pense em como você acredita que esperam que você seja no trabalho. Em cada portão, escolha a palavra que mais combina com essa expectativa.',
-];
 // Modo ciclo (uma palavra por vez): a placa sem palavra diz "Deixar passar" e tem id 0.
 const PASSAR = { id: 0, word: 'Deixar passar' };
 const NOMES_CORES = ['Azul', 'Laranja', 'Verde', 'Roxo', 'Rosa', 'Marinho', 'Amarelo'];
@@ -440,7 +436,7 @@ export function montar(raiz, api) {
             titulo: indice === 0 ? T('etapa1_titulo') : T('etapa2_titulo'),
             corpoHtml: ciclo
                 ? `${paragrafo(indice === 0 ? 'etapa1_texto' : 'etapa2_texto')}${paragrafo('regra_texto', { n: escolhasPorEtapa })}`
-                : `<p>${TEXTO_ETAPA[indice]}</p><p>Siga ${textosDe(cenario, meio).percurso} e, em cada portão, escolha <strong>uma</strong> das duas palavras. A etapa termina quando você passar pelos <strong>${escolhasPorEtapa} portões</strong>.</p>`,
+                : `${paragrafo(indice === 0 ? 'etapa1_texto_pares' : 'etapa2_texto_pares')}${paragrafo('regra_texto_pares', { n: escolhasPorEtapa, percurso: textosDe(cenario, meio).percurso })}`,
             botao: textosDe(cenario, meio).comeco,
             aoClicar: () => {
                 fecharCartao();
@@ -531,7 +527,7 @@ export function montar(raiz, api) {
                         titulo: T('etapa_concluida_titulo'),
                         corpoHtml: ciclo
                             ? `${paragrafo('etapa_concluida_texto', { n: escolhasPorEtapa, proxima: etapa + 2 })}${automaticas ? `<p>As últimas ${automaticas} entraram sozinhas, porque eram as únicas que faltavam.</p>` : ''}`
-                            : `<p>Você passou pelos ${escolhasPorEtapa} portões desta etapa.</p><p>Agora vem a etapa ${etapa + 2}, com outras combinações de palavras.</p>`,
+                            : paragrafo('etapa_concluida_texto_pares', { n: escolhasPorEtapa, proxima: etapa + 2 }),
                         botao: `Continuar para a etapa ${etapa + 2}`,
                         aoClicar: () => {
                             fecharCartao();
@@ -630,7 +626,7 @@ export function montar(raiz, api) {
             titulo: T('titulo_geral'),
             corpoHtml: `${ciclo
                     ? paragrafo('abertura_texto', { n: escolhasPorEtapa, total: Object.keys(ciclo.palavras).length })
-                    : '<p>Você vai percorrer um cenário em duas etapas. Em cada portão aparecem duas palavras: escolha a que mais combina com você. Não há resposta certa ou errada, e no fim você descobre o seu animal.</p>'}
+                    : paragrafo('abertura_texto_pares', { n: escolhasPorEtapa })}
                 <ul><li>Toque na placa, use as setas do teclado ou os botões abaixo do jogo.</li>
                 <li>O avatar espera por você: não há limite de tempo. Para acelerar, segure ↑ (ou W) na vista 3D, ou → (ou D) na vista lateral.</li>
                 <li>O jogo tem som. Você pode desligá-lo a qualquer momento no botão no canto da tela.</li>
