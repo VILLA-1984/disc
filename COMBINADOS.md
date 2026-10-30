@@ -204,7 +204,10 @@ variável), mas rode o servidor de teste em outra sessão para não misturar.
 
 ## 8. Pendências e ideias combinadas
 
-- [ ] Levar o **cenário do espaço** (e os demais ajustes do front do jogo) para o Laravel.
+- [ ] **Publicar o cenário do espaço no Laravel (PANDORA).** O código já está no Laravel (commit `1d5672f`, branch
+      `feature/rua-das-palavras`), com os testes JS e PHP do jogo e o build do Vite passando. Falta só o deploy em produção:
+      `python scripts/deploy_ftp.py --skip-manual-update 27ba94e 1d5672f` (envia também `public/build`). O deploy em produção
+      pede a liberação do usuário.
 - [ ] Imagem da tela do **ID** (jogador sem cadastro) no manual.
 - [ ] Filtrar a lista de `/whatsapp` por evento.
 - [ ] Imagens do manual: regerar sempre que uma tela mudar.
