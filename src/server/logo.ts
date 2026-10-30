@@ -1,3 +1,4 @@
+import { ESCOLHA_ENVIADA, ESCOLHA_NENHUMA, ESCOLHA_PADRAO, enderecoDaEnviada, enderecoDaFixa, escolhaValida, logoFixa, type EscolhaLogo, type LogoEmUso } from '../lib/logos';
 import { gravarConfiguracao, lerConfiguracao } from './db';
 
 /**
@@ -87,10 +88,57 @@ export async function salvarLogo(tipo: TipoLogo, bytes: Uint8Array): Promise<num
     const versao = Date.now();
 
     await gravarConfiguracao(CHAVE, JSON.stringify({ tipo, dados: Buffer.from(bytes).toString('base64'), versao }));
+    // Quem envia uma imagem nova quer usa-la: ela passa a ser a logo em uso.
+    await gravarConfiguracao(CHAVE_ESCOLHA, ESCOLHA_ENVIADA);
 
     return versao;
 }
 
+/** Apaga a imagem enviada. Se ela era a logo em uso, a tela volta para a generica. */
 export async function removerLogo(): Promise<void> {
     await gravarConfiguracao(CHAVE, null);
+
+    if ((await lerConfiguracao(CHAVE_ESCOLHA)) === ESCOLHA_ENVIADA) {
+        await gravarConfiguracao(CHAVE_ESCOLHA, ESCOLHA_PADRAO);
+    }
+}
+
+// ------------------------------------------------------------------ qual logo esta em uso
+
+const CHAVE_ESCOLHA = 'logo_escolha';
+
+/** A escolha salva; sem nada salvo (ou valor invalido), vale a logo generica. */
+export async function lerEscolha(): Promise<EscolhaLogo> {
+    try {
+        const salvo = await lerConfiguracao(CHAVE_ESCOLHA);
+
+        return escolhaValida(salvo) ? salvo : ESCOLHA_PADRAO;
+    } catch (erro) {
+        console.error('Falha ao ler a escolha da logo:', erro);
+
+        return ESCOLHA_PADRAO;
+    }
+}
+
+export async function salvarEscolha(escolha: EscolhaLogo): Promise<void> {
+    await gravarConfiguracao(CHAVE_ESCOLHA, escolha);
+}
+
+/** A logo que a tela inicial mostra, ou null quando a escolha e "sem logo" (ou a enviada nao existe mais). */
+export async function logoEmUso(): Promise<LogoEmUso | null> {
+    const escolha = await lerEscolha();
+
+    if (escolha === ESCOLHA_NENHUMA) {
+        return null;
+    }
+
+    if (escolha === ESCOLHA_ENVIADA) {
+        const versao = await versaoDaLogo();
+
+        return versao ? { src: enderecoDaEnviada(versao), escuro: false } : null;
+    }
+
+    const fixa = logoFixa(escolha);
+
+    return fixa ? { src: enderecoDaFixa(fixa), escuro: fixa.fundoEscuro === true } : null;
 }

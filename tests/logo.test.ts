@@ -94,3 +94,63 @@ describe('gravacao da logo', () => {
         expect(await lerLogo()).toBeNull();
     });
 });
+
+describe('logo em uso', () => {
+    it('sem escolha salva vale a generica; escolhas invalidas voltam a ela', async () => {
+        const { lerEscolha, logoEmUso } = await import('../src/server/logo');
+        const { gravarConfiguracao } = await import('../src/server/db');
+
+        await gravarConfiguracao('logo_escolha', null);
+        await gravarConfiguracao('logo', null);
+        expect(await lerEscolha()).toBe('generica');
+        expect(await logoEmUso()).toEqual({ src: '/logo/logo-generica.png', escuro: false });
+
+        await gravarConfiguracao('logo_escolha', 'qualquer-coisa');
+        expect(await lerEscolha()).toBe('generica');
+    });
+
+    it('logo fixa clara vem marcada para fundo escuro; "nenhuma" nao mostra imagem', async () => {
+        const { logoEmUso, salvarEscolha } = await import('../src/server/logo');
+
+        await salvarEscolha('senac-branco');
+        expect(await logoEmUso()).toEqual({ src: '/logo/LOGO-SENAC_BRANCO.png', escuro: true });
+
+        await salvarEscolha('senac');
+        expect((await logoEmUso())?.escuro).toBe(false);
+
+        await salvarEscolha('nenhuma');
+        expect(await logoEmUso()).toBeNull();
+    });
+
+    it('enviar uma imagem a coloca em uso; apagar a enviada em uso volta para a generica', async () => {
+        const { lerEscolha, logoEmUso, removerLogo, salvarEscolha, salvarLogo } = await import('../src/server/logo');
+
+        const versao = await salvarLogo('image/png', PNG);
+
+        expect(await lerEscolha()).toBe('enviada');
+        expect(await logoEmUso()).toEqual({ src: `/api/logo?v=${versao}`, escuro: false });
+
+        // outra logo em uso: apagar a imagem enviada nao muda a escolha
+        await salvarEscolha('senac');
+        await removerLogo();
+        expect(await lerEscolha()).toBe('senac');
+
+        // enviada em uso e apagada: volta para a generica; e "enviada" sem imagem nao mostra nada
+        await salvarLogo('image/png', PNG);
+        await removerLogo();
+        expect(await lerEscolha()).toBe('generica');
+        await salvarEscolha('enviada');
+        expect(await logoEmUso()).toBeNull();
+    });
+
+    it('todas as logos fixas existem em public/logo, sem ids repetidos', async () => {
+        const { existsSync } = await import('node:fs');
+        const { LOGOS_FIXAS } = await import('../src/lib/logos');
+
+        expect(new Set(LOGOS_FIXAS.map((l) => l.id)).size).toBe(LOGOS_FIXAS.length);
+
+        for (const logo of LOGOS_FIXAS) {
+            expect(existsSync(path.join(__dirname, '..', 'public', 'logo', logo.arquivo)), logo.arquivo).toBe(true);
+        }
+    });
+});

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { resolverAnimais } from '@/jogo/animais-dados.js';
 import { textoDe, type Configuracao } from '@/lib/configuracao';
+import type { LogoEmUso } from '@/lib/logos';
 import { montarMensagem, type Resumo } from '@/lib/mensagem';
 import { linkWhatsapp, mascararWhatsapp, normalizarWhatsapp, problemaNoWhatsapp } from '@/lib/whatsapp';
 
@@ -52,17 +53,17 @@ async function copiarTexto(texto: string): Promise<boolean> {
     }
 }
 
-/** Logo enviada na area de gerenciamento; o ?v= muda a cada troca, para o navegador nao mostrar uma logo velha. */
-function Logo({ versao, alt, className }: { versao: number | null | undefined; alt: string; className: string }) {
-    if (!versao) {
+/** Logo escolhida na area de gerenciamento. Logo clara (para fundo escuro) vem sobre uma faixa azul-marinho. */
+function Logo({ logo, alt, className }: { logo: LogoEmUso | null | undefined; alt: string; className: string }) {
+    if (!logo) {
         return null;
     }
 
     // eslint-disable-next-line @next/next/no-img-element
-    return <img className={className} src={`/api/logo?v=${versao}`} alt={alt} />;
+    return <img className={`${className}${logo.escuro ? ' logo-sobre-escuro' : ''}`} src={logo.src} alt={alt} />;
 }
 
-export default function Partida({ qr, config, logo }: { qr?: React.ReactNode; config: Configuracao; logo?: number | null }) {
+export default function Partida({ qr, config, logo }: { qr?: React.ReactNode; config: Configuracao; logo?: LogoEmUso | null }) {
     // Titulos e explicacoes editaveis na area de gerenciamento (/admin).
     const titulo = textoDe(config.textos, 'titulo_geral');
     const introducao = textoDe(config.textos, 'cadastro_intro');
@@ -171,7 +172,7 @@ export default function Partida({ qr, config, logo }: { qr?: React.ReactNode; co
         <>
             {fase === 'cadastro' && (
                 <div className="abertura">
-                <Logo versao={logo} alt={titulo} className="logo-abertura" />
+                <Logo logo={logo} alt={titulo} className="logo-abertura" />
                 <section className="painel" aria-labelledby="titulo-cadastro">
                     <h2 id="titulo-cadastro">{titulo}</h2>
                     {introducao && <p>{introducao}</p>}
@@ -269,7 +270,7 @@ export default function Partida({ qr, config, logo }: { qr?: React.ReactNode; co
             {fase === 'jogo' && (
                 <>
                     <div className="cabecalho">
-                        <Logo versao={logo} alt="" className="logo-cabecalho" />
+                        <Logo logo={logo} alt="" className="logo-cabecalho" />
                         <h1>{titulo}</h1>
                         <span>{anonimo ? '' : nome.trim().split(/\s+/)[0]}</span>
                     </div>

@@ -236,6 +236,10 @@ const enviarLogo = (conteudo, nome, cookieSessao) => {
 assert.equal((await fetch(`${base}/api/logo`)).status, 404, 'sem logo enviada, a imagem nao existe');
 assert.equal((await enviarLogo(pngFaixa(8, 8, [0, 0, 0]), 'logo.png')).status, 401, 'sem sessao nao envia logo');
 assert.equal((await fetch(`${base}/api/admin/logo`, { method: 'DELETE' })).status, 401, 'sem sessao nao remove logo');
+const escolherLogo = (escolha, cookieSessao) => fetch(`${base}/api/admin/logo`, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...(cookieSessao ? { Cookie: cookieSessao } : {}) }, body: JSON.stringify({ escolha }) });
+assert.equal((await escolherLogo('senac')).status, 401, 'sem sessao nao escolhe logo');
+assert.equal((await escolherLogo('inventada', sessao)).status, 422, 'logo desconhecida e recusada');
+assert.equal((await escolherLogo('enviada', sessao)).status, 422, 'escolher a enviada sem ter enviado nenhuma e recusado');
 const svg = await enviarLogo(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'), 'logo.png', sessao);
 assert.equal(svg.status, 422, 'SVG e recusado, mesmo com nome de PNG');
 assert.equal((await enviarLogo(Buffer.alloc(1024 * 1024 + 1, 1), 'grande.png', sessao)).status, 422, 'arquivo grande demais e recusado');
@@ -243,11 +247,27 @@ assert.equal((await enviarLogo(Buffer.alloc(1024 * 1024 + 1, 1), 'grande.png', s
 // Pela tela: enviar, ver a previa e a tela inicial, trocar e remover.
 await admin.reload();
 await admin.getByRole('heading', { name: 'Gerenciamento do teste' }).waitFor();
-assert.equal(await admin.getByText('Nenhuma logo enviada').count(), 1);
+assert.ok(await admin.getByRole('radio', { name: /^Genérica/ }).isChecked(), 'comeca na logo generica');
+assert.equal(await admin.getByRole('radio', { name: /^Enviada por você/ }).count(), 0, 'sem imagem enviada, nao ha a opcao enviada');
+
+for (const nome of [/^Quatro animais/, /^Senac e Fecomércio Sesc Horizontal/, /^Senac Só a marca/, /^Senac e Fecomércio Sesc \(vertical\)/, /^Senac \(branca\)/, /^Sem logo/]) {
+    assert.equal(await admin.getByRole('radio', { name: nome }).count(), 1, `opcao ${nome}`);
+}
+
+// As logos fixas carregam de verdade (arquivos em public/logo).
+for (const arquivo of ['logo-generica.png', 'logo-quatro-animais.png', 'senac100-colorido.png', 'senac-01.png', 'image.png', 'LOGO-SENAC_BRANCO.png']) {
+    assert.equal((await fetch(`${base}/logo/${arquivo}`)).status, 200, `logo fixa ${arquivo}`);
+}
+
+const padrao = await novaPagina({ width: 1180, height: 900 });
+await padrao.goto(base);
+await padrao.locator('img.logo-abertura').waitFor();
+assert.match(await padrao.getAttribute('img.logo-abertura', 'src'), /\/logo\/logo-generica\.png$/, 'a tela inicial comeca com a logo generica');
+
 await admin.setInputFiles('#arquivo-logo', { name: 'logo.png', mimeType: 'image/png', buffer: pngFaixa(240, 72, [13, 71, 161]) });
-await admin.getByText(/Logo atualizada/).waitFor({ timeout: 15000 });
-await admin.getByRole('img', { name: 'Logo atual' }).waitFor();
-await admin.screenshot({ path: join(pasta, 'admin-5-logo.png'), fullPage: true });
+await admin.getByText(/Imagem enviada e já em uso/).waitFor({ timeout: 15000 });
+assert.ok(await admin.getByRole('radio', { name: /^Enviada por você/ }).isChecked(), 'a imagem enviada passa a ser a logo em uso');
+await admin.locator('section[aria-labelledby="secao-logo"]').screenshot({ path: join(pasta, 'admin-5-logo.png') });
 
 const resposta = await fetch(`${base}/api/logo`);
 assert.equal(resposta.status, 200);
@@ -266,18 +286,50 @@ await celular.locator('img.logo-abertura').waitFor();
 await celular.screenshot({ path: join(pasta, 'logo-2-inicio-celular.png') });
 
 await admin.setInputFiles('#arquivo-logo', { name: 'outra.png', mimeType: 'image/png', buffer: pngFaixa(120, 40, [239, 108, 0]) });
-await admin.getByText(/Logo atualizada/).waitFor({ timeout: 15000 });
+await admin.getByText(/Imagem enviada e já em uso/).waitFor({ timeout: 15000 });
 await inicio.reload();
 await inicio.locator('img.logo-abertura').waitFor();
 assert.ok(await inicio.evaluate(() => document.querySelector('img.logo-abertura').naturalWidth === 120), 'a logo trocada aparece (sem ficar a antiga em cache)');
 
-await admin.getByRole('button', { name: 'Remover a logo' }).click();
-await admin.getByText('Logo removida.').waitFor({ timeout: 15000 });
-assert.equal((await fetch(`${base}/api/logo`)).status, 404, 'depois de remover, a imagem some');
+// Escolher uma logo fixa pelo painel vale na hora; a branca vem sobre a faixa azul-marinho.
+await admin.getByRole('radio', { name: /^Senac \(branca\)/ }).click();
+await admin.getByText(/Logo atualizada/).waitFor({ timeout: 15000 });
+await inicio.reload();
+await inicio.locator('img.logo-abertura.logo-sobre-escuro').waitFor();
+assert.match(await inicio.getAttribute('img.logo-abertura', 'src'), /LOGO-SENAC_BRANCO\.png$/);
+await inicio.screenshot({ path: join(pasta, 'logo-3-branca-sobre-escuro.png') });
+
+await admin.getByRole('radio', { name: /^Quatro animais/ }).click();
+await admin.getByText(/Logo atualizada/).waitFor({ timeout: 15000 });
+await inicio.reload();
+await inicio.locator('img.logo-abertura').waitFor();
+assert.match(await inicio.getAttribute('img.logo-abertura', 'src'), /logo-quatro-animais\.png$/);
+await inicio.screenshot({ path: join(pasta, 'logo-4-quatro-animais.png') });
+
+await admin.getByRole('radio', { name: /^Senac e Fecomércio Sesc Horizontal/ }).click();
+await admin.getByText(/Logo atualizada/).waitFor({ timeout: 15000 });
+await inicio.reload();
+await inicio.locator('img.logo-abertura').waitFor();
+assert.equal(await inicio.locator('img.logo-sobre-escuro').count(), 0, 'logo colorida nao leva a faixa escura');
+assert.match(await inicio.getAttribute('img.logo-abertura', 'src'), /senac100-colorido\.png$/);
+
+await admin.getByRole('radio', { name: /^Sem logo/ }).click();
+await admin.getByText(/Logo atualizada/).waitFor({ timeout: 15000 });
 await inicio.reload();
 await inicio.getByRole('heading', { name: 'Teste de Perfil DISC' }).waitFor();
-assert.equal(await inicio.locator('img.logo-abertura').count(), 0, 'sem logo, a tela inicial volta ao normal');
-console.log('logo: envio, formatos e tamanho recusados, troca, remocao e tela inicial OK.');
+assert.equal(await inicio.locator('img.logo-abertura').count(), 0, 'sem logo, a tela inicial fica sem imagem');
+
+// Apagar a imagem enviada tambem apaga a rota e, se ela estava em uso, volta para a generica.
+await admin.getByRole('radio', { name: /^Enviada por você/ }).click();
+await admin.getByText(/Logo atualizada/).waitFor({ timeout: 15000 });
+await admin.getByRole('button', { name: 'Apagar a imagem enviada' }).click();
+await admin.getByText('Imagem apagada.').waitFor({ timeout: 15000 });
+assert.equal((await fetch(`${base}/api/logo`)).status, 404, 'depois de apagar, a imagem enviada some');
+assert.ok(await admin.getByRole('radio', { name: /^Genérica/ }).isChecked(), 'a escolha volta para a generica');
+await inicio.reload();
+await inicio.locator('img.logo-abertura').waitFor();
+assert.match(await inicio.getAttribute('img.logo-abertura', 'src'), /logo-generica\.png$/);
+console.log('logo: logos fixas, envio, formatos e tamanho recusados, troca, remocao e tela inicial OK.');
 
 // ------------------------------------------------------------------ voltar ao padrao
 await admin.getByRole('button', { name: 'Voltar ao padrão' }).click();

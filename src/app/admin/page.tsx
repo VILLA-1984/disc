@@ -4,7 +4,7 @@ import AdminLogin from '@/components/AdminLogin';
 import { TEXTOS } from '@/lib/configuracao';
 import { adminAtivo, sessaoAdminValida } from '@/server/admin';
 import { carregarConfiguracao, montarCatalogo } from '@/server/configuracao';
-import { versaoDaLogo } from '@/server/logo';
+import { lerEscolha, versaoDaLogo } from '@/server/logo';
 
 // Sempre fresca (a sessao e a configuracao mudam) e fora dos buscadores.
 export const dynamic = 'force-dynamic';
@@ -35,7 +35,7 @@ export default async function PaginaAdmin() {
 
     return (
         <main className="pagina">
-            <Admin configInicial={await carregarConfiguracao()} catalogo={montarCatalogo()} textos={TEXTOS} logoInicial={await versaoDaLogo()} />
+            <Admin configInicial={await carregarConfiguracao()} catalogo={montarCatalogo()} textos={TEXTOS} escolhaLogo={await lerEscolha()} versaoLogo={await versaoDaLogo()} />
         </main>
     );
 }

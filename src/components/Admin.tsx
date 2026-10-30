@@ -9,7 +9,8 @@ type Props = {
     configInicial: Configuracao;
     catalogo: Catalogo;
     textos: TextoDefinicao[];
-    logoInicial: number | null;
+    escolhaLogo: string;
+    versaoLogo: number | null;
 };
 
 const ROTULO_MOBILIDADE: Record<string, string> = {
@@ -26,7 +27,7 @@ type Lista = 'avatares' | 'cenarios' | 'meios';
 type Mensagem = { tipo: 'ok' | 'erro' | 'pendente'; texto: string };
 
 /** Area de gerenciamento: o que fica liberado, o que fica visivel, quantas palavras marcar e os textos do jogo. */
-export default function Admin({ configInicial, catalogo, textos, logoInicial }: Props) {
+export default function Admin({ configInicial, catalogo, textos, escolhaLogo, versaoLogo }: Props) {
     const [config, setConfig] = useState<Configuracao>(configInicial);
     const [salvo, setSalvo] = useState<Configuracao>(configInicial);
     const [ocupado, setOcupado] = useState(false);
@@ -227,7 +228,7 @@ export default function Admin({ configInicial, catalogo, textos, logoInicial }: 
                 </p>
             </div>
 
-            <AdminLogo versaoInicial={logoInicial} />
+            <AdminLogo escolhaInicial={escolhaLogo} versaoInicial={versaoLogo} />
 
             <section className="admin-secao" aria-labelledby="secao-cenarios">
                 <h2 id="secao-cenarios">Cenários e meios de locomoção</h2>
