@@ -14,7 +14,7 @@ export function montarMensagem(nome: string, natural: Resumo, adaptado: Resumo):
     const nat = resolverAnimais(natural.percentual);
     const adp = resolverAnimais(adaptado.percentual);
     const saudacao = primeiroNome ? `Olá, ${primeiroNome}!` : 'Olá!'; // quem joga sem cadastro pode nao ter informado o nome
-    const linhas: string[] = [`${saudacao} Este é o seu resultado na Rua das Palavras (SENAC-MT).`, ''];
+    const linhas: string[] = [`${saudacao} Este é o seu resultado no Teste de Perfil DISC (SENAC-MT).`, ''];
 
     if (nat.principal) {
         linhas.push(`Seu animal: ${nat.principal.nome}. ${nat.principal.slogan}`);

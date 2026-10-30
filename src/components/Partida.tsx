@@ -154,7 +154,7 @@ export default function Partida({ qr }: { qr?: React.ReactNode }) {
             {fase === 'cadastro' && (
                 <div className="abertura">
                 <section className="painel" aria-labelledby="titulo-cadastro">
-                    <h2 id="titulo-cadastro">Rua das Palavras</h2>
+                    <h2 id="titulo-cadastro">Teste de Perfil DISC</h2>
                     <p>Você descobre o seu animal no fim do jogo. Se quiser, também pode receber o resultado pelo WhatsApp: é opcional.</p>
 
                     <form onSubmit={comecar} noValidate>
@@ -250,7 +250,7 @@ export default function Partida({ qr }: { qr?: React.ReactNode }) {
             {fase === 'jogo' && (
                 <>
                     <div className="cabecalho">
-                        <h1>Rua das Palavras</h1>
+                        <h1>Teste de Perfil DISC</h1>
                         <span>{anonimo ? '' : nome.trim().split(/\s+/)[0]}</span>
                     </div>
                     <div className="rua-app" ref={raizJogo} />

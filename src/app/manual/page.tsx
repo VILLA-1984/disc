@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'Manual de uso · Rua das Palavras',
-    description: 'Passo a passo para jogar a Rua das Palavras e orientações para quem aplica o teste.',
+    title: 'Manual de uso · Teste de Perfil DISC',
+    description: 'Passo a passo para fazer o Teste de Perfil DISC e orientações para quem aplica o teste.',
 };
 
 type Passo = {
@@ -216,7 +216,7 @@ export default function Manual() {
             </div>
 
             <p className="manual-intro">
-                A <strong>Rua das Palavras</strong> é uma versão em jogo do teste comportamental DISC do SENAC-MT. A pessoa corre por uma rua e, em cada portão, escolhe uma entre duas palavras. No fim, descobre o seu animal e recebe o resultado pelo WhatsApp.
+                O <strong>Teste de Perfil DISC</strong> é uma versão em jogo do teste comportamental DISC do SENAC-MT. A pessoa corre por uma rua e, em cada portão, escolhe uma entre duas palavras. No fim, descobre o seu animal e recebe o resultado pelo WhatsApp.
             </p>
 
             <nav className="manual-indice" aria-label="Neste manual">

@@ -1,4 +1,4 @@
-# Rua das Palavras
+# Teste de Perfil DISC (Rua das Palavras)
 
 Jogo de escolhas do teste DISC do SENAC-MT, como projeto independente (Next.js). A pessoa informa nome e
 WhatsApp, joga as duas etapas, vê o animal do resultado e envia o resultado pelo WhatsApp.

@@ -35,7 +35,7 @@ const totais0 = await (await fetch(`${base}/api/totais`)).json();
 
 // ------------------------------------------------------------------ cadastro
 await pagina.goto(base);
-await pagina.getByRole('heading', { name: 'Rua das Palavras' }).waitFor();
+await pagina.getByRole('heading', { name: 'Teste de Perfil DISC' }).waitFor();
 await pagina.screenshot({ path: join(pasta, 'e2e-0-cadastro.png') });
 
 // Receber o resultado e opcional: o botao so libera depois de escolher, e os campos so aparecem com o "Sim".
@@ -60,7 +60,7 @@ await pagina.getByRole('button', { name: 'Continuar' }).click();
 // ---------------------------------------------------------------------- jogo
 const cartao = pagina.locator('#cartao.aberto');
 await cartao.waitFor({ timeout: 30000 });
-assert.match(await pagina.textContent('#cartao-titulo'), /Rua das Palavras/);
+assert.match(await pagina.textContent('#cartao-titulo'), /Teste de Perfil DISC/);
 
 // Painel de totais no canto do jogo: o total e uma linha por animal.
 await pagina.locator('.rua-totais').waitFor({ timeout: 15000 });

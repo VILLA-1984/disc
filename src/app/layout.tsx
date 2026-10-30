@@ -3,8 +3,8 @@ import './globals.css';
 import '../jogo/rua.css';
 
 export const metadata: Metadata = {
-    title: 'Rua das Palavras',
-    description: 'Jogo de escolhas do teste comportamental DISC do SENAC-MT.',
+    title: 'Teste de Perfil DISC',
+    description: 'Teste de perfil comportamental DISC do SENAC-MT, em formato de jogo.',
 };
 
 export const viewport: Viewport = {

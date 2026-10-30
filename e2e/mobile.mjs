@@ -43,7 +43,7 @@ async function tela(nome) {
 }
 
 await pagina.goto(base);
-await pagina.getByRole('heading', { name: 'Rua das Palavras' }).waitFor();
+await pagina.getByRole('heading', { name: 'Teste de Perfil DISC' }).waitFor();
 await tela('m-0-abertura');
 
 await pagina.check('#receber-sim');

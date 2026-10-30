@@ -595,7 +595,7 @@ export function montar(raiz, api) {
     } else {
         mostrarCartao({
             sobretitulo: 'Teste comportamental',
-            titulo: 'Rua das Palavras',
+            titulo: 'Teste de Perfil DISC',
             corpoHtml: `<p>${ciclo
                     ? `Você vai percorrer um cenário em duas etapas. Em cada portão aparece uma palavra de um lado e "Deixar passar" do outro: pegue a palavra se ela combina com você. Em cada etapa você pega ${escolhasPorEtapa} das ${Object.keys(ciclo.palavras).length} palavras, e as que você deixar passar voltam mais tarde. Não há resposta certa ou errada, e no fim você descobre o seu animal.`
                     : 'Você vai percorrer um cenário em duas etapas. Em cada portão aparecem duas palavras: escolha a que mais combina com você. Não há resposta certa ou errada, e no fim você descobre o seu animal.'}</p>
