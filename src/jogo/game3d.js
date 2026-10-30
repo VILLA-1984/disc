@@ -520,7 +520,7 @@ export function criarJogo3D(opcoes) {
         }
     };
     const barco = rio
-        ? criarBarco(meioEscolhido, modo)
+        ? criarBarco(meioEscolhido, modo, { aoModelo: esconderAvatar })
         : (aereo
             ? criarAeronave(meioEscolhido, modo)
             : (gelo ? criarVeiculoNeve(meioEscolhido) : (ferrovia ? criarVeiculoTrilho(meioEscolhido, modo, { aoModelo: esconderAvatar }) : (espacial ? criarVeiculoEspacial(meioEscolhido, modo) : null))));

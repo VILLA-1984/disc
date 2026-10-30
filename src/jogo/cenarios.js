@@ -534,13 +534,19 @@ export function criarPeixes({ cena, sorteio }) {
     };
 }
 
+/** Modelos glTF do rio: largura (eixo x) e altura do fundo do casco sobre o convés (que fica em y = 0). */
+const MODELOS_RIO = {
+    barco: { arquivo: 'lancha.glb', largura: 1.6, fundo: -0.5 },
+    veleiro: { arquivo: 'veleiro.glb', largura: 1.3, fundo: -0.5, achatar3d: 0.45 }, // na vista 3D o mastro nao pode tapar as placas
+};
+
 /**
  * Barco de motor de popa (as "voadeiras" dos rios do Mato Grosso). O convés fica em y = 0, e o casco
  * desce abaixo disso; comprimento de z = -2 (proa) a z = 1,4 (popa). O avatar senta no banco do meio.
  *
  * @returns {{grupo: THREE.Group, atualizar: (dt: number, ritmo: number) => void}}
  */
-export function criarBarco(meio = 'barco', modo = '3d') {
+export function criarBarco(meio = 'barco', modo = '3d', { aoModelo } = {}) {
     if (meio === 'caiaque') {
         return criarCaiaque();
     }
@@ -658,6 +664,26 @@ export function criarBarco(meio = 'barco', modo = '3d') {
         espuma.position.set(0, -0.5, 1.8 + (i / 9) * 4);
         espumas.push({ espuma, idade: i / 9 });
         grupo.add(espuma);
+    }
+
+    // Piloto glTF (so no Next): a lancha e o veleiro do Kenney (CC0) entram por cima dos feitos em codigo; a espuma fica.
+    const modelo = MODELOS_RIO[meio];
+
+    if (modelo && modelosLigados()) {
+        const proprios = grupo.children.filter((filho) => !espumas.some((e) => e.espuma === filho));
+
+        carregarModelo(`/modelos/rio/${modelo.arquivo}`)
+            .then((cena) => {
+                const { grupo: aninhado } = encaixarModelo(cena, { ...modelo, achatarY: modo === '3d' ? (modelo.achatar3d ?? 1) : 1 });
+
+                for (const filho of proprios) {
+                    filho.visible = false;
+                }
+
+                grupo.add(aninhado);
+                aoModelo?.();
+            })
+            .catch((erro) => console.warn(`modelo ${modelo.arquivo} indisponivel, usando o feito em codigo`, erro));
     }
 
     return {

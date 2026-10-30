@@ -23,11 +23,12 @@ export function carregarModelo(url) {
 /**
  * Gira o modelo (os do Kenney e do Quaternius olham para +z; o jogo anda para -z), dimensiona pela largura (eixo x),
  * centraliza em x e z e fixa a altura pelo `topo` (parte de cima) ou pelo `fundo` (parte de baixo). `cabineZ` desloca
- * o modelo para a cabine (que fica atras do centro) cair na origem, onde o avatar fica.
+ * o modelo para a cabine (que fica atras do centro) cair na origem, onde o avatar fica. `achatarY` (< 1) encurta so a
+ * altura, para mastros e velas nao taparem as placas na vista 3D.
  *
  * @returns {{grupo: THREE.Group, escala: number, tamanho: THREE.Vector3}} `tamanho` ja vem na escala final.
  */
-export function encaixarModelo(cena, { largura, topo, fundo, cabineZ = 0 }) {
+export function encaixarModelo(cena, { largura, topo, fundo, cabineZ = 0, achatarY = 1 }) {
     const pivo = new THREE.Group();
     pivo.rotation.y = Math.PI;
     pivo.add(cena);
@@ -37,11 +38,12 @@ export function encaixarModelo(cena, { largura, topo, fundo, cabineZ = 0 }) {
     const tamanho = caixa.getSize(new THREE.Vector3());
     const centro = caixa.getCenter(new THREE.Vector3());
     const escala = largura / tamanho.x;
-    const y = topo !== undefined ? topo - caixa.max.y * escala : fundo - caixa.min.y * escala;
+    const escalaY = escala * achatarY;
+    const y = topo !== undefined ? topo - caixa.max.y * escalaY : fundo - caixa.min.y * escalaY;
     const grupo = new THREE.Group();
-    grupo.scale.setScalar(escala);
+    grupo.scale.set(escala, escalaY, escala);
     grupo.position.set(-centro.x * escala, y, -centro.z * escala - cabineZ);
     grupo.add(pivo);
 
-    return { grupo, escala, tamanho: tamanho.multiplyScalar(escala) };
+    return { grupo, escala, tamanho: tamanho.multiply(new THREE.Vector3(escala, escalaY, escala)) };
 }

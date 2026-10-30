@@ -1,0 +1,4 @@
+Modelos 3D do barco a motor e do veleiro do rio (piloto, so no projeto Next).
+Origem: "Watercraft Kit" de Kenney (https://kenney.nl/assets/watercraft-kit), espelhado em OpenGameArt.
+Licenca: CC0 1.0 (dominio publico) - uso livre, sem exigencia de credito; o credito e dado por cortesia.
+Arquivos: lancha.glb (boat-speed-c.glb) e veleiro.glb (boat-sail-a.glb), sem alteracoes, com Textures/colormap.png.
