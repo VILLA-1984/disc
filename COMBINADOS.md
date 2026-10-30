@@ -102,7 +102,7 @@ veículo; quem usa cadeira vai sem os apoios nos meios que pedem isso.
 **Piloto de modelos glTF (só no Next, decidido em 2026-10-30; o Laravel NÃO recebe).** Só o espaço usa modelos 3D prontos
 (CC0, Quaternius "Ultimate Space Kit", em `public/modelos/espaco/`, licença em `LICENCA.txt`): hoje `nave` e `disco-voador`.
 O modelo entra assíncrono por cima do veículo feito em código, que continua como plano B (arquivo ausente ou `?modelos=0`).
-Foguete e astronauta seguem em código (o pacote não tem esses modelos). `?fps=1` mostra o painel de desempenho (fps, chamadas,
+Foguete e astronauta seguem em código (o pacote não tem esses modelos); só o astronauta mostra o avatar (de traje), nos outros meios a pessoa vai por dentro (o avatar fica escondido). **Trilhos**: a `locomotiva` usa o modelo do Kenney Train Kit (CC0, `public/modelos/trilhos/`, com a textura `Textures/colormap.png` ao lado); a draisina segue em código (o kit não tem). Código comum em `src/jogo/modelos.js`; teste em `e2e/trilhos.mjs`. Céu e rio ainda sem modelos (céu: não achei pacote CC0 em glTF; rio: Kenney Watercraft Kit é candidato). `?fps=1` mostra o painel de desempenho (fps, chamadas,
 triângulos). Falta medir num celular de verdade antes de decidir se estende aos outros cenários. Por isso `espaco.js` do Next
 diverge do `espaco.js` do Laravel de propósito.
 

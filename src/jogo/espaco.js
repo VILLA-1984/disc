@@ -1,29 +1,17 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { carregarModelo, encaixarModelo, modelosLigados } from './modelos.js';
 
 /**
- * Modelos 3D prontos (glTF, CC0, Quaternius "Ultimate Space Kit") so neste cenario e so no projeto Next: piloto da melhoria.
- * Entram de forma assincrona por cima do veiculo feito em codigo, que continua sendo o plano B (sem rede, arquivo ausente
- * ou `?modelos=0` na URL). `largura` e o tamanho no eixo x depois de girar o modelo para a proa apontar para -z; `topo`
- * e a altura da parte de cima do casco; `cabineZ` e quanto a abertura da cabine fica atras do centro do casco (o avatar
- * fica ali); `popa` guia onde ficam as chamas. Nos veiculos o avatar fica escondido (so o astronauta aparece, de traje).
+ * Modelos 3D prontos (glTF, CC0, Quaternius "Ultimate Space Kit") so neste projeto (Next): piloto da melhoria, ver
+ * modelos.js. `largura` e o tamanho no eixo x; `topo` e a altura da parte de cima do casco; `cabineZ` e quanto a cabine
+ * fica atras do centro do casco; `popa` guia onde ficam as chamas. Nos veiculos o avatar fica escondido (so o astronauta
+ * aparece, de traje).
  */
 const MODELOS = {
     nave: { arquivo: 'nave.glb', largura: 4.3, topo: 1.0, cabineZ: 0.76, popa: true },
     'disco-voador': { arquivo: 'disco-voador.glb', largura: 4.4, topo: 0.8 },
 };
 const PASTA_MODELOS = '/modelos/espaco/';
-const carregador = new GLTFLoader();
-const emCache = new Map();
-
-/** Carrega (uma vez) o glTF de um meio; quem chamar recebe um clone novo da cena. */
-function carregarModelo(arquivo) {
-    if (!emCache.has(arquivo)) {
-        emCache.set(arquivo, carregador.loadAsync(PASTA_MODELOS + arquivo).then((gltf) => gltf.scene));
-    }
-
-    return emCache.get(arquivo).then((cena) => cena.clone(true));
-}
 
 /**
  * Cenario do espaco: estrelas, nebulosas e planetas ao fundo, balizas de luz e asteroides que passam, riscos de
@@ -594,27 +582,14 @@ export function criarVeiculoEspacial(meio, modo = '3d') {
 
     // Piloto glTF: troca o casco feito em codigo pelo modelo pronto assim que ele chegar.
     const modelo = MODELOS[meio];
-    const usarModelos = typeof location === 'undefined' || new URLSearchParams(location.search).get('modelos') !== '0';
 
-    if (modelo && usarModelos) {
+    if (modelo && modelosLigados()) {
         const mantidos = new Set(chamas.map((c) => c.malha));
         const proprios = [...grupo.children];
 
-        carregarModelo(modelo.arquivo)
+        carregarModelo(PASTA_MODELOS + modelo.arquivo)
             .then((cena) => {
-                const pivo = new THREE.Group();
-                pivo.rotation.y = Math.PI; // os modelos olham para +z; o jogo anda para -z
-                pivo.add(cena);
-                pivo.updateMatrixWorld(true);
-
-                const caixa = new THREE.Box3().setFromObject(pivo);
-                const tamanho = caixa.getSize(new THREE.Vector3());
-                const centro = caixa.getCenter(new THREE.Vector3());
-                const escala = modelo.largura / tamanho.x;
-                const aninhado = new THREE.Group();
-                aninhado.scale.setScalar(escala);
-                aninhado.position.set(-centro.x * escala, modelo.topo - caixa.max.y * escala, -centro.z * escala - (modelo.cabineZ ?? 0));
-                aninhado.add(pivo);
+                const { grupo: aninhado, tamanho } = encaixarModelo(cena, modelo);
 
                 for (const filho of proprios) {
                     // ficam o facho e as chamas (sem a bolha de vidro: nao ha ninguem a mostra dentro); o resto (casco, asas, luzes) sai
@@ -624,7 +599,7 @@ export function criarVeiculoEspacial(meio, modo = '3d') {
                 }
 
                 if (modelo.popa) {
-                    const popa = (tamanho.z / 2) * escala - (modelo.cabineZ ?? 0); // z da traseira do casco, ja que o modelo fica centrado em z
+                    const popa = tamanho.z / 2 - (modelo.cabineZ ?? 0); // z da traseira do casco, ja que o modelo fica centrado em z
 
                     for (const { malha } of chamas) {
                         malha.position.z = popa + 0.5;

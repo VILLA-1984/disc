@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { carregarModelo, encaixarModelo, modelosLigados } from './modelos.js';
 
 /**
  * Cenarios do jogo. O cenario e so o visual (chao, margens, veiculo): portoes, placas, ciclo de
@@ -1663,15 +1664,20 @@ function rodaDeFerro(raio, cor = 0x2b3a4f) {
     return roda;
 }
 
+/** Locomotiva glTF: largura (eixo x), altura do fundo das rodas e quanto a cabine fica atras do centro do modelo. */
+const LOCOMOTIVA = { largura: 1.7, fundo: -0.4, cabineZ: 0.7 };
+
 /**
  * Veiculos dos trilhos (conves em y = 0, avatar no mesmo grupo):
  *  - locomotiva a vapor: caldeira, chaminé com fumaça, cabine com teto, rodas motrizes e limpa-trilhos;
  *  - draisina: carrinho de ferrovia com alavanca de bombear, que balança junto com os braços do avatar.
  */
-export function criarVeiculoTrilho(meio, modo = '3d') {
+export function criarVeiculoTrilho(meio, modo = '3d', { aoModelo } = {}) {
     const grupo = new THREE.Group();
     const rodas = [];
+    const rodasDoModelo = [];
     const fumaca = [];
+    const bocal = { y: 2.15, z: -3.0 }; // de onde sai a fumaca
     let alavanca = null;
     let tempo = 0;
 
@@ -1810,6 +1816,32 @@ export function criarVeiculoTrilho(meio, modo = '3d') {
             grupo.add(bola);
             fumaca.push({ bola, idade: i / 9 });
         }
+
+        // Piloto glTF (so no Next): a locomotiva do Kenney (CC0) entra por cima da feita em codigo quando chegar.
+        if (modelosLigados()) {
+            const proprios = grupo.children.filter((filho) => !fumaca.some((f) => f.bola === filho));
+
+            carregarModelo('/modelos/trilhos/locomotiva.glb')
+                .then((cena) => {
+                    const { grupo: aninhado, tamanho } = encaixarModelo(cena, LOCOMOTIVA);
+
+                    for (const filho of proprios) {
+                        filho.visible = false;
+                    }
+
+                    // a chamine fica perto da frente, a cerca de 14% do comprimento
+                    bocal.z = -LOCOMOTIVA.cabineZ - tamanho.z / 2 + tamanho.z * 0.14;
+                    bocal.y = LOCOMOTIVA.fundo + tamanho.y * 0.92;
+                    aninhado.traverse((no) => {
+                        if (no.name === 'wheel' || no.name === 'wheels-front') {
+                            rodasDoModelo.push(no);
+                        }
+                    });
+                    grupo.add(aninhado);
+                    aoModelo?.();
+                })
+                .catch((erro) => console.warn('locomotiva glTF indisponivel, usando a feita em codigo', erro));
+        }
     }
 
     return {
@@ -1818,6 +1850,7 @@ export function criarVeiculoTrilho(meio, modo = '3d') {
             tempo += dt;
             const giro = dt * (2 + Math.min(ritmo, 2) * 12);
             rodas.forEach((roda) => { roda.rotation.x -= giro; });
+            rodasDoModelo.forEach((roda) => { roda.rotation.x += giro; }); // o modelo esta girado 180 graus
 
             if (alavanca) {
                 // Sincronizada com os bracos do avatar (mesma formula em avatars.js, pelo relogio do navegador).
@@ -1831,7 +1864,7 @@ export function criarVeiculoTrilho(meio, modo = '3d') {
                     f.idade -= 1;
                 }
 
-                f.bola.position.set(Math.sin(f.idade * 5 + 1) * 0.15, 2.15 + f.idade * 2.6, -3.0 + f.idade * (1.2 + Math.min(ritmo, 2) * 2.4));
+                f.bola.position.set(Math.sin(f.idade * 5 + 1) * 0.15, bocal.y + f.idade * 2.6, bocal.z + f.idade * (1.2 + Math.min(ritmo, 2) * 2.4));
                 f.bola.scale.setScalar(0.5 + f.idade * 1.9);
                 f.bola.material.opacity = (1 - f.idade) * 0.7;
             }

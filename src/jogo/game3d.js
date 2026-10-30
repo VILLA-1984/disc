@@ -510,11 +510,20 @@ export function criarJogo3D(opcoes) {
     const avatar = criarAvatar3D(specAvatar);
     avatar.grupo.position.set(0, 0, 0);
     cena.add(avatar.grupo);
+
+    // Quando um modelo pronto (glTF) entra no lugar do veiculo, a pessoa passa a ir por dentro dele.
+    const esconderAvatar = () => {
+        for (const parte of avatar.grupo.children) {
+            if (parte !== barco.grupo) {
+                parte.visible = false;
+            }
+        }
+    };
     const barco = rio
         ? criarBarco(meioEscolhido, modo)
         : (aereo
             ? criarAeronave(meioEscolhido, modo)
-            : (gelo ? criarVeiculoNeve(meioEscolhido) : (ferrovia ? criarVeiculoTrilho(meioEscolhido, modo) : (espacial ? criarVeiculoEspacial(meioEscolhido, modo) : null))));
+            : (gelo ? criarVeiculoNeve(meioEscolhido) : (ferrovia ? criarVeiculoTrilho(meioEscolhido, modo, { aoModelo: esconderAvatar }) : (espacial ? criarVeiculoEspacial(meioEscolhido, modo) : null))));
 
     if (barco) {
         barco.grupo.scale.setScalar(1 / avatar.grupo.scale.x);

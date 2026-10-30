@@ -1,0 +1,4 @@
+Modelo 3D da locomotiva dos trilhos (piloto, so no projeto Next).
+Origem: "Train Kit" de Kenney (https://kenney.nl/assets/train-kit), espelhado em OpenGameArt.
+Licenca: CC0 1.0 (dominio publico) - uso livre, sem exigencia de credito; o credito e dado por cortesia.
+Arquivo: locomotiva.glb (train-locomotive-a.glb), sem alteracoes.
