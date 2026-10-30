@@ -55,6 +55,15 @@ const CRIAR_TABELA_PARTIDAS = `
     )
 `;
 
+/** Configuracao do jogo (area de gerenciamento): uma linha por chave, com o valor em JSON. Sem dados pessoais. */
+const CRIAR_TABELA_CONFIGURACOES = `
+    CREATE TABLE IF NOT EXISTS configuracoes (
+        chave TEXT PRIMARY KEY,
+        valor TEXT NOT NULL,
+        atualizado_em TEXT NOT NULL
+    )
+`;
+
 /** Turso (libSQL). O cliente e carregado so quando e preciso, para o modo local nao depender dele. */
 async function abrirTurso(url: string, token: string | undefined): Promise<Armazenamento> {
     const { createClient } = await import('@libsql/client');
@@ -109,6 +118,7 @@ function abrir(): Promise<Armazenamento> {
         const armazenamento = url ? await abrirTurso(url, process.env.TURSO_AUTH_TOKEN?.trim()) : abrirLocal();
         await armazenamento.escrever(CRIAR_TABELA, []);
         await armazenamento.escrever(CRIAR_TABELA_PARTIDAS, []);
+        await armazenamento.escrever(CRIAR_TABELA_CONFIGURACOES, []);
 
         return armazenamento;
     })().catch((erro) => {
@@ -166,6 +176,30 @@ export async function lerTotais(): Promise<{ total: number; porAnimal: Record<st
     }
 
     return { total, porAnimal };
+}
+
+/** Valor (JSON em texto) de uma configuracao, ou null quando nunca foi gravada. */
+export async function lerConfiguracao(chave: string): Promise<string | null> {
+    const [linha] = await (await abrir()).ler('SELECT valor FROM configuracoes WHERE chave = ?', [chave]);
+
+    return linha ? String(linha.valor) : null;
+}
+
+/** Grava (ou, com null, apaga) uma configuracao. */
+export async function gravarConfiguracao(chave: string, valor: string | null): Promise<void> {
+    const armazenamento = await abrir();
+
+    if (valor === null) {
+        await armazenamento.escrever('DELETE FROM configuracoes WHERE chave = ?', [chave]);
+
+        return;
+    }
+
+    await armazenamento.escrever(
+        'INSERT INTO configuracoes (chave, valor, atualizado_em) VALUES (?, ?, ?) '
+        + 'ON CONFLICT(chave) DO UPDATE SET valor = excluded.valor, atualizado_em = excluded.atualizado_em',
+        [chave, valor, new Date().toISOString()],
+    );
 }
 
 export async function buscarParticipante(id: number): Promise<Participante | undefined> {

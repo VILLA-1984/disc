@@ -48,6 +48,25 @@ aparelhos entre si: teste antes com um celular, ou leve um roteador próprio.
 - O botão "Próxima pessoa", na tela final, volta à abertura para o próximo participante.
 - O endereço é calculado a cada abertura da página: se a rede mudar, recarregue a página para gerar outro QR.
 
+## Área de gerenciamento (`/admin`)
+
+Quem aplica o teste configura o jogo sem mexer no código. Entra com a senha de `RUA_ADMIN_SENHA` (cookie assinado, vale 8 horas;
+sem a variável, a área fica desativada) e define:
+
+- **Cenários e meios de locomoção** liberados (Rua, Rio, Céu, Neve, Trilhos e os meios de cada um). Se só sobra um cenário, a
+  escolha some; se só sobra um meio no cenário, também.
+- **Avatares** liberados. A tela recusa combinações impossíveis (por exemplo, só avatares de moto num cenário em que moto não vai).
+- **O que aparece na tela**: painel de totais, lista por perfil (ranking dos animais, do mais ao menos frequente), minimapa e barra
+  de progresso.
+- **Palavras por etapa** (de 6 a 36; padrão 12).
+- **Títulos e textos de explicação** (15 itens, com marcadores como `{n}`), com "Restaurar o original" em cada um e "Mostrar" para
+  esconder as explicações. Os títulos não podem ser escondidos.
+
+A configuração fica no mesmo banco dos cadastros (tabela `configuracoes`, uma linha com JSON, sem dados pessoais) e vale para quem
+abrir o jogo a partir do salvamento; **cada instalação tem a sua** (o servidor da feira, em SQLite, e o Vercel, no Turso, não
+compartilham a configuração). A validação é feita no servidor (`src/server/configuracao.ts`); se o que está salvo ficar inválido,
+o jogo usa o padrão de fábrica em vez de quebrar. "Voltar ao padrão" apaga o que foi salvo.
+
 ## Painel de totais
 
 No canto inferior esquerdo do jogo há um painel com **quantas pessoas já terminaram o jogo** e **quantas deram cada animal**
@@ -70,7 +89,7 @@ hora e devolve um token novo com o id do cadastro, usado nas correções seguint
 ## Como a partida funciona: ciclo de palavras
 
 Modo padrão ("uma por vez"): em cada etapa passam as 48 palavras, uma por portão, e a pessoa **pega** a palavra
-ou **deixa passar**. As pegas saem do jogo; as deixadas voltam na volta seguinte, até completar 14 por etapa (eram 24; o jogo ficou bem mais curto)
+ou **deixa passar**. As pegas saem do jogo; as deixadas voltam na volta seguinte, até completar o número configurado por etapa (padrão 12, em `/admin`; eram 24)
 (`RUA_ESCOLHER`, de 12 a `palavras − 12`). As duas etapas usam as mesmas palavras, com perguntas diferentes
 (natural × adaptado).
 
@@ -155,7 +174,8 @@ URL). Defina quem acessa o banco e por quanto tempo os cadastros são mantidos.
 | `RUA_SEGREDO` | Segredo da assinatura do token. Sem ela, é gerado em `data/.segredo`. Em produção com mais de uma instância, defina a mesma em todas. |
 | `RUA_DADOS` | Pasta dos dados (padrão `./data`). |
 | `RUA_BANCO` | Caminho do arquivo SQLite (padrão `<RUA_DADOS>/participantes.db`). |
-| `RUA_ESCOLHER` | Palavras que a pessoa pega por etapa no modo ciclo (padrão 14; de 3 a conjunto − 3). |
+| `RUA_ADMIN_SENHA` | Senha da área de gerenciamento (`/admin`). **Sem ela a área fica desativada.** Defina também no Vercel. |
+| `RUA_ESCOLHER` | Só o ponto de partida de "palavras por etapa" quando nada foi salvo em `/admin` (padrão 12). O valor em vigor é o de `/admin`. |
 | `RUA_PALAVRAS` | Quantas palavras entram na partida (padrão: a lista toda, 48; de 8 a 48). Menor que a lista: sorteia esse tanto por pessoa, repartido entre os quatro fatores (14 = 4, 4, 3 e 3), as mesmas nas duas etapas. |
 | `RUA_MODO` | `pares` usa o formato antigo de duas palavras por portão; sem valor, usa o ciclo. |
 | `RUA_PORTOES` | Só no modo `pares`: portões por etapa, de 6 a 24 (padrão 12). |

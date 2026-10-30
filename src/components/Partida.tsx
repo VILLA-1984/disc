@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { resolverAnimais } from '@/jogo/animais-dados.js';
+import { textoDe, type Configuracao } from '@/lib/configuracao';
 import { montarMensagem, type Resumo } from '@/lib/mensagem';
 import { linkWhatsapp, mascararWhatsapp, normalizarWhatsapp, problemaNoWhatsapp } from '@/lib/whatsapp';
 
@@ -51,7 +52,12 @@ async function copiarTexto(texto: string): Promise<boolean> {
     }
 }
 
-export default function Partida({ qr }: { qr?: React.ReactNode }) {
+export default function Partida({ qr, config }: { qr?: React.ReactNode; config: Configuracao }) {
+    // Titulos e explicacoes editaveis na area de gerenciamento (/admin).
+    const titulo = textoDe(config.textos, 'titulo_geral');
+    const introducao = textoDe(config.textos, 'cadastro_intro');
+    const perguntaReceber = textoDe(config.textos, 'cadastro_pergunta');
+
     const [fase, setFase] = useState<Fase>('cadastro');
     const [nome, setNome] = useState('');
     const [whatsapp, setWhatsapp] = useState('');
@@ -134,7 +140,9 @@ export default function Partida({ qr }: { qr?: React.ReactNode }) {
             instancia = montar(raizJogo.current, {
                 etapas: etapas ?? undefined,
                 ciclo,
-                totais: () => fetch('/api/totais', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)),
+                config,
+                // O painel de totais so e oferecido ao jogo quando a area de gerenciamento o deixa visivel.
+                totais: config.mostrarTotais ? () => fetch('/api/totais', { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)) : undefined,
                 concluir,
                 aoFinalizar: (resposta: Resultado) => {
                     setResultado(resposta);
@@ -147,19 +155,19 @@ export default function Partida({ qr }: { qr?: React.ReactNode }) {
             cancelado = true;
             instancia?.destruir();
         };
-    }, [fase, etapas, ciclo, concluir]);
+    }, [fase, etapas, ciclo, concluir, config]);
 
     return (
         <>
             {fase === 'cadastro' && (
                 <div className="abertura">
                 <section className="painel" aria-labelledby="titulo-cadastro">
-                    <h2 id="titulo-cadastro">Teste de Perfil DISC</h2>
-                    <p>Você descobre o seu animal no fim do jogo. Se quiser, também pode receber o resultado pelo WhatsApp: é opcional.</p>
+                    <h2 id="titulo-cadastro">{titulo}</h2>
+                    {introducao && <p>{introducao}</p>}
 
                     <form onSubmit={comecar} noValidate>
                         <fieldset className="escolha-recebimento">
-                            <legend>Quer receber o seu resultado pelo WhatsApp?</legend>
+                            <legend>{perguntaReceber}</legend>
 
                             <label className={querReceber === true ? 'opcao marcada' : 'opcao'}>
                                 <input
@@ -250,7 +258,7 @@ export default function Partida({ qr }: { qr?: React.ReactNode }) {
             {fase === 'jogo' && (
                 <>
                     <div className="cabecalho">
-                        <h1>Teste de Perfil DISC</h1>
+                        <h1>{titulo}</h1>
                         <span>{anonimo ? '' : nome.trim().split(/\s+/)[0]}</span>
                     </div>
                     <div className="rua-app" ref={raizJogo} />

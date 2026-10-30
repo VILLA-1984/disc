@@ -1,6 +1,7 @@
 import { AVATARES, CORES_ROUPA, gerarRetratos } from './avatars.js';
 import { alternarMudo, estaMudo, iniciarAudio, iniciarMusica, pararMusica, sons } from './audio.js';
 import { CENARIOS, MEIOS, avatarCabe, meioPadrao, regraDe, textosDe } from './cenarios.js';
+import { paraHtml, textoDe } from '../lib/configuracao';
 import { criarCiclo } from './ciclo.js';
 import { criarJogo3D } from './game3d.js';
 import { mostrarRelatorio } from './report.js';
@@ -15,16 +16,11 @@ import { mostrarRelatorio } from './report.js';
  * Carregado sob demanda pela propria pagina (import dinamico), para nao pesar as demais telas.
  */
 
-const ROTULOS = ['Etapa 1 de 2 · Como você é', 'Etapa 2 de 2 · Como esperam de você'];
 const TEXTO_ETAPA = [
     'Pense em como você é naturalmente, no dia a dia. Em cada portão, escolha a palavra que mais combina com você.',
     'Agora pense em como você acredita que esperam que você seja no trabalho. Em cada portão, escolha a palavra que mais combina com essa expectativa.',
 ];
 // Modo ciclo (uma palavra por vez): a placa sem palavra diz "Deixar passar" e tem id 0.
-const TEXTO_ETAPA_CICLO = [
-    'Pense em como você é naturalmente, no dia a dia. As palavras vêm uma por vez: PEGUE as que mais combinam com você e deixe passar as outras.',
-    'Agora pense em como você acredita que esperam que você seja no trabalho. As palavras vêm uma por vez: PEGUE as que mais combinam com essa expectativa e deixe passar as outras.',
-];
 const PASSAR = { id: 0, word: 'Deixar passar' };
 const NOMES_CORES = ['Azul', 'Laranja', 'Verde', 'Roxo', 'Rosa', 'Marinho', 'Amarelo'];
 // rotulo: o que aparece no botao, igual a etiqueta da placa no jogo; tecla: dica so para quem tem teclado.
@@ -86,12 +82,41 @@ function escapar(texto) {
  */
 export function montar(raiz, api) {
     const ciclo = api.ciclo ?? null; // {escolher, etapas: ordens por etapa e volta, palavras: {id: texto}}
+
+    // Configuracao da area de gerenciamento (so o Next.js a envia): o que esta liberado e visivel, e os textos.
+    const config = api.config ?? null;
+    const avataresLivres = (() => {
+        const lista = AVATARES.filter((a) => !config?.avatares || config.avatares.includes(a.id));
+
+        return lista.length ? lista : AVATARES;
+    })();
+    const cenariosLivres = (() => {
+        const lista = Object.keys(CENARIOS).filter((chave) => !config?.cenarios || config.cenarios.includes(chave));
+
+        return lista.length ? lista : ['rua'];
+    })();
+    const meioLiberado = (chave) => !config?.meios || config.meios.includes(chave);
+    const T = (chave, variaveis) => textoDe(config?.textos, chave, variaveis);
+    const paragrafo = (chave, variaveis) => {
+        const texto = T(chave, variaveis);
+
+        return texto ? `<p>${paraHtml(texto)}</p>` : '';
+    };
     const etapas = api.etapas ?? [];
     const totalEtapas = ciclo ? ciclo.etapas.length : etapas.length;
     const escolhasPorEtapa = ciclo ? ciclo.escolher : etapas[0].length;
     const reduzirMovimento = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     raiz.innerHTML = ESTRUTURA;
+
+    // Elementos da tela que a area de gerenciamento pode esconder (as regras estao em globals.css).
+    if (config?.mostrarMinimapa === false) {
+        raiz.dataset.semMinimapa = '';
+    }
+
+    if (config?.mostrarProgresso === false) {
+        raiz.dataset.semProgresso = '';
+    }
 
     const el = (id) => raiz.querySelector(`#${id}`);
     const palco = el('palco');
@@ -104,9 +129,9 @@ export function montar(raiz, api) {
     const escolhas = [];
     let jogo = null;
     let modo = '3d';
-    let cenario = 'rua';
+    let cenario = cenariosLivres[0];
     let meio = null; // meio de locomocao do cenario (so o rio tem)
-    let avatarId = AVATARES[0].id;
+    let avatarId = avataresLivres[0].id;
     let corRoupa = null; // null = cor original do avatar
     let retratoAtual = '';
     let ultimoPasso = 0;
@@ -115,7 +140,11 @@ export function montar(raiz, api) {
     let vezes = 0; // quantas palavras ja passaram na etapa: alterna o lado em que a proxima aparece
 
     try {
-        avatarId = localStorage.getItem('rua_avatar') ?? avatarId;
+        const lembrado = localStorage.getItem('rua_avatar');
+
+        if (avataresLivres.some((a) => a.id === lembrado)) {
+            avatarId = lembrado;
+        }
     } catch {
         // sem localStorage: usa o avatar padrao
     }
@@ -140,8 +169,11 @@ export function montar(raiz, api) {
                     return;
                 }
 
-                painelTotais.innerHTML = `<div class="rua-totais-topo"><span>Já jogaram</span><strong>${Number(dados.total)}</strong></div>`
-                    + `<ul>${dados.animais.map((a) => `<li><i style="background:${escapar(a.cor)}"></i><span>${escapar(a.nome)}</span><b>${Number(a.total)}</b></li>`).join('')}</ul>`;
+                // Ranking: do perfil com mais pessoas para o com menos (a area de gerenciamento pode esconder a lista).
+                const ordenados = [...dados.animais].sort((a, b) => b.total - a.total);
+                const lista = config?.mostrarRanking === false ? '' : `<ul>${ordenados.map((a) => `<li><i style="background:${escapar(a.cor)}"></i><span>${escapar(a.nome)}</span><b>${Number(a.total)}</b></li>`).join('')}</ul>`;
+
+                painelTotais.innerHTML = `<div class="rua-totais-topo"><span>Já jogaram</span><strong>${Number(dados.total)}</strong></div>${lista}`;
                 painelTotais.hidden = false;
             } catch {
                 // sem totais: nada a mostrar
@@ -266,22 +298,22 @@ export function montar(raiz, api) {
 
     // ------------------------------------------------------------------ avatar
     function especificacaoEscolhida() {
-        const base = AVATARES.find((a) => a.id === avatarId) ?? AVATARES[0];
+        const base = avataresLivres.find((a) => a.id === avatarId) ?? avataresLivres[0];
 
         return corRoupa ? { ...base, roupa: corRoupa } : { ...base };
     }
 
     function escolherAvatar() {
-        const retratos = gerarRetratos(AVATARES, { largura: 220, altura: 280 });
+        const retratos = gerarRetratos(avataresLivres, { largura: 220, altura: 280 });
 
         mostrarCartao({
             sobretitulo: 'Antes de começar',
-            titulo: 'Escolha o seu avatar',
+            titulo: T('avatar_titulo'),
             largo: true,
             botao: 'Começar',
-            corpoHtml: `<p>Escolha quem vai participar. Todos os avatares jogam do mesmo jeito; o nome é só um apelido.</p>
+            corpoHtml: `${paragrafo('avatar_texto')}
                 <p class="rolar-aviso">↓ Role até o fim: depois dos avatares há mais escolhas (cenário, meio e vista) e só então o botão Começar.</p>
-                <div class="avatares" role="radiogroup" aria-label="Avatar">${AVATARES.map((a) => `
+                <div class="avatares" role="radiogroup" aria-label="Avatar">${avataresLivres.map((a) => `
                     <button type="button" class="avatar-op" role="radio" aria-checked="${a.id === avatarId}" data-id="${a.id}" ${avatarCabe(a, cenario, meio) ? '' : 'disabled'}>
                         ${retratos.get(a.id) ? `<img src="${retratos.get(a.id)}" alt="">` : `<span class="avatar-ini" style="background:${a.roupa}">${a.nome[0]}</span>`}
                         <span>${a.nome}</span>
@@ -291,8 +323,8 @@ export function montar(raiz, api) {
                         <button type="button" class="cor-op" data-cor="" aria-pressed="${corRoupa === null}" aria-label="Cor original" title="Cor original">★</button>
                         ${CORES_ROUPA.map((c, i) => `<button type="button" class="cor-op" data-cor="${c}" aria-pressed="${corRoupa === c}" aria-label="${NOMES_CORES[i]}" title="${NOMES_CORES[i]}" style="background:${c}"></button>`).join('')}
                     </div>
-                    <fieldset class="vistas"><legend>Onde você quer correr?</legend>
-                        ${Object.entries(CENARIOS).map(([chave, c]) => `<label><input type="radio" name="cenario" value="${chave}" ${cenario === chave ? 'checked' : ''}> <span><strong>${c.nome}</strong><small>${c.descricao}</small></span></label>`).join('')}
+                    <fieldset class="vistas" ${cenariosLivres.length < 2 ? 'hidden' : ''}><legend>Onde você quer correr?</legend>
+                        ${Object.entries(CENARIOS).filter(([chave]) => cenariosLivres.includes(chave)).map(([chave, c]) => `<label><input type="radio" name="cenario" value="${chave}" ${cenario === chave ? 'checked' : ''}> <span><strong>${c.nome}</strong><small>${c.descricao}</small></span></label>`).join('')}
                         <p class="cenario-aviso" aria-live="polite"></p>
                     </fieldset>
                     <fieldset class="vistas meios" hidden></fieldset>
@@ -334,13 +366,13 @@ export function montar(raiz, api) {
                     const aviso = corpo.querySelector('.cenario-aviso');
 
                     for (const botao of botoes) {
-                        const cabe = avatarCabe(AVATARES.find((a) => a.id === botao.dataset.id), cenario, meio);
+                        const cabe = avatarCabe(avataresLivres.find((a) => a.id === botao.dataset.id), cenario, meio);
                         botao.disabled = !cabe;
                         botao.title = cabe ? '' : regraDe(cenario, meio).motivo;
                     }
 
-                    if (!avatarCabe(AVATARES.find((a) => a.id === avatarId), cenario, meio)) {
-                        avatarId = AVATARES.find((a) => avatarCabe(a, cenario, meio)).id;
+                    if (!avatarCabe(avataresLivres.find((a) => a.id === avatarId), cenario, meio)) {
+                        avatarId = avataresLivres.find((a) => avatarCabe(a, cenario, meio)).id;
                         botoes.forEach((b) => b.setAttribute('aria-checked', String(b.dataset.id === avatarId)));
                     }
 
@@ -351,8 +383,8 @@ export function montar(raiz, api) {
                 const caixaMeios = corpo.querySelector('.meios');
 
                 const desenharMeios = () => {
-                    const lista = Object.entries(MEIOS).filter(([, m]) => m.cenario === cenario);
-                    caixaMeios.hidden = lista.length === 0;
+                    const lista = Object.entries(MEIOS).filter(([chave, m]) => m.cenario === cenario && meioLiberado(chave));
+                    caixaMeios.hidden = lista.length < 2; // com um meio so, nao ha o que escolher
 
                     if (lista.length === 0) {
                         meio = null;
@@ -363,7 +395,7 @@ export function montar(raiz, api) {
                     if (!lista.some(([chave]) => chave === meio)) {
                         // Prefere o primeiro meio que aceita o avatar ja escolhido (assim quem usa cadeira nao
                         // perde o avatar ao entrar na neve, por exemplo).
-                        const mobilidadeAtual = AVATARES.find((a) => a.id === avatarId)?.mobilidade ?? 'anda';
+                        const mobilidadeAtual = avataresLivres.find((a) => a.id === avatarId)?.mobilidade ?? 'anda';
                         meio = (lista.find(([, m]) => m.aceita(mobilidadeAtual)) ?? lista[0])[0];
                     }
 
@@ -405,9 +437,9 @@ export function montar(raiz, api) {
     function apresentarEtapa(indice) {
         mostrarCartao({
             sobretitulo: `Etapa ${indice + 1} de ${totalEtapas}`,
-            titulo: indice === 0 ? 'Como você é' : 'Como esperam de você',
+            titulo: indice === 0 ? T('etapa1_titulo') : T('etapa2_titulo'),
             corpoHtml: ciclo
-                ? `<p>${TEXTO_ETAPA_CICLO[indice]}</p><p>Você precisa pegar <strong>${escolhasPorEtapa} palavras</strong> no total. As que você deixar passar voltam mais tarde, até você completar as ${escolhasPorEtapa}.</p>`
+                ? `${paragrafo(indice === 0 ? 'etapa1_texto' : 'etapa2_texto')}${paragrafo('regra_texto', { n: escolhasPorEtapa })}`
                 : `<p>${TEXTO_ETAPA[indice]}</p><p>Siga ${textosDe(cenario, meio).percurso} e, em cada portão, escolha <strong>uma</strong> das duas palavras. A etapa termina quando você passar pelos <strong>${escolhasPorEtapa} portões</strong>.</p>`,
             botao: textosDe(cenario, meio).comeco,
             aoClicar: () => {
@@ -435,7 +467,7 @@ export function montar(raiz, api) {
             modo,
             cenario,
             meio,
-            rotulosEtapas: ROTULOS,
+            rotulosEtapas: [`Etapa 1 de 2 · ${T('etapa1_titulo')}`, `Etapa 2 de 2 · ${T('etapa2_titulo')}`],
             reduzirMovimento,
             aoPasso: () => {
                 const agora = performance.now();
@@ -496,9 +528,9 @@ export function montar(raiz, api) {
                     const automaticas = ciclo ? estadoCiclo.estado().automaticas.length : 0;
                     mostrarCartao({
                         sobretitulo: `Etapa ${etapa + 1} concluída`,
-                        titulo: 'Muito bem!',
+                        titulo: T('etapa_concluida_titulo'),
                         corpoHtml: ciclo
-                            ? `<p>Você completou as ${escolhasPorEtapa} palavras desta etapa.</p>${automaticas ? `<p>As últimas ${automaticas} entraram sozinhas, porque eram as únicas que faltavam.</p>` : ''}<p>Agora vem a etapa ${etapa + 2}, com as mesmas palavras, mas outra pergunta.</p>`
+                            ? `${paragrafo('etapa_concluida_texto', { n: escolhasPorEtapa, proxima: etapa + 2 })}${automaticas ? `<p>As últimas ${automaticas} entraram sozinhas, porque eram as únicas que faltavam.</p>` : ''}`
                             : `<p>Você passou pelos ${escolhasPorEtapa} portões desta etapa.</p><p>Agora vem a etapa ${etapa + 2}, com outras combinações de palavras.</p>`,
                         botao: `Continuar para a etapa ${etapa + 2}`,
                         aoClicar: () => {
@@ -521,8 +553,8 @@ export function montar(raiz, api) {
     function mostrarFim(mensagemErro = '') {
         mostrarCartao({
             sobretitulo: 'Fim da jornada',
-            titulo: `Você chegou ao fim ${textosDe(cenario, meio).fim}!`,
-            corpoHtml: `<p>Suas escolhas viram um animal. Quer descobrir qual é o seu?</p>${mensagemErro ? `<p class="erro-jogo" role="alert">${escapar(mensagemErro)}</p>` : ''}`,
+            titulo: T('fim_titulo', { fim: textosDe(cenario, meio).fim }),
+            corpoHtml: `${paragrafo('fim_texto')}${mensagemErro ? `<p class="erro-jogo" role="alert">${escapar(mensagemErro)}</p>` : ''}`,
             botao: mensagemErro ? 'Tentar de novo' : 'Descobrir meu animal',
             aoClicar: (botao) => concluir(botao),
         });
@@ -595,10 +627,10 @@ export function montar(raiz, api) {
     } else {
         mostrarCartao({
             sobretitulo: 'Teste comportamental',
-            titulo: 'Teste de Perfil DISC',
-            corpoHtml: `<p>${ciclo
-                    ? `Você vai percorrer um cenário em duas etapas. Em cada portão aparece uma palavra de um lado e "Deixar passar" do outro: pegue a palavra se ela combina com você. Em cada etapa você pega ${escolhasPorEtapa} das ${Object.keys(ciclo.palavras).length} palavras, e as que você deixar passar voltam mais tarde. Não há resposta certa ou errada, e no fim você descobre o seu animal.`
-                    : 'Você vai percorrer um cenário em duas etapas. Em cada portão aparecem duas palavras: escolha a que mais combina com você. Não há resposta certa ou errada, e no fim você descobre o seu animal.'}</p>
+            titulo: T('titulo_geral'),
+            corpoHtml: `${ciclo
+                    ? paragrafo('abertura_texto', { n: escolhasPorEtapa, total: Object.keys(ciclo.palavras).length })
+                    : '<p>Você vai percorrer um cenário em duas etapas. Em cada portão aparecem duas palavras: escolha a que mais combina com você. Não há resposta certa ou errada, e no fim você descobre o seu animal.</p>'}
                 <ul><li>Toque na placa, use as setas do teclado ou os botões abaixo do jogo.</li>
                 <li>O avatar espera por você: não há limite de tempo. Para acelerar, segure ↑ (ou W) na vista 3D, ou → (ou D) na vista lateral.</li>
                 <li>O jogo tem som. Você pode desligá-lo a qualquer momento no botão no canto da tela.</li>

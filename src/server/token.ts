@@ -93,3 +93,34 @@ export function verificar(token: unknown, agora = Date.now()): Carga | null {
         return null;
     }
 }
+
+// ------------------------------------------------------------------------- sessao da area de gerenciamento
+
+const VALIDADE_ADMIN_MS = 8 * 60 * 60 * 1000;
+
+/**
+ * Valor do cookie de quem entrou na area de gerenciamento: "<expira>.<assinatura>". Nao guarda nada no servidor; a
+ * assinatura usa o mesmo segredo das partidas (RUA_SEGREDO), com um prefixo que impede trocar um token por outro.
+ */
+export function assinarSessaoAdmin(agora = Date.now()): string {
+    const expira = agora + VALIDADE_ADMIN_MS;
+
+    return `${expira}.${assinatura(`admin:${expira}`).toString('base64url')}`;
+}
+
+export function verificarSessaoAdmin(valor: unknown, agora = Date.now()): boolean {
+    if (typeof valor !== 'string') {
+        return false;
+    }
+
+    const [expira, recebida, resto] = valor.split('.');
+
+    if (!expira || !recebida || resto !== undefined || !/^\d+$/.test(expira) || Number(expira) <= agora) {
+        return false;
+    }
+
+    const esperada = assinatura(`admin:${expira}`);
+    const informada = Buffer.from(recebida, 'base64url');
+
+    return informada.length === esperada.length && timingSafeEqual(informada, esperada);
+}

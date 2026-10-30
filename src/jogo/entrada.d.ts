@@ -7,7 +7,11 @@ export type CicloDoJogo = {
     palavras: Record<number, string>;
 };
 
+/** Configuracao da area de gerenciamento (ver src/lib/configuracao.ts); o jogo so usa o que precisa. */
+export type ConfiguracaoDoJogo = import('../lib/configuracao').Configuracao;
+
 export type ApiDoJogo<Resposta> = {
+    config?: ConfiguracaoDoJogo;
     etapas?: EtapasDoJogo;
     ciclo?: CicloDoJogo | null;
     /** Painel de totais (so o Next.js): quantas pessoas ja jogaram e quantas deram cada animal. */

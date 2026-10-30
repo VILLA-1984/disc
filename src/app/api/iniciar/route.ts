@@ -1,5 +1,6 @@
 import { normalizarWhatsapp, problemaNoWhatsapp } from '@/lib/whatsapp';
 import { escolherPorEtapa, montarCiclo, tamanhoDoPool } from '@/server/ciclo';
+import { carregarConfiguracao } from '@/server/configuracao';
 import { criarParticipante } from '@/server/db';
 import { montarRodada, portoesPorEtapa, RodadaInvalida } from '@/server/gameRound';
 import { PALAVRA_POR_ID, PALAVRAS } from '@/server/palavras';
@@ -38,9 +39,11 @@ export async function POST(request: Request) {
         if (emPares) {
             rodada = montarRodada(PALAVRAS, portoesPorEtapa(Number(process.env.RUA_PORTOES) || null));
         } else {
-            // Padrao: a lista toda, 14 escolhidas em cada etapa (RUA_ESCOLHER e RUA_PALAVRAS mudam isso).
+            // Quantas palavras marcar por etapa vem da area de gerenciamento (padrao 12); a lista toda passa na
+            // partida, a menos que RUA_PALAVRAS peca um conjunto menor.
+            const { palavrasPorEtapa } = await carregarConfiguracao();
             const tamanho = tamanhoDoPool(PALAVRAS.length, Number(process.env.RUA_PALAVRAS) || null);
-            ciclo = montarCiclo(PALAVRAS, escolherPorEtapa(tamanho, Number(process.env.RUA_ESCOLHER) || null), undefined, tamanho);
+            ciclo = montarCiclo(PALAVRAS, escolherPorEtapa(tamanho, palavrasPorEtapa), undefined, tamanho);
         }
     } catch (erro) {
         if (erro instanceof RodadaInvalida) {
