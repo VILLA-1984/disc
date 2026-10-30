@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { criarAvatar3D } from './avatars.js';
 import { continuos } from './audio.js';
+import { criarPainelDesempenho } from './desempenho.js';
 import { criarEspacoVivo, criarVeiculoEspacial, construirEspaco } from './espaco.js';
 import { MEIOS, construirCeu, construirNeve, construirRio, construirTrilhos, criarAeronave, criarBarco, criarNevasca, criarPassaros, criarPeixes, criarVeiculoNeve, criarVeiculoTrilho } from './cenarios.js';
 
@@ -302,6 +303,7 @@ export function criarJogo3D(opcoes) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.domElement.style.cssText = 'display:block;width:100%;height:100%;touch-action:manipulation';
     parent.appendChild(renderer.domElement);
+    const painelDesempenho = criarPainelDesempenho(renderer, parent);
 
     const cena = new THREE.Scene();
     const ceu = criarCeu();
@@ -1321,6 +1323,7 @@ export function criarJogo3D(opcoes) {
         atualizarMapa(dt);
         posicionarCamera(dt);
         renderer.render(cena, camera);
+        painelDesempenho?.atualizar(dt);
     }
 
     posicionarCamera(1);

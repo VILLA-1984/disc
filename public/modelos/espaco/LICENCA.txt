@@ -1,0 +1,4 @@
+Modelos 3D do cenario do espaco (piloto, so no projeto Next).
+Origem: "Ultimate Space Kit" de Quaternius (https://quaternius.com), publicado em OpenGameArt.
+Licenca: CC0 1.0 (dominio publico) - uso livre, sem exigencia de credito; o credito e dado por cortesia.
+Arquivos: nave.glb (Spaceship.glb) e disco-voador.glb (Spaceship-u105mYHLHU.glb), sem alteracoes.

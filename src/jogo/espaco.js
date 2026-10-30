@@ -1,4 +1,28 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+/**
+ * Modelos 3D prontos (glTF, CC0, Quaternius "Ultimate Space Kit") so neste cenario e so no projeto Next: piloto da melhoria.
+ * Entram de forma assincrona por cima do veiculo feito em codigo, que continua sendo o plano B (sem rede, arquivo ausente
+ * ou `?modelos=0` na URL). `largura` e o tamanho no eixo x depois de girar o modelo para a proa apontar para -z; `topo`
+ * e a altura da parte de cima do casco (o avatar senta sobre ela); `popa` guia onde ficam as chamas.
+ */
+const MODELOS = {
+    nave: { arquivo: 'nave.glb', largura: 5.4, topo: 0.1, popa: true },
+    'disco-voador': { arquivo: 'disco-voador.glb', largura: 4.4, topo: 0.1 },
+};
+const PASTA_MODELOS = '/modelos/espaco/';
+const carregador = new GLTFLoader();
+const emCache = new Map();
+
+/** Carrega (uma vez) o glTF de um meio; quem chamar recebe um clone novo da cena. */
+function carregarModelo(arquivo) {
+    if (!emCache.has(arquivo)) {
+        emCache.set(arquivo, carregador.loadAsync(PASTA_MODELOS + arquivo).then((gltf) => gltf.scene));
+    }
+
+    return emCache.get(arquivo).then((cena) => cena.clone(true));
+}
 
 /**
  * Cenario do espaco: estrelas, nebulosas e planetas ao fundo, balizas de luz e asteroides que passam, riscos de
@@ -398,6 +422,7 @@ export function criarVeiculoEspacial(meio, modo = '3d') {
     const assento = (cor = 0x2b3a4f) => {
         const banco = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.1, 0.45), lambert(cor));
         banco.position.set(0, 0.23, 0);
+        banco.userData.manter = true;
         grupo.add(banco);
     };
 
@@ -526,6 +551,7 @@ export function criarVeiculoEspacial(meio, modo = '3d') {
 
         const facho = new THREE.Mesh(new THREE.ConeGeometry(1.5, 3.2, 24, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff6a0, transparent: true, opacity: 0.16, side: THREE.DoubleSide, depthWrite: false }));
         facho.position.y = -1.95;
+        facho.userData.manter = true;
         grupo.add(facho);
     } else if (meio === 'astronauta') {
         // Sem veiculo: mochila a jato nas costas (o avatar fica em pe, flutuando) e um capacete de vidro.
@@ -555,6 +581,50 @@ export function criarVeiculoEspacial(meio, modo = '3d') {
         aro.rotation.x = Math.PI / 2;
         aro.position.set(0, 1.3, -0.02);
         grupo.add(aro);
+    }
+
+    // Piloto glTF: troca o casco feito em codigo pelo modelo pronto assim que ele chegar.
+    const modelo = MODELOS[meio];
+    const usarModelos = typeof location === 'undefined' || new URLSearchParams(location.search).get('modelos') !== '0';
+
+    if (modelo && usarModelos) {
+        const mantidos = new Set(chamas.map((c) => c.malha));
+        const proprios = [...grupo.children];
+
+        carregarModelo(modelo.arquivo)
+            .then((cena) => {
+                const pivo = new THREE.Group();
+                pivo.rotation.y = Math.PI; // os modelos olham para +z; o jogo anda para -z
+                pivo.add(cena);
+                pivo.updateMatrixWorld(true);
+
+                const caixa = new THREE.Box3().setFromObject(pivo);
+                const tamanho = caixa.getSize(new THREE.Vector3());
+                const centro = caixa.getCenter(new THREE.Vector3());
+                const escala = modelo.largura / tamanho.x;
+                const aninhado = new THREE.Group();
+                aninhado.scale.setScalar(escala);
+                aninhado.position.set(-centro.x * escala, modelo.topo - caixa.max.y * escala, -centro.z * escala);
+                aninhado.add(pivo);
+
+                for (const filho of proprios) {
+                    // fica o assento, o vidro, o facho e as chamas; o resto (casco, asas, luzes) sai
+                    if (!mantidos.has(filho) && !filho.userData.manter && filho.material !== vidro) {
+                        filho.visible = false;
+                    }
+                }
+
+                if (modelo.popa) {
+                    const popa = (tamanho.z / 2) * escala; // z da traseira do casco, ja que o modelo fica centrado em z
+
+                    for (const { malha } of chamas) {
+                        malha.position.z = popa + 0.5;
+                    }
+                }
+
+                grupo.add(aninhado);
+            })
+            .catch((erro) => console.warn(`modelo ${modelo.arquivo} indisponivel, usando o feito em codigo`, erro));
     }
 
     return {

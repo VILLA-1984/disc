@@ -99,6 +99,13 @@ Rua · Rio (barco, veleiro, caiaque, moto aquática, boia de pato, nado) · Céu
 O cenário é **só visual**: portões, ciclo, pontuação e relatório são os mesmos. Moto e táxi não vão para os cenários com
 veículo; quem usa cadeira vai sem os apoios nos meios que pedem isso.
 
+**Piloto de modelos glTF (só no Next, decidido em 2026-10-30; o Laravel NÃO recebe).** Só o espaço usa modelos 3D prontos
+(CC0, Quaternius "Ultimate Space Kit", em `public/modelos/espaco/`, licença em `LICENCA.txt`): hoje `nave` e `disco-voador`.
+O modelo entra assíncrono por cima do veículo feito em código, que continua como plano B (arquivo ausente ou `?modelos=0`).
+Foguete e astronauta seguem em código (o pacote não tem esses modelos). `?fps=1` mostra o painel de desempenho (fps, chamadas,
+triângulos). Falta medir num celular de verdade antes de decidir se estende aos outros cenários. Por isso `espaco.js` do Next
+diverge do `espaco.js` do Laravel de propósito.
+
 ### Modo das placas
 - **Uma palavra e "Deixar passar"** (ciclo, padrão): as palavras deixadas voltam em até 6 voltas; pega-se um número fixo por
   etapa (12 no padrão). Se o que resta é exatamente o que falta, entra sozinho.

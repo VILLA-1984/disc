@@ -18,7 +18,7 @@ const avatarPedido = process.argv[3] ?? 'ana';
 mkdirSync(pasta, { recursive: true });
 
 const evento = await eventoDeTeste(base, 'Espaco E2E');
-const url = `${base}/e/${evento.slug}`;
+const url = `${base}/e/${evento.slug}${process.env.RUA_QUERY ?? ''}`; // ex.: RUA_QUERY='?fps=1'
 const navegador = await chromium.launch({
     channel: 'msedge',
     headless: true,
@@ -56,7 +56,7 @@ async function noEspaco(meio, { vista = '3d', reduzir = false, avatar = avatarPe
     return pagina;
 }
 
-const meios = ['nave', 'foguete', 'disco-voador', 'astronauta'];
+const meios = (process.env.RUA_MEIOS ?? 'nave,foguete,disco-voador,astronauta').split(',');
 
 for (const meio of meios) {
     const pagina = await noEspaco(meio);
@@ -79,6 +79,12 @@ for (const meio of meios) {
     assert.match(await pagina.textContent('.rua-hud-clima'), /Espaço/, `${meio}: o clima nao muda no espaco`);
     await pagina.context().close();
     console.log(`espaco / ${meio}: primeiro portao, clima fixo e 5 escolhas OK.`);
+}
+
+if (process.env.RUA_MEIOS) {
+    await navegador.close();
+    console.log('Rodada parcial (RUA_MEIOS): so os meios pedidos.');
+    process.exit(erros.length ? 1 : 0);
 }
 
 // Vista lateral e "reduzir movimento" (sem riscos de estrelas, rochas e cometas) tambem abrem
