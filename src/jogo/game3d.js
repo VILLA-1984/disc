@@ -519,6 +519,15 @@ export function criarJogo3D(opcoes) {
     if (barco) {
         barco.grupo.scale.setScalar(1 / avatar.grupo.scale.x);
         avatar.grupo.add(barco.grupo);
+
+        // No espaco so o astronauta mostra o avatar (de traje); nave, foguete e disco levam a pessoa por dentro.
+        if (espacial && meioEscolhido !== 'astronauta') {
+            for (const parte of avatar.grupo.children) {
+                if (parte !== barco.grupo) {
+                    parte.visible = false;
+                }
+            }
+        }
     }
 
     // Enfeites vivos (so visuais; ficam de fora com "reduzir movimento"): peixes que pulam no rio, passaros no ceu.

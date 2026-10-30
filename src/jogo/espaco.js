@@ -6,11 +6,11 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
  * Entram de forma assincrona por cima do veiculo feito em codigo, que continua sendo o plano B (sem rede, arquivo ausente
  * ou `?modelos=0` na URL). `largura` e o tamanho no eixo x depois de girar o modelo para a proa apontar para -z; `topo`
  * e a altura da parte de cima do casco; `cabineZ` e quanto a abertura da cabine fica atras do centro do casco (o avatar
- * fica ali, so com o tronco para fora); `semBanco` tira o banco feito em codigo; `popa` guia onde ficam as chamas.
+ * fica ali); `popa` guia onde ficam as chamas. Nos veiculos o avatar fica escondido (so o astronauta aparece, de traje).
  */
 const MODELOS = {
-    nave: { arquivo: 'nave.glb', largura: 4.3, topo: 1.0, cabineZ: 0.76, semBanco: true, popa: true },
-    'disco-voador': { arquivo: 'disco-voador.glb', largura: 4.4, topo: 0.1 },
+    nave: { arquivo: 'nave.glb', largura: 4.3, topo: 1.0, cabineZ: 0.76, popa: true },
+    'disco-voador': { arquivo: 'disco-voador.glb', largura: 4.4, topo: 0.8 },
 };
 const PASTA_MODELOS = '/modelos/espaco/';
 const carregador = new GLTFLoader();
@@ -407,7 +407,7 @@ function chamaDe(cor, raio, comprimento, x, y, z) {
 }
 
 /**
- * Meios do espaco. O avatar (filho do mesmo grupo) fica em y = 0 sobre o assento; z negativo e a frente.
+ * Meios do espaco. O avatar (filho do mesmo grupo) fica em y = 0; z negativo e a frente.
  *
  * @param {'nave'|'foguete'|'disco-voador'|'astronauta'} meio
  * @returns {{grupo: THREE.Group, atualizar: (dt: number, ritmo: number) => void}}
@@ -420,13 +420,6 @@ export function criarVeiculoEspacial(meio, modo = '3d') {
     const giros = []; // { obj, velocidade }
     let tempo = 0;
 
-    const assento = (cor = 0x2b3a4f) => {
-        const banco = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.1, 0.45), lambert(cor));
-        banco.position.set(0, 0.23, 0);
-        banco.userData.manter = true;
-        grupo.add(banco);
-    };
-
     const cilindroEmZ = (raioTras, raioFrente, comprimento, cor, x, y, z) => {
         const c = new THREE.Mesh(new THREE.CylinderGeometry(raioTras, raioFrente, comprimento, 16), lambert(cor));
         c.rotation.x = Math.PI / 2; // topo (raioTras) para a popa, base (raioFrente) para a proa
@@ -436,7 +429,6 @@ export function criarVeiculoEspacial(meio, modo = '3d') {
     };
 
     if (meio === 'nave') {
-        assento();
         grupo.add(cilindroEmZ(0.34, 0.5, 4.2, 0xe9eef4, 0, -0.14, 0.2));
         const nariz = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1.3, 16), lambert(0xd6455a));
         nariz.rotation.x = -Math.PI / 2;
@@ -478,7 +470,6 @@ export function criarVeiculoEspacial(meio, modo = '3d') {
         cupula.position.set(0, 0.86, -0.05);
         grupo.add(cupula);
     } else if (meio === 'foguete') {
-        assento(0x59616b);
         // Corpo com listras vermelhas e brancas, ponta vermelha e tres aletas.
         const listras = [0xf2f6fb, 0xd6455a, 0xf2f6fb, 0xd6455a];
 
@@ -529,7 +520,6 @@ export function criarVeiculoEspacial(meio, modo = '3d') {
         borda.position.y = -0.22;
         grupo.add(borda);
 
-        assento(0x2b3a4f);
         const cupula = new THREE.Mesh(new THREE.SphereGeometry(0.95, 18, 12, 0, Math.PI * 2, 0, Math.PI / 2), vidro);
         cupula.scale.set(1.1, 1.1, 1.1);
         cupula.position.set(0, 0.1, 0);
@@ -571,6 +561,24 @@ export function criarVeiculoEspacial(meio, modo = '3d') {
             chamas.push({ malha: chama, base: 1 });
         }
 
+        // Traje por cima da roupa do avatar: tronco, pernas, botas e mangas brancas; so o rosto fica a mostra.
+        const traje = lambert(0xeef2f7);
+        const parte = (geo, mat, x, y, z, rotZ = 0) => {
+            const m = new THREE.Mesh(geo, mat);
+            m.position.set(x, y, z);
+            m.rotation.z = rotZ;
+            grupo.add(m);
+        };
+        parte(new THREE.BoxGeometry(0.62, 0.62, 0.42), traje, 0, 1.0, 0);
+        parte(new THREE.BoxGeometry(0.28, 0.6, 0.3), traje, -0.17, 0.4, 0);
+        parte(new THREE.BoxGeometry(0.28, 0.6, 0.3), traje, 0.17, 0.4, 0);
+        parte(new THREE.BoxGeometry(0.3, 0.16, 0.4), lambert(0x4a5668), -0.17, 0.08, -0.04);
+        parte(new THREE.BoxGeometry(0.3, 0.16, 0.4), lambert(0x4a5668), 0.17, 0.08, -0.04);
+        parte(new THREE.BoxGeometry(0.2, 0.6, 0.22), traje, -0.43, 1.0, 0, -0.18);
+        parte(new THREE.BoxGeometry(0.2, 0.6, 0.22), traje, 0.43, 1.0, 0, 0.18);
+        parte(new THREE.BoxGeometry(0.2, 0.2, 0.22), lambert(0xd6455a), -0.46, 0.66, 0);
+        parte(new THREE.BoxGeometry(0.2, 0.2, 0.22), lambert(0xd6455a), 0.46, 0.66, 0);
+
         const faixa = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.08, 0.32), lambert(0xd6455a));
         faixa.position.set(0, 1.2, 0.3);
         grupo.add(faixa);
@@ -609,8 +617,8 @@ export function criarVeiculoEspacial(meio, modo = '3d') {
                 aninhado.add(pivo);
 
                 for (const filho of proprios) {
-                    // fica o assento, o vidro, o facho e as chamas; o resto (casco, asas, luzes) sai
-                    if (!mantidos.has(filho) && (!filho.userData.manter || modelo.semBanco) && filho.material !== vidro) {
+                    // ficam o facho e as chamas (sem a bolha de vidro: nao ha ninguem a mostra dentro); o resto (casco, asas, luzes) sai
+                    if (!mantidos.has(filho) && !filho.userData.manter) {
                         filho.visible = false;
                     }
                 }
