@@ -5,9 +5,9 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Entrega a logo. O endereco leva ?v=<versao>, que muda a cada envio, entao o navegador pode guardar a imagem por
- * muito tempo sem mostrar uma logo velha depois de uma troca.
+ * muito tempo sem mostrar uma logo velha depois de uma troca. Sem a versao no endereco, a imagem nunca fica guardada.
  */
-export async function GET() {
+export async function GET(request: Request) {
     const logo = await lerLogo();
 
     if (!logo) {
@@ -17,7 +17,7 @@ export async function GET() {
     return new Response(new Uint8Array(logo.bytes), {
         headers: {
             'Content-Type': logo.tipo,
-            'Cache-Control': 'public, max-age=31536000, immutable',
+            'Cache-Control': new URL(request.url).searchParams.has('v') ? 'public, max-age=31536000, immutable' : 'no-store',
             'X-Content-Type-Options': 'nosniff',
             // Mesmo que alguem abra a imagem direto no navegador, nada nela roda.
             'Content-Security-Policy': "default-src 'none'; sandbox",
