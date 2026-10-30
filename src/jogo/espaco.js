@@ -5,10 +5,11 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
  * Modelos 3D prontos (glTF, CC0, Quaternius "Ultimate Space Kit") so neste cenario e so no projeto Next: piloto da melhoria.
  * Entram de forma assincrona por cima do veiculo feito em codigo, que continua sendo o plano B (sem rede, arquivo ausente
  * ou `?modelos=0` na URL). `largura` e o tamanho no eixo x depois de girar o modelo para a proa apontar para -z; `topo`
- * e a altura da parte de cima do casco (o avatar senta sobre ela); `popa` guia onde ficam as chamas.
+ * e a altura da parte de cima do casco; `cabineZ` e quanto a abertura da cabine fica atras do centro do casco (o avatar
+ * fica ali, so com o tronco para fora); `semBanco` tira o banco feito em codigo; `popa` guia onde ficam as chamas.
  */
 const MODELOS = {
-    nave: { arquivo: 'nave.glb', largura: 5.4, topo: 0.1, popa: true },
+    nave: { arquivo: 'nave.glb', largura: 4.3, topo: 1.0, cabineZ: 0.76, semBanco: true, popa: true },
     'disco-voador': { arquivo: 'disco-voador.glb', largura: 4.4, topo: 0.1 },
 };
 const PASTA_MODELOS = '/modelos/espaco/';
@@ -604,18 +605,18 @@ export function criarVeiculoEspacial(meio, modo = '3d') {
                 const escala = modelo.largura / tamanho.x;
                 const aninhado = new THREE.Group();
                 aninhado.scale.setScalar(escala);
-                aninhado.position.set(-centro.x * escala, modelo.topo - caixa.max.y * escala, -centro.z * escala);
+                aninhado.position.set(-centro.x * escala, modelo.topo - caixa.max.y * escala, -centro.z * escala - (modelo.cabineZ ?? 0));
                 aninhado.add(pivo);
 
                 for (const filho of proprios) {
                     // fica o assento, o vidro, o facho e as chamas; o resto (casco, asas, luzes) sai
-                    if (!mantidos.has(filho) && !filho.userData.manter && filho.material !== vidro) {
+                    if (!mantidos.has(filho) && (!filho.userData.manter || modelo.semBanco) && filho.material !== vidro) {
                         filho.visible = false;
                     }
                 }
 
                 if (modelo.popa) {
-                    const popa = (tamanho.z / 2) * escala; // z da traseira do casco, ja que o modelo fica centrado em z
+                    const popa = (tamanho.z / 2) * escala - (modelo.cabineZ ?? 0); // z da traseira do casco, ja que o modelo fica centrado em z
 
                     for (const { malha } of chamas) {
                         malha.position.z = popa + 0.5;
