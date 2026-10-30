@@ -18,7 +18,7 @@ export default async function PaginaAdmin() {
             <main className="pagina">
                 <section className="painel" aria-labelledby="titulo-admin-desativado">
                     <h2 id="titulo-admin-desativado">Gerenciamento desativado</h2>
-                    <p>Para usar esta área, defina a variável de ambiente <code>RUA_ADMIN_SENHA</code> com a senha de acesso e publique de novo.</p>
+                    <p>Para usar esta área, defina as variáveis de ambiente <code>USER_AREA_ADM</code> e <code>PASS_AREA_ADM</code> com o usuário e a senha de acesso e publique de novo.</p>
                 </section>
             </main>
         );

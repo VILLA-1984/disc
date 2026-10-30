@@ -2,28 +2,34 @@ import { createHash, timingSafeEqual } from 'node:crypto';
 import { cookies } from 'next/headers';
 import { verificarSessaoAdmin } from './token';
 
-/** Acesso a area de gerenciamento (/admin): uma senha unica, definida em RUA_ADMIN_SENHA, e um cookie assinado. */
+/** Acesso a area de gerenciamento (/admin): usuario e senha do super admin (USER_AREA_ADM e PASS_AREA_ADM) e um cookie assinado. */
 
 export const COOKIE_ADMIN = 'rua_admin';
 export const DURACAO_COOKIE_ADMIN = 8 * 60 * 60; // segundos
 
-/** Sem RUA_ADMIN_SENHA a area fica desativada (ninguem entra), em vez de abrir sem senha. */
+/** Sem usuario e senha definidos a area fica desativada (ninguem entra), em vez de abrir sem senha. */
 export function adminAtivo(): boolean {
-    return Boolean(process.env.RUA_ADMIN_SENHA?.trim());
+    return Boolean(process.env.USER_AREA_ADM?.trim() && process.env.PASS_AREA_ADM?.trim());
 }
 
-/** Compara as senhas em tempo constante (pelos hashes, que tem sempre o mesmo tamanho). */
-export function senhaConfere(informada: string): boolean {
-    const certa = process.env.RUA_ADMIN_SENHA?.trim();
+function iguais(informado: string, certo: string): boolean {
+    // Pelos hashes, que tem sempre o mesmo tamanho, para a comparacao levar o mesmo tempo.
+    return timingSafeEqual(createHash('sha256').update(informado).digest(), createHash('sha256').update(certo).digest());
+}
 
-    if (!certa) {
+/** Confere usuario e senha em tempo constante; os dois sao sempre comparados, para nao revelar qual errou. */
+export function credenciaisConferem(usuario: string, senha: string): boolean {
+    const usuarioCerto = process.env.USER_AREA_ADM?.trim();
+    const senhaCerta = process.env.PASS_AREA_ADM?.trim();
+
+    if (!usuarioCerto || !senhaCerta) {
         return false;
     }
 
-    const a = createHash('sha256').update(informada).digest();
-    const b = createHash('sha256').update(certa).digest();
+    const usuarioOk = iguais(usuario.trim(), usuarioCerto);
+    const senhaOk = iguais(senha, senhaCerta);
 
-    return timingSafeEqual(a, b);
+    return usuarioOk && senhaOk;
 }
 
 export async function sessaoAdminValida(): Promise<boolean> {

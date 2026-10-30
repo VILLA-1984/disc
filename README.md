@@ -50,7 +50,7 @@ aparelhos entre si: teste antes com um celular, ou leve um roteador próprio.
 
 ## Área de gerenciamento (`/admin`)
 
-Quem aplica o teste configura o jogo sem mexer no código. Entra com a senha de `RUA_ADMIN_SENHA` (cookie assinado, vale 8 horas;
+Quem aplica o teste configura o jogo sem mexer no código. Entra com o usuário e a senha do super admin (`USER_AREA_ADM` e `PASS_AREA_ADM`; cookie assinado, vale 8 horas;
 sem a variável, a área fica desativada) e define:
 
 - **Cenários e meios de locomoção** liberados (Rua, Rio, Céu, Neve, Trilhos e os meios de cada um). Se só sobra um cenário, a
@@ -174,7 +174,7 @@ URL). Defina quem acessa o banco e por quanto tempo os cadastros são mantidos.
 | `RUA_SEGREDO` | Segredo da assinatura do token. Sem ela, é gerado em `data/.segredo`. Em produção com mais de uma instância, defina a mesma em todas. |
 | `RUA_DADOS` | Pasta dos dados (padrão `./data`). |
 | `RUA_BANCO` | Caminho do arquivo SQLite (padrão `<RUA_DADOS>/participantes.db`). |
-| `RUA_ADMIN_SENHA` | Senha da área de gerenciamento (`/admin`). **Sem ela a área fica desativada.** Defina também no Vercel. |
+| `USER_AREA_ADM` / `PASS_AREA_ADM` | Usuário e senha do super admin da área de gerenciamento (`/admin`). **Sem os dois a área fica desativada.** Defina também no Vercel. |
 | `RUA_ESCOLHER` | Só o ponto de partida de "palavras por etapa" quando nada foi salvo em `/admin` (padrão 12). O valor em vigor é o de `/admin`. |
 | `RUA_PALAVRAS` | Quantas palavras entram na partida (padrão: a lista toda, 48; de 8 a 48). Menor que a lista: sorteia esse tanto por pessoa, repartido entre os quatro fatores (14 = 4, 4, 3 e 3), as mesmas nas duas etapas. |
 | `RUA_MODO` | Só o valor inicial do modo das placas, antes de alguém salvar a escolha em `/admin`: `pares` = duas palavras por portão; sem valor, ciclo. |

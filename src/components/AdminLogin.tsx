@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 
-/** Entrada da area de gerenciamento: uma senha unica (RUA_ADMIN_SENHA). */
+/** Entrada da area de gerenciamento: usuario e senha do super admin. */
 export default function AdminLogin() {
+    const [usuario, setUsuario] = useState('');
     const [senha, setSenha] = useState('');
     const [erro, setErro] = useState<string | null>(null);
     const [entrando, setEntrando] = useState(false);
@@ -17,7 +18,7 @@ export default function AdminLogin() {
             const resposta = await fetch('/api/admin/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ senha }),
+                body: JSON.stringify({ usuario, senha }),
             });
             const dados = await resposta.json().catch(() => ({}));
 
@@ -38,9 +39,22 @@ export default function AdminLogin() {
     return (
         <section className="painel admin-login" aria-labelledby="titulo-admin-login">
             <h2 id="titulo-admin-login">Gerenciamento</h2>
-            <p>Digite a senha para configurar o teste.</p>
+            <p>Digite o usuário e a senha para configurar o teste.</p>
 
             <form onSubmit={entrar}>
+                <div className="campo">
+                    <label htmlFor="usuario-admin">Usuário</label>
+                    <input
+                        id="usuario-admin"
+                        type="text"
+                        autoComplete="username"
+                        autoCapitalize="none"
+                        spellCheck={false}
+                        value={usuario}
+                        onChange={(e) => setUsuario(e.target.value)}
+                    />
+                </div>
+
                 <div className="campo">
                     <label htmlFor="senha-admin">Senha</label>
                     <input
@@ -54,7 +68,7 @@ export default function AdminLogin() {
                     {erro && <span className="erro-campo" role="alert">{erro}</span>}
                 </div>
 
-                <button className="botao" type="submit" disabled={entrando || senha.length === 0}>
+                <button className="botao" type="submit" disabled={entrando || usuario.trim().length === 0 || senha.length === 0}>
                     {entrando ? 'Entrando…' : 'Entrar'}
                 </button>
             </form>

@@ -1,7 +1,7 @@
 /**
  * Teste de ponta a ponta da area de gerenciamento (/admin): acesso por senha, salvar a configuracao, e conferir
  * no jogo que ela vale (cenarios e avatares liberados, minimapa, barra de progresso, ranking, palavras por etapa e
- * textos). Requer o servidor em RUA_URL (padrao http://127.0.0.1:3100) com RUA_ADMIN_SENHA no .env e, de
+ * textos). Requer o servidor em RUA_URL (padrao http://127.0.0.1:3100) com USER_AREA_ADM e PASS_AREA_ADM no .env e, de
  * preferencia, RUA_DADOS apontando para uma pasta temporaria e RUA_BANCO_LOCAL=1 (nao grava no Turso).
  *
  * Uso: node e2e/admin.mjs [pasta_das_capturas]
@@ -25,8 +25,9 @@ for (const linha of readFileSync('.env', 'utf8').split(/\r?\n/)) {
     }
 }
 
-const senha = env.RUA_ADMIN_SENHA;
-assert.ok(senha, 'defina RUA_ADMIN_SENHA no .env');
+const usuario = env.USER_AREA_ADM;
+const senha = env.PASS_AREA_ADM;
+assert.ok(usuario && senha, 'defina USER_AREA_ADM e PASS_AREA_ADM no .env');
 
 const chamar = (rota, corpo, cookie) => fetch(base + rota, {
     method: 'POST',
@@ -37,8 +38,9 @@ const chamar = (rota, corpo, cookie) => fetch(base + rota, {
 // ------------------------------------------------------------------ acesso (sem navegador)
 assert.equal((await chamar('/api/admin/config', { restaurar: true })).status, 401, 'sem sessao nao grava');
 assert.equal((await chamar('/api/admin/config', { restaurar: true }, 'rua_admin=9999999999999.falsa')).status, 401, 'cookie falso nao vale');
-assert.equal((await chamar('/api/admin/login', { senha: 'senha errada' })).status, 401, 'senha errada');
-const entrou = await chamar('/api/admin/login', { senha });
+assert.equal((await chamar('/api/admin/login', { usuario, senha: 'senha errada' })).status, 401, 'senha errada');
+assert.equal((await chamar('/api/admin/login', { usuario: 'outro', senha })).status, 401, 'usuario errado com a senha certa');
+const entrou = await chamar('/api/admin/login', { usuario, senha });
 assert.equal(entrou.status, 200, 'senha certa');
 const cookie = entrou.headers.get('set-cookie') ?? '';
 assert.match(cookie, /rua_admin=/);
@@ -69,9 +71,10 @@ const novaPagina = async (viewport = { width: 1180, height: 900 }) => {
 const admin = await novaPagina();
 await admin.goto(`${base}/admin`);
 await admin.locator('#senha-admin').waitFor();
+await admin.fill('#usuario-admin', usuario);
 await admin.fill('#senha-admin', 'errada');
 await admin.getByRole('button', { name: 'Entrar' }).click();
-await admin.getByText('Senha incorreta.').waitFor({ timeout: 10000 });
+await admin.getByText('Usuário ou senha incorretos.').waitFor({ timeout: 10000 });
 await admin.fill('#senha-admin', senha);
 await admin.getByRole('button', { name: 'Entrar' }).click();
 await admin.getByRole('heading', { name: 'Gerenciamento do teste' }).waitFor({ timeout: 15000 });
