@@ -602,7 +602,7 @@ export function montar(raiz, api) {
             adaptado: resposta.adaptado,
             retrato: retratoAtual,
             reduzirEfeitos: reduzirMovimento,
-            textoBotaoFinal: 'Enviar meu resultado por WhatsApp',
+            textoBotaoFinal: 'Continuar',
             aoFinalizar: () => api.aoFinalizar(resposta),
         });
     }

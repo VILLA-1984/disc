@@ -1,7 +1,7 @@
 # Teste de Perfil DISC (Rua das Palavras)
 
 Jogo de escolhas do teste DISC do SENAC-MT, como projeto independente (Next.js). A pessoa informa nome e
-WhatsApp, joga as duas etapas, vê o animal do resultado e envia o resultado pelo WhatsApp.
+WhatsApp, joga as duas etapas, vê o animal do resultado e recebe o resultado pelo WhatsApp, enviado pela equipe.
 
 Nasceu do formato "jogo" do sistema DISC (`../disc`): mesma lista de palavras, mesma pontuação e mesmo front
 (three.js). A diferença é que aqui o servidor é Next.js e **nada do teste é gravado**.
@@ -86,9 +86,9 @@ No canto inferior esquerdo do jogo há um painel com **quantas pessoas já termi
 ## Cadastro opcional
 
 Na abertura a pessoa escolhe se quer receber o resultado pelo WhatsApp: **"Sim"** pede nome e WhatsApp (guardados no
-Turso ou no SQLite); **"Não, só quero jogar"** não pede nem guarda nada. Quem joga sem cadastro (`/api/iniciar` com
-`{ anonimo: true }`, token com id 0) pode, na tela final, informar nome e número: `/api/whatsapp` cria o cadastro nessa
-hora e devolve um token novo com o id do cadastro, usado nas correções seguintes. Sem cadastro, nenhuma linha vai ao banco.
+Turso ou no SQLite); **"Não, só quero jogar"** não pede nem guarda dados pessoais (`/api/iniciar` com `{ anonimo: true }`,
+token com id 0). Quem joga sem cadastro vê, no fim, um **ID** (`ABC-123`) para informar à equipe, e o resultado é
+apagado sozinho em 5 minutos (veja "Envio dos resultados").
 
 ## Como a partida funciona: ciclo de palavras
 
@@ -125,11 +125,14 @@ quais avatares entram a partir do campo `mobilidade` (no rio e no céu, moto e t
 
 ## O que fica salvo
 
-Só **nome e WhatsApp**, num de dois lugares: no **Turso** (nuvem; modo do Vercel) quando `TURSO_DATABASE_URL` está
-definida, ou no **SQLite embutido** em `data/participantes.db`, criado sozinho (modo da feira, no próprio computador;
-`RUA_BANCO_LOCAL=1` força este mesmo com as variáveis do Turso no `.env`). Guarda também as datas de cadastro e
-de correção. As escolhas e o resultado do jogo **não são gravados**: o resultado aparece na tela e vai na
-mensagem do WhatsApp.
+**Nome e WhatsApp**, só de quem escolhe receber o resultado, num de dois lugares: no **Turso** (nuvem; modo do Vercel)
+quando `TURSO_DATABASE_URL` está definida, ou no **SQLite embutido** em `data/participantes.db`, criado sozinho (modo da
+feira, no próprio computador; `RUA_BANCO_LOCAL=1` força este mesmo com as variáveis do Turso no `.env`). Guarda também as
+datas de cadastro e de correção.
+
+Para a equipe enviar o resultado, guarda-se também o **resumo** (as porcentagens por fator, natural e adaptado), **sem as
+palavras escolhidas**: de quem se cadastrou, ligado ao cadastro; de quem jogou sem cadastro, só com um ID e um prazo de
+5 minutos, sem nome nem telefone.
 
 - `npm run exportar > participantes.csv` exporta os cadastros.
 - `data/` não é versionada (`.gitignore`). Faça backup dessa pasta se os cadastros importarem.
@@ -142,12 +145,28 @@ mensagem do WhatsApp.
    id e texto das palavras. O fator DISC de cada palavra nunca sai do servidor.
 2. A rodada volta ao navegador dentro de um **token assinado** (HMAC), então não é preciso guardar a partida no
    servidor. O token vale 6 horas.
-3. `POST /api/concluir`: confere as escolhas contra a rodada assinada e devolve a pontuação.
-4. No fim, a pessoa confere o número. Se corrigir, `POST /api/whatsapp` atualiza o cadastro e o botão abre
-   `https://wa.me/55<número>?text=<mensagem>`.
+3. `POST /api/concluir`: confere as escolhas contra a rodada assinada, devolve a pontuação, conta a partida no painel de
+   totais e **guarda o resumo para a equipe enviar** (quem jogou sem cadastro recebe um ID e um prazo de 5 minutos).
+4. No fim, a tela do jogador mostra o que acontece com o resultado: quem se cadastrou vê que a equipe vai enviar para o
+   WhatsApp informado (só o DDD e os 4 últimos dígitos aparecem); quem jogou sem cadastro vê o ID e a contagem do prazo.
+   **O jogador não envia nada pelo próprio celular.**
 
-O WhatsApp é aberto na conta de quem está usando o aparelho, com a conversa e a mensagem prontas: quem clica em
-Enviar é a pessoa (não há API de envio automático).
+## Envio dos resultados (`/whatsapp`)
+
+Tela da equipe, com o **mesmo usuário e senha** do gerenciamento (`USER_AREA_ADM` e `PASS_AREA_ADM`; a sessão vale nas
+duas telas). `/whatsaap` (erro de digitação comum) redireciona para ela. Link também no alto de `/admin`.
+
+- **Com cadastro**: nome, animal, hora em que terminou e o número (que pode ser corrigido antes do envio; a correção
+  atualiza o cadastro). Abas **A enviar / Enviados / Todos** e busca pelo nome. **Enviar pelo WhatsApp** abre
+  `https://wa.me/55<número>?text=<mensagem>` na conta de quem usa o aparelho e marca como enviado (há **Desfazer**).
+- **Sem cadastro**: um cartão por ID, com uma **barra de progresso por cima** que mostra quanto falta para o resultado ser
+  apagado (5 minutos; fica vermelha no último minuto). A equipe digita o número da pessoa **só para abrir a conversa: ele
+  nunca é gravado**. **Descartar resultado** apaga na hora.
+- A lista atualiza sozinha a cada 8 segundos. O tempo dos anônimos usa o relógio do servidor.
+- O prazo é aplicado no servidor: o resultado vencido nunca é devolvido e é apagado do banco na próxima gravação ou
+  consulta (não há rotina agendada; o Vercel não tem).
+- Não há envio automático: o WhatsApp só permite isso pela API paga da Meta. Quem toca em Enviar é a equipe.
+- API (só com a sessão): `GET/POST/DELETE /api/admin/envios`.
 
 ## Deploy no Vercel (GitHub + Turso)
 
@@ -198,6 +217,7 @@ portões por etapa.
   as funções `concluir` e `aoFinalizar`.
 - `src/server/`: sorteio dos portões (`gameRound.ts`), pontuação, token, banco e lista de palavras.
 - `src/lib/`: regras do número de WhatsApp e texto da mensagem (usadas no navegador e no servidor).
+- `src/server/envios.ts`: resultados guardados para a equipe (ID, prazo de 5 minutos, lista, enviado, descartar).
 - `src/app/`: páginas e rotas da API. `src/components/Partida.tsx` conduz cadastro, jogo e envio.
 
 Os animais do relatório usam ícones do Game Icons (game-icons.net), licença CC BY 3.0: mantenha o crédito.

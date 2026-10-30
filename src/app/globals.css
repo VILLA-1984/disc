@@ -386,3 +386,41 @@ body {
 .admin-barra .mensagem.pendente { color: #8a4a12; font-weight: 600; }
 
 .admin-login { max-width: 420px; }
+
+/* ----------------------------------------------------------- ID de quem jogou sem cadastro */
+.id-resultado { margin: 14px 0 4px; }
+.id-resultado p { margin: 0 0 8px; }
+.id-resultado .id-resultado-codigo { margin: 10px 0; padding: 14px 10px; text-align: center; font-size: 2.2rem; font-weight: 800; letter-spacing: 0.12em; font-family: ui-monospace, Menlo, Consolas, monospace; color: var(--marinho); background: #eef3fb; border: 2px dashed var(--azul); border-radius: 12px; user-select: all; }
+.id-resultado .id-resultado-prazo { text-align: center; color: var(--suave); font-size: 0.95rem; }
+
+/* ----------------------------------------------------------- tela de envio dos resultados (/whatsapp) */
+.envios-contagem { display: inline-block; margin-left: 8px; padding: 2px 10px; font-size: 0.82rem; font-weight: 700; color: var(--marinho); background: #eef3fb; border-radius: 999px; vertical-align: middle; }
+.envios-aviso { margin: 14px 0 0; padding: 10px 14px; border-radius: 10px; font-size: 0.92rem; }
+.envios-aviso.erro { color: #8c1d18; background: #fdecea; border: 1px solid #f3b9b4; }
+.envios-aviso.ok { color: #1d6b3a; background: #e8f5ec; border: 1px solid #b6dfc3; }
+.envios-vazio { margin: 0; color: var(--suave); font-size: 0.95rem; }
+.envios-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.envio { overflow: hidden; background: #fff; border: 1px solid var(--borda); border-radius: 12px; }
+.envio-corpo { display: grid; gap: 8px; padding: 12px 14px; }
+.envio-id { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.envio-id strong { font-size: 1.1rem; color: var(--marinho); }
+.envio--anonimo .envio-id strong { font-size: 1.5rem; letter-spacing: 0.1em; font-family: ui-monospace, Menlo, Consolas, monospace; }
+.envio-id span { color: var(--suave); font-size: 0.9rem; }
+.envio-tempo { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin: 0; font-size: 0.92rem; color: var(--suave); }
+.envio-tempo b { color: var(--marinho); font-variant-numeric: tabular-nums; }
+.envio-selo { padding: 2px 10px; font-size: 0.8rem; font-weight: 700; color: #1d6b3a; background: #e8f5ec; border-radius: 999px; }
+.envio-selo.pendente { color: #8a5a00; background: #fff3d6; }
+.envio-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.envio-acoes input { flex: 1 1 170px; min-width: 0; padding: 10px 12px; font: inherit; border: 1px solid var(--borda); border-radius: 10px; }
+.envio-acoes .botao { width: auto; flex: 0 0 auto; margin: 0; padding: 10px 16px; }
+.envio-prazo { height: 8px; background: #dfe7f3; }
+.envio-prazo span { display: block; height: 100%; background: var(--azul); transition: width 1s linear; }
+.envio-prazo.acabando span { background: #d93025; }
+.envios-filtros { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.envios-filtros input { padding: 9px 12px; font: inherit; border: 1px solid var(--borda); border-radius: 10px; min-width: 200px; }
+.envios-aba { padding: 8px 14px; font: inherit; font-size: 0.9rem; color: var(--marinho); background: #fff; border: 1px solid var(--borda); cursor: pointer; }
+.envios-aba:first-child { border-radius: 10px 0 0 10px; }
+.envios-aba:last-child { border-radius: 0 10px 10px 0; }
+.envios-aba + .envios-aba { border-left: 0; }
+.envios-aba.ativa { color: #fff; background: var(--marinho); border-color: var(--marinho); }
+@media (prefers-reduced-motion: reduce) { .envio-prazo span { transition: none; } }

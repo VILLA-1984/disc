@@ -94,13 +94,8 @@ await pagina.waitForTimeout(9000);
 await foto('08-resultado')(jogo);
 
 await pagina.locator('[data-acao="rejogar"]').click();
-await pagina.getByRole('heading', { name: 'Enviar o resultado' }).waitFor();
+await pagina.getByRole('heading', { name: 'Resultado pronto' }).waitFor();
 await foto('09-enviar', 'png')(painel);
-
-await pagina.fill('#whatsapp-final', '65988887777');
-await pagina.getByRole('button', { name: 'Enviar pelo WhatsApp' }).click();
-await pagina.getByText('Número atualizado.').waitFor();
-await foto('10-numero-corrigido', 'png')(painel);
 
 // 4. No celular (emulado): tela do jogo em pe, com os botoes de lado e o de acelerar
 const celular = await (await navegador.newContext({

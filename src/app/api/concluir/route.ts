@@ -1,6 +1,7 @@
 import { resolverAnimais } from '@/jogo/animais-dados.js';
 import { resolverCiclo } from '@/server/ciclo';
 import { registrarPartida } from '@/server/db';
+import { guardarResultado } from '@/server/envios';
 import { RodadaInvalida, resolverEscolhas } from '@/server/gameRound';
 import { PALAVRAS } from '@/server/palavras';
 import { resumir } from '@/server/pontuacao';
@@ -22,7 +23,30 @@ async function contar(codigo: string | undefined, natural: { percentual: Record<
     }
 }
 
-/** Confere as escolhas contra a partida assinada e devolve a pontuacao. O resultado em si nao e gravado. */
+/**
+ * Guarda o resumo (so os percentuais por fator) para a equipe enviar pelo WhatsApp na tela /whatsapp. Quem jogou sem
+ * cadastro recebe um ID e o resultado some em 5 minutos. Uma falha aqui nunca estraga o resultado de quem jogou: sem
+ * o ID, a tela do jogo explica que o envio nao ficou disponivel.
+ */
+async function guardar(
+    carga: { p: number; n?: string },
+    natural: { percentual: Record<string, number>; total: number },
+    adaptado: { percentual: Record<string, number>; total: number },
+) {
+    if (!carga.n) {
+        return null; // token antigo, de antes desta tela
+    }
+
+    try {
+        return await guardarResultado(carga.n, carga.p, { natural, adaptado });
+    } catch (erro) {
+        console.error('Falha ao guardar o resultado para envio:', erro);
+
+        return null;
+    }
+}
+
+/** Confere as escolhas contra a partida assinada e devolve a pontuacao e os dados do envio. */
 export async function POST(request: Request) {
     const corpo = (await request.json().catch(() => null)) as { token?: unknown; escolhas?: unknown } | null;
     const carga = verificar(corpo?.token);
@@ -36,24 +60,24 @@ export async function POST(request: Request) {
             // A pontuacao usa so as palavras escolhidas (pegas + as que entraram sozinhas no fim).
             const etapas = resolverCiclo(carga.c, corpo?.escolhas);
             const natural = resumir(etapas[0].escolhidas, PALAVRAS);
+            const adaptado = resumir(etapas[1].escolhidas, PALAVRAS);
             await contar(carga.n, natural);
 
             return Response.json({
                 natural,
-                adaptado: resumir(etapas[1].escolhidas, PALAVRAS),
+                adaptado,
                 ciclo: etapas.map((e) => ({ automaticas: e.automaticas, voltas: e.voltas })),
+                envio: await guardar(carga, natural, adaptado),
             });
         }
 
         const resolvidas = resolverEscolhas(carga.r!, corpo?.escolhas);
         const idsPorEtapa = [0, 1].map((etapa) => resolvidas.filter((r) => r.etapa === etapa).map((r) => r.escolhida));
         const natural = resumir(idsPorEtapa[0], PALAVRAS);
+        const adaptado = resumir(idsPorEtapa[1], PALAVRAS);
         await contar(carga.n, natural);
 
-        return Response.json({
-            natural,
-            adaptado: resumir(idsPorEtapa[1], PALAVRAS),
-        });
+        return Response.json({ natural, adaptado, envio: await guardar(carga, natural, adaptado) });
     } catch (erro) {
         if (erro instanceof RodadaInvalida) {
             return Response.json({ erro: erro.message }, { status: 422 });

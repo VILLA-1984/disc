@@ -97,7 +97,7 @@ await pagina.locator('[data-acao="rejogar"]').scrollIntoViewIfNeeded();
 await tela('m-7-resultado-fim');
 await pagina.locator('[data-acao="rejogar"]').tap();
 
-await pagina.getByRole('heading', { name: 'Enviar o resultado' }).waitFor();
+await pagina.getByRole('heading', { name: 'Resultado pronto' }).waitFor();
 await tela('m-8-envio');
 
 assert.deepEqual(erros, [], `erros no navegador: ${erros.join(' | ')}`);

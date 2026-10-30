@@ -147,25 +147,16 @@ const PASSOS: Passo[] = [
         ),
     },
     {
-        titulo: 'Confira o número e envie pelo WhatsApp',
+        titulo: 'Fim do jogo: quem envia é a equipe',
         imagem: '09-enviar.png',
-        legenda: 'Tela de envio, com o número digitado no início.',
+        legenda: 'Tela final. (O print mostra a tela de uma versão anterior.)',
         texto: (
             <>
-                <p>Na tela final, confira o número. É o momento de corrigir se você digitou errado no início.</p>
-                <p>Toque em <strong>Enviar pelo WhatsApp</strong>: o WhatsApp abre na conversa com esse número, com a mensagem do resultado pronta. Basta tocar em enviar dentro do WhatsApp.</p>
-            </>
-        ),
-    },
-    {
-        titulo: 'Número corrigido',
-        imagem: '10-numero-corrigido.png',
-        legenda: 'Aviso de que o número foi atualizado.',
-        texto: (
-            <>
-                <p>Se você trocou o número, o aviso <strong>Número atualizado</strong> confirma que o cadastro foi corrigido antes de abrir o WhatsApp.</p>
-                <p>O WhatsApp não abriu? Use o link <strong>Toque aqui para abrir</strong>, ou o botão <strong>Copiar a mensagem</strong> e cole a mensagem na conversa.</p>
-                <p>Jogou sem cadastro? A tela final pergunta <strong>“Quer receber o resultado?”</strong>: informe o nome e o número para receber (o cadastro só é criado nesse momento) ou toque em <strong>Não, obrigado · próxima pessoa</strong>, e nada seu fica guardado.</p>
+                <p>Depois do resultado, toque em <strong>Continuar</strong>. O jogador <strong>não envia nada pelo próprio celular</strong>: quem envia é a equipe, na tela <strong>/whatsapp</strong>.</p>
+                <ul>
+                    <li><strong>Quem se cadastrou:</strong> a tela diz que a equipe vai enviar o resultado para o WhatsApp informado (só o DDD e os quatro últimos dígitos aparecem). A equipe vê o resultado na lista e envia.</li>
+                    <li><strong>Quem jogou sem cadastro:</strong> a tela mostra um <strong>ID</strong>, como <strong>ABC-123</strong>. Quem quiser receber o resultado diz o ID e o número à equipe. Se não quiser, é só seguir: o resultado é <strong>apagado sozinho em 5 minutos</strong>, e a tela mostra a contagem regressiva.</li>
+                </ul>
                 <p>Terminou? O botão <strong>Próxima pessoa</strong> volta à abertura, limpa a tela e deixa o jogo pronto para quem vem a seguir.</p>
             </>
         ),
@@ -174,8 +165,8 @@ const PASSOS: Passo[] = [
 
 const PERGUNTAS: { pergunta: string; resposta: React.ReactNode }[] = [
     {
-        pergunta: 'Fechei a página antes de enviar. O resultado foi perdido?',
-        resposta: 'Sim. O resultado não é gravado: aparece na tela e segue na mensagem do WhatsApp. Se a página for fechada antes do envio, é preciso jogar de novo.',
+        pergunta: 'Fechei a página antes de a equipe enviar. O resultado foi perdido?',
+        resposta: 'Não, se você se cadastrou: o resultado fica guardado para a equipe enviar. Sem cadastro, o resultado fica disponível por 5 minutos, pelo ID que aparece no fim do jogo; depois disso ele é apagado e é preciso jogar de novo.',
     },
     {
         pergunta: 'O que é o quadro no canto esquerdo do jogo?',
@@ -183,15 +174,15 @@ const PERGUNTAS: { pergunta: string; resposta: React.ReactNode }[] = [
     },
     {
         pergunta: 'Preciso informar nome e telefone para jogar?',
-        resposta: 'Não. Na primeira tela, escolha “Não, só quero jogar”: nada pessoal é pedido nem guardado. Se mudar de ideia, a tela final deixa pedir o resultado pelo WhatsApp.',
+        resposta: 'Não. Na primeira tela, escolha “Não, só quero jogar”: nada pessoal é pedido nem guardado. No fim aparece um ID: se mudar de ideia, diga o ID e o número à equipe em até 5 minutos.',
     },
     {
         pergunta: 'Digitei o número errado no começo.',
-        resposta: 'Corrija na tela final, antes de tocar em Enviar pelo WhatsApp. O cadastro é atualizado com o número novo.',
+        resposta: 'Avise a equipe: na tela /whatsapp o número pode ser corrigido antes do envio, e o cadastro é atualizado.',
     },
     {
-        pergunta: 'O WhatsApp não abriu.',
-        resposta: 'Use o link “Toque aqui para abrir” que aparece na tela, ou copie a mensagem e cole na conversa. Alguns navegadores bloqueiam a abertura de nova aba.',
+        pergunta: 'O WhatsApp não abriu na tela de envio (/whatsapp).',
+        resposta: 'Use o link “Toque aqui para abrir o WhatsApp” que aparece no aviso da tela. Alguns navegadores bloqueiam a abertura de nova aba.',
     },
     {
         pergunta: 'Aparece que o navegador não consegue exibir o jogo.',
@@ -216,7 +207,7 @@ export default function Manual() {
             </div>
 
             <p className="manual-intro">
-                O <strong>Teste de Perfil DISC</strong> é uma versão em jogo do teste comportamental DISC do SENAC-MT. A pessoa corre por uma rua e, em cada portão, escolhe uma entre duas palavras. No fim, descobre o seu animal e recebe o resultado pelo WhatsApp.
+                O <strong>Teste de Perfil DISC</strong> é uma versão em jogo do teste comportamental DISC do SENAC-MT. A pessoa corre por uma rua e, em cada portão, escolhe uma entre duas palavras. No fim, descobre o seu animal e, se quiser, recebe o resultado pelo WhatsApp, enviado pela equipe.
             </p>
 
             <nav className="manual-indice" aria-label="Neste manual">
@@ -269,15 +260,16 @@ export default function Manual() {
                 <h3>No dia da aplicação</h3>
                 <ul>
                     <li>Use um navegador atual com WebGL (o jogo foi testado no Edge, no computador). O jogo aceita toque, mas teste antes no aparelho que será usado. Peça para ligar o som.</li>
-                    <li>O WhatsApp abre <strong>na conta do aparelho usado</strong>, já na conversa com o número informado. Quem toca em Enviar é a pessoa que está com o aparelho: se o jogo for feito no seu celular, a mensagem sai da sua conta para o número do participante.</li>
-                    <li>Peça que a pessoa só feche a página depois de enviar. O resultado não fica guardado.</li>
+                    <li>Deixe a tela <strong>/whatsapp</strong> aberta em um aparelho da equipe (entre com o mesmo usuário e senha do gerenciamento). Ela lista quem terminou o jogo; o botão <strong>Enviar pelo WhatsApp</strong> abre a conversa com a mensagem pronta e <strong>quem toca em Enviar é a equipe</strong>, na conta do aparelho usado. O WhatsApp não permite envio automático sem a API paga da Meta.</li>
+                    <li>Quem se cadastrou aparece em <strong>Com cadastro</strong>, com o botão de marcar como enviado. Quem jogou sem cadastro aparece em <strong>Sem cadastro</strong>, pelo ID, com uma barra que mostra quanto falta para o resultado ser apagado (5 minutos). Se a pessoa não quiser receber, use <strong>Descartar resultado</strong>.</li>
                 </ul>
             </div>
 
             <div className="manual-bloco">
                 <h3>Dados guardados</h3>
                 <ul>
-                    <li>Ficam salvos apenas <strong>nome e WhatsApp</strong>, e só de quem escolhe receber o resultado, com as datas de cadastro e de correção. O banco é o <strong>Turso</strong> (nuvem; é o que o Vercel usa) ou um SQLite embutido no servidor (<code>data/participantes.db</code>, o modo da feira). Quem joga sem cadastro não deixa nenhum registro de pessoa.</li>
+                    <li>Ficam salvos <strong>nome e WhatsApp</strong>, e só de quem escolhe receber o resultado, com as datas de cadastro e de correção, e o <strong>resumo do resultado</strong> (as porcentagens por fator, sem as palavras escolhidas) para a equipe enviar. O banco é o <strong>Turso</strong> (nuvem; é o que o Vercel usa) ou um SQLite embutido no servidor (<code>data/participantes.db</code>, o modo da feira).</li>
+                    <li>Quem joga sem cadastro não deixa registro de pessoa: guarda-se só o resumo do resultado e um ID, por <strong>5 minutos</strong>, e depois tudo é apagado. O número que a equipe digita para enviar a um anônimo <strong>nunca é gravado</strong>.</li>
                     <li>O painel de totais do jogo usa um contador à parte: para cada partida concluída guarda só um <strong>código aleatório</strong> (para ela não contar duas vezes) e o <strong>animal</strong> do resultado, com ou sem cadastro. Nada disso identifica alguém. A lista pública está em <code>/api/totais</code>.</li>
                     <li>Para exportar os cadastros: <code>npm run exportar &gt; participantes.csv</code>.</li>
                     <li>São dados pessoais (LGPD). Defina quem acessa o arquivo, por quanto tempo ele é mantido e faça backup da pasta <code>data</code> se os cadastros importarem.</li>

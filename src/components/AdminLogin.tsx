@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 /** Entrada da area de gerenciamento: usuario e senha do super admin. */
-export default function AdminLogin() {
+export default function AdminLogin({ titulo = 'Gerenciamento', texto = 'Digite o usuário e a senha para configurar o teste.' }: { titulo?: string; texto?: string }) {
     const [usuario, setUsuario] = useState('');
     const [senha, setSenha] = useState('');
     const [erro, setErro] = useState<string | null>(null);
@@ -38,8 +38,8 @@ export default function AdminLogin() {
 
     return (
         <section className="painel admin-login" aria-labelledby="titulo-admin-login">
-            <h2 id="titulo-admin-login">Gerenciamento</h2>
-            <p>Digite o usuário e a senha para configurar o teste.</p>
+            <h2 id="titulo-admin-login">{titulo}</h2>
+            <p>{texto}</p>
 
             <form onSubmit={entrar}>
                 <div className="campo">

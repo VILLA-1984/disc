@@ -64,6 +64,24 @@ const CRIAR_TABELA_CONFIGURACOES = `
     )
 `;
 
+/**
+ * Resultados guardados para a equipe enviar pelo WhatsApp (tela /whatsapp). So o resumo por fator (percentuais), sem as
+ * palavras escolhidas. Quem se cadastrou tem o resultado ligado ao cadastro; quem jogou sem cadastro recebe um ID curto
+ * e o resultado some sozinho (expira_em), sem nome nem telefone. Datas em milissegundos (epoch).
+ */
+const CRIAR_TABELA_RESULTADOS = `
+    CREATE TABLE IF NOT EXISTS resultados_envio (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        codigo TEXT NOT NULL UNIQUE,
+        participante_id INTEGER,
+        id_exibicao TEXT UNIQUE,
+        resumo TEXT NOT NULL,
+        criado_em INTEGER NOT NULL,
+        expira_em INTEGER,
+        enviado_em INTEGER
+    )
+`;
+
 /** Turso (libSQL). O cliente e carregado so quando e preciso, para o modo local nao depender dele. */
 async function abrirTurso(url: string, token: string | undefined): Promise<Armazenamento> {
     const { createClient } = await import('@libsql/client');
@@ -119,6 +137,7 @@ function abrir(): Promise<Armazenamento> {
         await armazenamento.escrever(CRIAR_TABELA, []);
         await armazenamento.escrever(CRIAR_TABELA_PARTIDAS, []);
         await armazenamento.escrever(CRIAR_TABELA_CONFIGURACOES, []);
+        await armazenamento.escrever(CRIAR_TABELA_RESULTADOS, []);
 
         return armazenamento;
     })().catch((erro) => {
@@ -176,6 +195,108 @@ export async function lerTotais(): Promise<{ total: number; porAnimal: Record<st
     }
 
     return { total, porAnimal };
+}
+
+// ------------------------------------------------------------------ resultados para envio
+
+export type LinhaResultado = {
+    id: number;
+    codigo: string;
+    participante_id: number | null;
+    id_exibicao: string | null;
+    resumo: string;
+    criado_em: number;
+    expira_em: number | null;
+    enviado_em: number | null;
+    /** Do cadastro (so quando o resultado e de quem se cadastrou). */
+    nome: string | null;
+    whatsapp: string | null;
+};
+
+const COLUNAS_RESULTADO = `
+    r.id, r.codigo, r.participante_id, r.id_exibicao, r.resumo, r.criado_em, r.expira_em, r.enviado_em,
+    p.nome AS nome, p.whatsapp AS whatsapp
+`;
+
+const paraResultado = (linha: Linha): LinhaResultado => ({
+    id: Number(linha.id),
+    codigo: String(linha.codigo),
+    participante_id: linha.participante_id === null ? null : Number(linha.participante_id),
+    id_exibicao: linha.id_exibicao === null ? null : String(linha.id_exibicao),
+    resumo: String(linha.resumo),
+    criado_em: Number(linha.criado_em),
+    expira_em: linha.expira_em === null ? null : Number(linha.expira_em),
+    enviado_em: linha.enviado_em === null ? null : Number(linha.enviado_em),
+    nome: linha.nome === null || linha.nome === undefined ? null : String(linha.nome),
+    whatsapp: linha.whatsapp === null || linha.whatsapp === undefined ? null : String(linha.whatsapp),
+});
+
+export async function resultadoPorCodigo(codigo: string): Promise<LinhaResultado | undefined> {
+    const [linha] = await (await abrir()).ler(
+        `SELECT ${COLUNAS_RESULTADO} FROM resultados_envio r LEFT JOIN participantes p ON p.id = r.participante_id WHERE r.codigo = ?`,
+        [codigo],
+    );
+
+    return linha ? paraResultado(linha) : undefined;
+}
+
+export async function resultadoPorId(id: number): Promise<LinhaResultado | undefined> {
+    const [linha] = await (await abrir()).ler(
+        `SELECT ${COLUNAS_RESULTADO} FROM resultados_envio r LEFT JOIN participantes p ON p.id = r.participante_id WHERE r.id = ?`,
+        [id],
+    );
+
+    return linha ? paraResultado(linha) : undefined;
+}
+
+/** Grava o resultado. Falha (lanca erro) se o codigo da partida ou o ID de exibicao ja existirem: quem chama decide o que fazer. */
+export async function inserirResultado(r: {
+    codigo: string;
+    participanteId: number | null;
+    idExibicao: string | null;
+    resumo: string;
+    criadoEm: number;
+    expiraEm: number | null;
+}): Promise<void> {
+    await (await abrir()).escrever(
+        'INSERT INTO resultados_envio (codigo, participante_id, id_exibicao, resumo, criado_em, expira_em) VALUES (?, ?, ?, ?, ?, ?)',
+        [r.codigo, r.participanteId as number, r.idExibicao as string, r.resumo, r.criadoEm, r.expiraEm as number],
+    );
+}
+
+/** Apaga de verdade os resultados anonimos que ja passaram do prazo. Devolve quantos foram apagados. */
+export async function apagarResultadosExpirados(agora: number): Promise<number> {
+    const { alteradas } = await (await abrir()).escrever('DELETE FROM resultados_envio WHERE expira_em IS NOT NULL AND expira_em <= ?', [agora]);
+
+    return alteradas;
+}
+
+/** Os resultados que ainda valem (cadastrados e anonimos dentro do prazo), do mais recente para o mais antigo. */
+export async function listarResultados(agora: number): Promise<LinhaResultado[]> {
+    const linhas = await (await abrir()).ler(
+        `SELECT ${COLUNAS_RESULTADO} FROM resultados_envio r LEFT JOIN participantes p ON p.id = r.participante_id
+         WHERE r.expira_em IS NULL OR r.expira_em > ? ORDER BY r.criado_em DESC, r.id DESC`,
+        [agora],
+    );
+
+    return linhas.map(paraResultado);
+}
+
+/** Marca (ou, com null, desmarca) o resultado como enviado. Anonimo fora do prazo nao conta: ja nao existe. */
+export async function marcarResultadoEnviado(id: number, enviadoEm: number | null, agora: number): Promise<boolean> {
+    const { alteradas } = await (await abrir()).escrever(
+        'UPDATE resultados_envio SET enviado_em = ? WHERE id = ? AND (expira_em IS NULL OR expira_em > ?)',
+        [enviadoEm as number, id, agora],
+    );
+
+    return alteradas > 0;
+}
+
+/** Descarta o resultado de quem jogou sem cadastro. Resultado de cadastrado nao se descarta por aqui. */
+export async function descartarResultadoAnonimo(id: number): Promise<boolean> {
+    const { alteradas } = await (await abrir()).escrever('DELETE FROM resultados_envio WHERE id = ? AND participante_id IS NULL', [id]);
+
+    return alteradas > 0;
 }
 
 /** Valor (JSON em texto) de uma configuracao, ou null quando nunca foi gravada. */

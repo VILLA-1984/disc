@@ -1,16 +1,18 @@
 /**
- * Teste de ponta a ponta: cadastro (com numero errado), partida completa, relatorio do animal, correcao
- * do WhatsApp no fim e link do wa.me. Requer o servidor em RUA_URL (padrao http://127.0.0.1:3100).
+ * Teste de ponta a ponta: cadastro (com numero errado), partida completa, relatorio do animal, fim do jogo (a equipe
+ * envia o resultado) e conferencia da lista de envios. Requer o servidor com USER_AREA_ADM e PASS_AREA_ADM no .env, em RUA_URL (padrao http://127.0.0.1:3100).
  * Uso: node e2e/partida.mjs [pasta_das_capturas] [3d|lateral]
  */
 import assert from 'node:assert/strict';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { chromium } from 'playwright-core';
 
 const base = process.env.RUA_URL ?? 'http://127.0.0.1:3100';
 const pasta = process.argv[2] ?? 'e2e/capturas';
 const modo = process.argv[3] === 'lateral' ? 'lateral' : '3d';
+// Quarto argumento "anonimo": joga sem cadastro e confere o ID do fim do jogo (em vez do cadastro da Maria).
+const anonimo = process.argv[4] === 'anonimo';
 mkdirSync(pasta, { recursive: true });
 
 const navegador = await chromium.launch({
@@ -38,24 +40,29 @@ await pagina.goto(base);
 await pagina.getByRole('heading', { name: 'Teste de Perfil DISC' }).waitFor();
 await pagina.screenshot({ path: join(pasta, 'e2e-0-cadastro.png') });
 
-// Receber o resultado e opcional: o botao so libera depois de escolher, e os campos so aparecem com o "Sim".
-assert.ok(await pagina.getByRole('button', { name: 'Continuar' }).isDisabled(), 'devia exigir a escolha antes de continuar');
-assert.equal(await pagina.locator('#nome').count(), 0, 'os campos so aparecem depois de escolher "Sim"');
-await pagina.check('#receber-sim');
-await pagina.getByRole('button', { name: 'Continuar' }).click();
-assert.ok(await pagina.getByText('Informe o seu nome.').isVisible(), 'devia exigir o nome');
-assert.ok(await pagina.getByText('Informe o número do WhatsApp.').isVisible(), 'devia exigir o WhatsApp');
+if (anonimo) {
+    await pagina.check('#receber-nao');
+    await pagina.getByRole('button', { name: 'Começar a jogar' }).click();
+} else {
+    // Receber o resultado e opcional: o botao so libera depois de escolher, e os campos so aparecem com o "Sim".
+    assert.ok(await pagina.getByRole('button', { name: 'Continuar' }).isDisabled(), 'devia exigir a escolha antes de continuar');
+    assert.equal(await pagina.locator('#nome').count(), 0, 'os campos so aparecem depois de escolher "Sim"');
+    await pagina.check('#receber-sim');
+    await pagina.getByRole('button', { name: 'Continuar' }).click();
+    assert.ok(await pagina.getByText('Informe o seu nome.').isVisible(), 'devia exigir o nome');
+    assert.ok(await pagina.getByText('Informe o número do WhatsApp.').isVisible(), 'devia exigir o WhatsApp');
 
-await pagina.fill('#nome', 'Maria da Silva');
-await pagina.fill('#whatsapp', '6599991234'); // falta um digito
-assert.equal(await pagina.inputValue('#whatsapp'), '(65) 99991-234', 'mascara');
-await pagina.getByRole('button', { name: 'Continuar' }).click();
-assert.ok(await pagina.getByText(/Faltou o 9/).isVisible(), 'devia explicar o digito faltando');
+    await pagina.fill('#nome', 'Maria da Silva');
+    await pagina.fill('#whatsapp', '6599991234'); // falta um digito
+    assert.equal(await pagina.inputValue('#whatsapp'), '(65) 99991-234', 'mascara');
+    await pagina.getByRole('button', { name: 'Continuar' }).click();
+    assert.ok(await pagina.getByText(/Faltou o 9/).isVisible(), 'devia explicar o digito faltando');
 
-// Numero ERRADO mas valido (sera corrigido no final).
-await pagina.fill('#whatsapp', '65999990000');
-assert.equal(await pagina.inputValue('#whatsapp'), '(65) 99999-0000');
-await pagina.getByRole('button', { name: 'Continuar' }).click();
+    // Numero ERRADO mas valido (sera corrigido no final).
+    await pagina.fill('#whatsapp', '65999990000');
+    assert.equal(await pagina.inputValue('#whatsapp'), '(65) 99999-0000');
+    await pagina.getByRole('button', { name: 'Continuar' }).click();
+}
 
 // ---------------------------------------------------------------------- jogo
 const cartao = pagina.locator('#cartao.aberto');
@@ -124,7 +131,7 @@ for (let etapa = 0; etapa < 2; etapa++) {
     }
 
     if (emCiclo) {
-        const escolher = Number(process.env.RUA_ESCOLHER) || 14;
+        const escolher = Number(process.env.RUA_ESCOLHER) || 12;
         assert.equal(pegas, escolher, `devia pegar ${escolher} palavras por etapa (pegou ${pegas})`);
         // Pegando 1 de cada 3, as 14 saem antes de a primeira volta de 48 terminar: a etapa fica bem mais curta que antes.
         assert.ok(apresentadas < 48, `devia terminar antes de passar as 48 palavras (apresentadas: ${apresentadas})`);
@@ -149,43 +156,53 @@ const titulo = (await pagina.textContent('#rel-titulo')).trim();
 assert.match(titulo, /^(Você é (um|uma) (Tubarão|Águia|Gato|Lobo)|Os quatro animais vivem em você)$/);
 
 const botaoFinal = pagina.locator('[data-acao="rejogar"]');
-assert.match(await botaoFinal.textContent(), /WhatsApp/);
+assert.match(await botaoFinal.textContent(), /Continuar/);
 await botaoFinal.click();
 
-// ------------------------------------------------------------------ WhatsApp
-await pagina.getByRole('heading', { name: 'Enviar o resultado' }).waitFor();
-assert.equal(await pagina.inputValue('#whatsapp-final'), '(65) 99999-0000', 'devia trazer o numero digitado no inicio');
+// ------------------------------------------------------------------ fim do jogo: a equipe envia, nao o jogador
+await pagina.getByRole('heading', { name: anonimo ? 'Quer receber o resultado?' : 'Resultado pronto' }).waitFor();
+await pagina.screenshot({ path: join(pasta, 'e2e-2-fim.png') });
+if (!anonimo) assert.match(await pagina.textContent('#titulo-envio ~ p'), /Obrigado, Maria! A equipe vai enviar o seu resultado para o WhatsApp \(65\) 9••••-0000\./);
+assert.equal(await pagina.locator('#whatsapp-final').count(), 0, 'o jogador nao envia mais pela propria tela');
+assert.equal((await pagina.evaluate(() => window.__abertos)).length, 0, 'o jogo nao abre o WhatsApp sozinho');
 
-// Corrige o numero errado e envia.
-await pagina.fill('#whatsapp-final', '65988887777');
-await pagina.getByRole('button', { name: 'Enviar pelo WhatsApp' }).click();
-try {
-    await pagina.getByText('Número atualizado.').waitFor({ timeout: 15000 });
-} catch (erroEspera) {
-    // Diagnostico: mostra o que a tela exibia em vez do aviso (mensagem de erro, botao ocupado, etc.).
-    await pagina.screenshot({ path: join(pasta, 'e2e-falha-envio.png') });
-    console.log('TELA NO MOMENTO DA FALHA:', JSON.stringify({
-        erro: await pagina.locator('.erro-geral').allTextContents(),
-        aviso: await pagina.locator('.ok-geral').allTextContents(),
-        botao: await pagina.getByRole('button', { name: /WhatsApp|Abrindo/ }).first().textContent(),
-        erros,
-    }));
-    throw erroEspera;
+let idMostrado = null;
+
+if (anonimo) {
+    idMostrado = (await pagina.textContent('.id-resultado-codigo')).trim();
+    assert.match(idMostrado, /^[A-HJKMNP-Z]{3}-[2-9]{3}$/, 'o jogador sem cadastro ve o ID');
+    assert.match(await pagina.textContent('.id-resultado-prazo'), /O resultado é apagado em \d:\d{2}\./);
+    assert.equal(await pagina.locator('.resumo-animal').count(), 1);
+    await pagina.screenshot({ path: join(pasta, 'e2e-3-fim-anonimo.png') });
 }
-await pagina.screenshot({ path: join(pasta, 'e2e-2-envio.png') });
 
-const abertos = await pagina.evaluate(() => window.__abertos);
-assert.equal(abertos.length, 1, 'devia abrir o WhatsApp uma vez');
-assert.match(abertos[0], /^https:\/\/wa\.me\/5565988887777\?text=/, 'o link devia usar o numero corrigido');
-const texto = decodeURIComponent(abertos[0].split('?text=')[1]);
-assert.match(texto, /^Olá, Maria!/);
-assert.match(texto, /Como você é: D \d+% · I \d+% · S \d+% · C \d+%/);
+// O resultado ficou guardado para a equipe, ligado ao cadastro, e a mensagem sai com o nome.
+const env = {};
 
-// Numero invalido no fim: nao envia.
-await pagina.fill('#whatsapp-final', '659');
-await pagina.getByRole('button', { name: 'Enviar pelo WhatsApp' }).click();
-assert.ok(await pagina.getByText(/incompleto/).isVisible());
-assert.equal((await pagina.evaluate(() => window.__abertos)).length, 1, 'numero invalido nao pode abrir o WhatsApp');
+for (const linha of readFileSync('.env', 'utf8').split(/\r?\n/)) {
+    const achado = linha.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
+
+    if (achado) {
+        env[achado[1]] = achado[2].replace(/^["']|["']$/g, '');
+    }
+}
+
+const entrou = await fetch(`${base}/api/admin/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ usuario: env.USER_AREA_ADM, senha: env.PASS_AREA_ADM }) });
+assert.equal(entrou.status, 200, 'login da equipe');
+const lista = await (await fetch(`${base}/api/admin/envios`, { headers: { Cookie: (entrou.headers.get('set-cookie') ?? '').split(';')[0] } })).json();
+if (anonimo) {
+    const dele = lista.anonimos.find((a) => a.idExibicao === idMostrado);
+    assert.ok(dele, 'o ID mostrado ao jogador devia estar na lista da equipe');
+    assert.match(dele.mensagem, /^Olá! Este é o seu resultado/);
+    assert.ok(dele.expiraEm - lista.agora <= lista.prazoAnonimoMs && dele.expiraEm > lista.agora, 'dentro do prazo de 5 minutos');
+    assert.ok(!('nome' in dele) && !('whatsapp' in dele), 'o resultado sem cadastro nao leva nome nem telefone');
+} else {
+    const maria = lista.cadastrados.find((c) => c.nome === 'Maria da Silva');
+    assert.ok(maria, 'o resultado da Maria devia estar na lista da equipe');
+    assert.equal(maria.whatsapp, '65999990000');
+    assert.match(maria.mensagem, /^Olá, Maria!/);
+    assert.match(maria.mensagem, /Como você é: D \d+% · I \d+% · S \d+% · C \d+%/);
+}
 
 // A partida concluida foi contada uma unica vez: +1 no total e +1 em exatamente um animal.
 const totais1 = await (await fetch(`${base}/api/totais`)).json();
@@ -196,4 +213,4 @@ assert.equal(mudaram[0].total, totais0.animais.find((a) => a.chave === mudaram[0
 
 assert.deepEqual(erros, [], `erros no navegador: ${erros.join(' | ')}`);
 await navegador.close();
-console.log(`OK (${modo}): cadastro validado, partida completa, "${titulo}", numero corrigido e wa.me gerado.`);
+console.log(`OK (${modo}): ${anonimo ? 'sem cadastro' : 'cadastro validado'}, partida completa, "${titulo}", resultado guardado para a equipe.`);

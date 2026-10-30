@@ -5,15 +5,15 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { resolverAnimais } from '@/jogo/animais-dados.js';
 import { textoDe, type Configuracao } from '@/lib/configuracao';
 import type { LogoEmUso } from '@/lib/logos';
-import { montarMensagem, type Resumo } from '@/lib/mensagem';
-import { linkWhatsapp, mascararWhatsapp, normalizarWhatsapp, problemaNoWhatsapp } from '@/lib/whatsapp';
+import type { Resumo } from '@/lib/mensagem';
+import { mascararWhatsapp, normalizarWhatsapp, problemaNoWhatsapp } from '@/lib/whatsapp';
 import type { Totais } from '@/server/totais';
 import TotaisInicio from './TotaisInicio';
 
 type Fase = 'cadastro' | 'jogo' | 'envio';
 type Etapas = { cima: { id: number; word: string }; baixo: { id: number; word: string } }[][];
 type Ciclo = { escolher: number; etapas: number[][][]; palavras: Record<number, string> };
-type Resultado = { natural: Resumo; adaptado: Resumo };
+type Resultado = { natural: Resumo; adaptado: Resumo; envio?: { idExibicao: string | null; restanteMs: number | null } | null };
 
 async function chamar<T>(rota: string, corpo: unknown): Promise<T> {
     const resposta = await fetch(rota, {
@@ -28,31 +28,6 @@ async function chamar<T>(rota: string, corpo: unknown): Promise<T> {
     }
 
     return dados as T;
-}
-
-/** Copia o texto; em endereco http (rede local do estande) o navegador bloqueia a area de transferencia, entao ha um plano B. */
-async function copiarTexto(texto: string): Promise<boolean> {
-    try {
-        await navigator.clipboard.writeText(texto);
-
-        return true;
-    } catch {
-        const campo = document.createElement('textarea');
-        campo.value = texto;
-        campo.setAttribute('readonly', '');
-        campo.style.position = 'fixed';
-        campo.style.opacity = '0';
-        document.body.appendChild(campo);
-        campo.select();
-
-        try {
-            return document.execCommand('copy');
-        } catch {
-            return false;
-        } finally {
-            campo.remove();
-        }
-    }
 }
 
 /** Logo escolhida na area de gerenciamento. Logo clara (para fundo escuro) vem sobre uma faixa azul-marinho. */
@@ -282,111 +257,50 @@ export default function Partida({ qr, config, logo, totaisInicio }: { qr?: React
             )}
 
             {fase === 'envio' && resultado && (
-                <EnvioWhatsApp
-                    nome={nome.trim()}
-                    whatsappInicial={whatsapp}
-                    resultado={resultado}
-                    token={token.current}
-                    anonimo={anonimo}
-                />
+                <FimDoJogo nome={nome.trim()} whatsapp={whatsapp} resultado={resultado} anonimo={anonimo} />
             )}
         </>
     );
 }
 
-function EnvioWhatsApp({
-    nome,
-    whatsappInicial,
-    resultado,
-    token,
-    anonimo,
-}: {
-    nome: string;
-    whatsappInicial: string;
-    resultado: Resultado;
-    token: string;
-    anonimo: boolean;
-}) {
-    const [whatsapp, setWhatsapp] = useState(whatsappInicial);
-    const [salvo, setSalvo] = useState(normalizarWhatsapp(whatsappInicial));
-    const [erro, setErro] = useState<string | null>(null);
-    const [aviso, setAviso] = useState<string | null>(null);
-    const [link, setLink] = useState<string | null>(null);
-    const [ocupado, setOcupado] = useState(false);
-    // Quem jogou sem cadastro pode pedir o resultado agora: informa o nome aqui, e o cadastro nasce no envio.
-    const [nomeInformado, setNomeInformado] = useState(nome);
-    const [cadastrado, setCadastrado] = useState(!anonimo);
-    const [tokenAtual, setTokenAtual] = useState(token);
+/** Numero do cadastro sem mostrar tudo: so o DDD e os quatro ultimos digitos. */
+function numeroEscondido(whatsapp: string): string {
+    const digitos = normalizarWhatsapp(whatsapp);
 
-    const mensagem = montarMensagem(nomeInformado, resultado.natural, resultado.adaptado);
+    return digitos ? `(${digitos.slice(0, 2)}) 9••••-${digitos.slice(7)}` : '';
+}
+
+function tempoRestante(ms: number): string {
+    const total = Math.max(0, Math.ceil(ms / 1000));
+
+    return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+}
+
+/**
+ * Fim do jogo: o animal e o que acontece com o resultado. Quem se cadastrou recebe o resultado pela equipe (tela
+ * /whatsapp); quem jogou sem cadastro ve um ID para informar a equipe, e o resultado e apagado em poucos minutos.
+ */
+function FimDoJogo({ nome, whatsapp, resultado, anonimo }: { nome: string; whatsapp: string; resultado: Resultado; anonimo: boolean }) {
     const animal = resolverAnimais(resultado.natural.percentual).principal;
+    const envio = resultado.envio ?? null;
+    const [fim] = useState(() => (envio?.restanteMs != null ? Date.now() + envio.restanteMs : null));
+    const [agora, setAgora] = useState(() => Date.now());
 
-    async function enviar() {
-        setErro(null);
-        setAviso(null);
-
-        const numero = normalizarWhatsapp(whatsapp);
-
-        if (!cadastrado && nomeInformado.trim().length < 2) {
-            setErro('Informe o seu nome para receber o resultado.');
-
+    useEffect(() => {
+        if (fim === null) {
             return;
         }
 
-        if (!numero) {
-            setErro(problemaNoWhatsapp(whatsapp));
+        const relogio = setInterval(() => setAgora(Date.now()), 1000);
 
-            return;
-        }
+        return () => clearInterval(relogio);
+    }, [fim]);
 
-        setOcupado(true);
-
-        try {
-            if (!cadastrado) {
-                // Primeiro pedido de quem jogou sem cadastro: cria o cadastro e troca o token pelo do cadastro novo.
-                const novo = await chamar<{ token: string }>('/api/whatsapp', { token: tokenAtual, whatsapp: numero, nome: nomeInformado.trim() });
-                setTokenAtual(novo.token);
-                setCadastrado(true);
-                setSalvo(numero);
-            } else if (numero !== salvo) {
-                // Numero corrigido no final: grava a correcao antes de abrir o WhatsApp.
-                await chamar('/api/whatsapp', { token: tokenAtual, whatsapp: numero });
-                setSalvo(numero);
-                setAviso('Número atualizado.');
-            }
-
-            const url = linkWhatsapp(numero, mensagem);
-            setLink(url);
-
-            // Se o navegador bloquear a nova aba, o link visivel abaixo faz o mesmo.
-            window.open(url, '_blank', 'noopener');
-        } catch (e) {
-            setErro((e as Error).message);
-        } finally {
-            setOcupado(false);
-        }
-    }
-
-    async function copiar() {
-        if (await copiarTexto(mensagem)) {
-            setErro(null);
-            setAviso('Mensagem copiada.');
-        } else {
-            setErro('Não foi possível copiar. Use o botão de enviar pelo WhatsApp.');
-        }
-    }
+    const restante = fim === null ? null : Math.max(0, fim - agora);
 
     return (
         <section className="painel" aria-labelledby="titulo-envio">
-            <h2 id="titulo-envio">{anonimo && !cadastrado ? 'Quer receber o resultado?' : 'Enviar o resultado'}</h2>
-            {anonimo && !cadastrado ? (
-                <p>
-                    Você já viu o seu animal na tela. Se quiser receber o resultado pelo WhatsApp, informe o seu nome e o seu número.
-                    É opcional: se preferir, é só seguir para a próxima pessoa, e nada seu fica guardado.
-                </p>
-            ) : (
-                <p>Confira o número de WhatsApp de {nomeInformado.trim().split(/\s+/)[0]}. Se estiver errado, corrija aqui antes de enviar.</p>
-            )}
+            <h2 id="titulo-envio">{anonimo ? 'Quer receber o resultado?' : 'Resultado pronto'}</h2>
 
             {animal ? (
                 <div className="resumo-animal">
@@ -400,57 +314,38 @@ function EnvioWhatsApp({
                 </div>
             )}
 
-            {anonimo && !cadastrado && (
-                <div className="campo">
-                    <label htmlFor="nome-final">Nome</label>
-                    <input
-                        id="nome-final"
-                        autoComplete="name"
-                        value={nomeInformado}
-                        maxLength={80}
-                        onChange={(e) => { setNomeInformado(e.target.value); setErro(null); }}
-                    />
-                </div>
+            {anonimo ? (
+                envio?.idExibicao ? (
+                    <div className="id-resultado">
+                        <p>
+                            Se quiser receber o resultado pelo WhatsApp, informe este ID à equipe
+                            {restante !== null && restante > 0 ? ' agora' : ''}. Se não quiser, é só seguir: o resultado é apagado sozinho e não tem nome nem telefone.
+                        </p>
+                        <p className="id-resultado-codigo" aria-label={`Seu ID é ${envio.idExibicao.split('').join(' ')}`}>{envio.idExibicao}</p>
+                        <p className="id-resultado-prazo" role="timer">
+                            {restante === null
+                                ? ''
+                                : restante > 0
+                                    ? <>O resultado é apagado em <b>{tempoRestante(restante)}</b>.</>
+                                    : 'O tempo acabou: o resultado foi apagado.'}
+                        </p>
+                    </div>
+                ) : (
+                    <p className="aviso-dados">Não foi possível gerar o ID agora, então o envio do resultado não está disponível. Nada seu foi guardado.</p>
+                )
+            ) : envio ? (
+                <p>
+                    Obrigado, {nome.split(/\s+/)[0]}! A equipe vai enviar o seu resultado para o WhatsApp {numeroEscondido(whatsapp)}.
+                </p>
+            ) : (
+                <p className="aviso-dados">Não foi possível guardar o seu resultado para o envio. Avise a equipe.</p>
             )}
-
-            <div className="campo">
-                <label htmlFor="whatsapp-final">WhatsApp</label>
-                <input
-                    id="whatsapp-final"
-                    type="tel"
-                    inputMode="numeric"
-                    autoComplete="tel-national"
-                    placeholder="(65) 99999-9999"
-                    value={whatsapp}
-                    aria-invalid={erro ? true : undefined}
-                    onChange={(e) => {
-                        setWhatsapp(mascararWhatsapp(e.target.value));
-                        setErro(null);
-                        setAviso(null);
-                    }}
-                />
-            </div>
-
-            {erro && <p className="erro-geral" role="alert">{erro}</p>}
-            {aviso && <p className="ok-geral" role="status">{aviso}</p>}
 
             <div className="botoes">
-                <button className="botao botao--whatsapp" type="button" onClick={enviar} disabled={ocupado}>
-                    {ocupado ? 'Abrindo…' : 'Enviar pelo WhatsApp'}
-                </button>
-                <button className="botao botao--secundario" type="button" onClick={copiar}>
-                    Copiar a mensagem
-                </button>
                 <button className="botao botao--discreto" type="button" onClick={() => window.location.assign('/')}>
-                    {anonimo && !cadastrado ? 'Não, obrigado · próxima pessoa' : 'Próxima pessoa'}
+                    Próxima pessoa
                 </button>
             </div>
-
-            {link && (
-                <p className="aviso-dados" style={{ marginTop: 14 }}>
-                    O WhatsApp não abriu? <a href={link} target="_blank" rel="noopener noreferrer">Toque aqui para abrir</a>.
-                </p>
-            )}
         </section>
     );
 }

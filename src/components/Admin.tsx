@@ -224,6 +224,8 @@ export default function Admin({ configInicial, catalogo, textos, escolhaLogo, ve
                 <p>
                     <a href="/" target="_blank" rel="noopener noreferrer">Abrir o jogo</a>
                     {' · '}
+                    <a href="/whatsapp">Envio de resultados</a>
+                    {' · '}
                     <button type="button" className="admin-link" onClick={sair}>Sair</button>
                 </p>
             </div>
@@ -298,17 +300,17 @@ export default function Admin({ configInicial, catalogo, textos, escolhaLogo, ve
                 <p>Escolha o que a pessoa vê na tela inicial e enquanto joga.</p>
 
                 <div className="admin-grade">
+                    <label className={`admin-opcao${config.mostrarTotaisInicio ? ' marcada' : ''}`}>
+                        <input type="checkbox" checked={config.mostrarTotaisInicio} onChange={(e) => definir('mostrarTotaisInicio', e.target.checked)} />
+                        <span><strong>Total geral e ranking na tela inicial</strong><small>abaixo do cartão de abertura: o total geral no alto e, por animal, o ícone, o nome e a quantidade de pessoas</small></span>
+                    </label>
                     <label className={`admin-opcao${config.mostrarTotais ? ' marcada' : ''}`}>
                         <input type="checkbox" checked={config.mostrarTotais} onChange={(e) => definir('mostrarTotais', e.target.checked)} />
-                        <span><strong>Painel de totais</strong><small>quantas pessoas já terminaram o jogo</small></span>
+                        <span><strong>Painel de totais dentro do jogo</strong><small>quantas pessoas já terminaram o jogo, no canto da tela enquanto joga</small></span>
                     </label>
                     <label className={`admin-opcao${config.mostrarRanking && config.mostrarTotais ? ' marcada' : ''}${config.mostrarTotais ? '' : ' desabilitada'}`}>
                         <input type="checkbox" checked={config.mostrarRanking} disabled={!config.mostrarTotais} onChange={(e) => definir('mostrarRanking', e.target.checked)} />
-                        <span><strong>Lista por perfil</strong><small>ranking dos animais, dentro do painel de totais (só aparece no computador)</small></span>
-                    </label>
-                    <label className={`admin-opcao${config.mostrarTotaisInicio ? ' marcada' : ''}`}>
-                        <input type="checkbox" checked={config.mostrarTotaisInicio} onChange={(e) => definir('mostrarTotaisInicio', e.target.checked)} />
-                        <span><strong>Ranking na tela inicial</strong><small>total geral e, por animal, o ícone, o nome e a quantidade de pessoas, abaixo do cartão de abertura</small></span>
+                        <span><strong>Lista por perfil dentro do jogo</strong><small>ranking dos animais, dentro do painel de totais do jogo (só aparece no computador)</small></span>
                     </label>
                     <label className={`admin-opcao${config.mostrarMinimapa ? ' marcada' : ''}`}>
                         <input type="checkbox" checked={config.mostrarMinimapa} onChange={(e) => definir('mostrarMinimapa', e.target.checked)} />
