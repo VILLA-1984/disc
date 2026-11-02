@@ -47,6 +47,7 @@ const ESTRUTURA = `
         </div>
     </div>
     <button type="button" id="som" aria-pressed="true"></button>
+    <button type="button" id="tela-cheia" aria-pressed="false" hidden></button>
 </div>
 <div id="controles" role="group" aria-label="Escolha uma das duas palavras">
     <button type="button" id="botao-cima" disabled><small class="lado"></small><strong>—</strong><span class="tecla"></span></button>
@@ -235,18 +236,45 @@ export function montar(raiz, api) {
         if (emTelaCheia) {
             emTelaCheia = false;
             raiz.classList.remove('imersivo');
+            atualizarBotaoTelaCheia();
         }
     }
+
+    // Botao "Tela cheia" (computador): alterna o mesmo modo imersivo; o Esc tambem sai. Some onde o navegador nao tem tela cheia.
+    const botaoTelaCheia = el('tela-cheia');
+    const temTelaCheia = Boolean(raiz.requestFullscreen ?? raiz.webkitRequestFullscreen);
+
+    function atualizarBotaoTelaCheia() {
+        const ativa = raiz.classList.contains('imersivo');
+        botaoTelaCheia.hidden = !temTelaCheia;
+        botaoTelaCheia.setAttribute('aria-pressed', String(ativa));
+        botaoTelaCheia.innerHTML = ativa
+            ? '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg> Sair da tela cheia'
+            : '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg> Tela cheia';
+    }
+
+    botaoTelaCheia.addEventListener('click', () => {
+        iniciarAudio();
+
+        if (raiz.classList.contains('imersivo')) {
+            sairImersivo();
+        } else {
+            entrarImersivo(true);
+        }
+    });
+    atualizarBotaoTelaCheia();
 
     document.addEventListener('fullscreenchange', aoMudarTelaCheia);
     document.addEventListener('webkitfullscreenchange', aoMudarTelaCheia);
 
-    function entrarImersivo() {
-        if (!comToque || raiz.classList.contains('imersivo')) {
+    // forcar: o botao "Tela cheia" do computador usa o mesmo modo; no celular ele entra sozinho ao comecar a partida.
+    function entrarImersivo(forcar = false) {
+        if ((!comToque && !forcar) || raiz.classList.contains('imersivo')) {
             return;
         }
 
         raiz.classList.add('imersivo');
+        atualizarBotaoTelaCheia();
 
         try {
             const pedir = raiz.requestFullscreen ?? raiz.webkitRequestFullscreen;
@@ -259,6 +287,7 @@ export function montar(raiz, api) {
     function sairImersivo() {
         emTelaCheia = false;
         raiz.classList.remove('imersivo');
+        atualizarBotaoTelaCheia();
 
         try {
             if (telaCheiaAtual() === raiz) {

@@ -123,6 +123,30 @@
 }
 
 .rua-app #som:hover { background: var(--marinho); }
+
+/* Tela cheia (computador): ao lado do botao de som. No celular o modo imersivo entra sozinho e o botao some. */
+.rua-app #tela-cheia {
+    position: absolute;
+    right: 160px;
+    bottom: 10px;
+    z-index: 9;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(13, 43, 78, 0.82);
+    color: #fff;
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 7px 12px;
+    cursor: pointer;
+}
+.rua-app #tela-cheia[hidden] { display: none; }
+.rua-app #tela-cheia:hover { background: var(--marinho); }
+.rua-app #palco.palco--relatorio #tela-cheia { display: none; }
+@media (pointer: coarse) { .rua-app #tela-cheia { display: none; } }
 .rua-app #palco.palco--relatorio #som { right: auto; left: 12px; }
 
 .rua-app #cartao {
@@ -311,7 +335,7 @@
 
 @media (max-width: 640px) {
     /* Com um cartao aberto, o botao de som cobriria o "Comecar"; ele volta quando o jogo comeca. */
-    .rua-app #cartao.aberto ~ #som { display: none; }
+    .rua-app #cartao.aberto ~ #som, .rua-app #cartao.aberto ~ #tela-cheia { display: none; }
     .rua-app #palco.palco--relatorio #som { display: none; }
     .rua-app .cartao-conteudo { padding: 18px 16px; }
     .rua-app .cartao-conteudo button.principal { width: 100%; }
@@ -406,6 +430,7 @@
 .rua-app.imersivo #dica,
 .rua-app.imersivo .rua-totais { display: none; }
 /* Sem a barra de som no canto de baixo (ocupado pelos botoes): ela sobe para o lado do HUD. */
+.rua-app.imersivo #tela-cheia { bottom: auto; right: auto; top: 76px; left: 175px; padding: 6px 10px; font-size: 0.72rem; }
 .rua-app.imersivo #som { top: 76px; bottom: auto; right: auto; left: max(10px, env(safe-area-inset-left)); padding: 6px 10px; font-size: 0.72rem; }
 .rua-app.imersivo .rua-hud { padding-top: max(10px, env(safe-area-inset-top)); padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
 .rua-app.imersivo .rua-velo { bottom: 120px; left: max(10px, env(safe-area-inset-left)); transform: scale(0.8); transform-origin: left bottom; }
