@@ -218,6 +218,57 @@ export function montar(raiz, api) {
     ['pointerup', 'pointercancel', 'lostpointercapture'].forEach((nome) => botaoTurbo.addEventListener(nome, soltarTurbo));
     botaoTurbo.addEventListener('contextmenu', (evento) => evento.preventDefault());
 
+    // ---------------------------------------------------------- modo imersivo
+    // No celular o jogo ocupa a tela toda (pedido dentro do toque em "Comecar", que e quando o navegador deixa) e
+    // as palavras e o acelerar ficam sobre ele. Onde nao ha tela cheia (iPhone) vale so o layout, que ja ocupa a janela.
+    let emTelaCheia = false;
+    const telaCheiaAtual = () => document.fullscreenElement ?? document.webkitFullscreenElement ?? null;
+
+    function aoMudarTelaCheia() {
+        if (telaCheiaAtual() === raiz) {
+            emTelaCheia = true;
+
+            return;
+        }
+
+        // A pessoa saiu da tela cheia (gesto do sistema): o jogo volta ao tamanho normal.
+        if (emTelaCheia) {
+            emTelaCheia = false;
+            raiz.classList.remove('imersivo');
+        }
+    }
+
+    document.addEventListener('fullscreenchange', aoMudarTelaCheia);
+    document.addEventListener('webkitfullscreenchange', aoMudarTelaCheia);
+
+    function entrarImersivo() {
+        if (!comToque || raiz.classList.contains('imersivo')) {
+            return;
+        }
+
+        raiz.classList.add('imersivo');
+
+        try {
+            const pedir = raiz.requestFullscreen ?? raiz.webkitRequestFullscreen;
+            pedir?.call(raiz, { navigationUI: 'hide' })?.catch?.(() => {});
+        } catch {
+            // sem tela cheia: segue so com o layout imersivo
+        }
+    }
+
+    function sairImersivo() {
+        emTelaCheia = false;
+        raiz.classList.remove('imersivo');
+
+        try {
+            if (telaCheiaAtual() === raiz) {
+                (document.exitFullscreen ?? document.webkitExitFullscreen)?.call(document)?.catch?.(() => {});
+            }
+        } catch {
+            // ja saiu
+        }
+    }
+
     // ----------------------------------------------------------------- cartoes
     function mostrarCartao({ sobretitulo, titulo, corpoHtml, botao, aoClicar, largo = false, aoRenderizar }) {
         el('cartao-sobretitulo').textContent = sobretitulo;
@@ -424,6 +475,7 @@ export function montar(raiz, api) {
                     // sem localStorage: segue sem lembrar a escolha
                 }
 
+                entrarImersivo();
                 iniciarJogo();
             },
         });
@@ -590,6 +642,7 @@ export function montar(raiz, api) {
         jogo?.destruir();
         jogo = null;
         pararMusica();
+        sairImersivo();
         el('jogo').innerHTML = '';
         el('controles').hidden = true;
         botaoTurbo.hidden = true;
@@ -643,6 +696,9 @@ export function montar(raiz, api) {
         destruir() {
             destruido = true;
             clearInterval(temporizadorTotais);
+            document.removeEventListener('fullscreenchange', aoMudarTelaCheia);
+            document.removeEventListener('webkitfullscreenchange', aoMudarTelaCheia);
+            sairImersivo();
             jogo?.destruir();
             jogo = null;
             pararMusica();
