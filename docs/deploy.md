@@ -36,4 +36,11 @@ node e2e/capturar-manual.mjs
 
 ## Esta documentação
 
-Os arquivos ficam em `docs/` e a configuração em `mkdocs.yml`. `mkdocs build` gera a pasta `site/` (não versionada), que pode ser publicada em qualquer hospedagem estática.
+Os arquivos ficam em `docs/` e a configuração em `mkdocs.yml`. O site gerado fica em `docs-site/` (**versionada**, para o build da Vercel não precisar de Python) e é servido pela rota `/docs` **só para quem entrou na área da equipe** (mesmo usuário e senha de `/admin`; sem sessão, vai para o login).
+
+Depois de mexer em `docs/` ou `mkdocs.yml`, regenere e faça o commit de `docs-site/` junto:
+
+```powershell
+pip install -r requirements-docs.txt
+npm run docs
+```

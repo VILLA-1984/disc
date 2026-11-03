@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://rua-das-palavras.vercel.app/docs/dados.html" />
+      <link rel="shortcut icon" href="img/favicon.ico" />
+    <title>Dados e privacidade - Teste de Perfil DISC · Documentação técnica</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Dados e privacidade";
+        var mkdocs_page_input_path = "dados.md";
+        var mkdocs_page_url = "/docs/dados.html";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="index.html" class="icon icon-home"> Teste de Perfil DISC · Documentação técnica
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="index.html">Início</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="arquitetura.html">Arquitetura</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="partida.html">Fluxo da partida</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="pontuacao.html">Pontuação e ciclo de palavras</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="api.html">API</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Dados e privacidade</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#o-que-e-gravado">O que é gravado</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#o-que-nunca-e-gravado">O que nunca é gravado</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#anonimos">Anônimos</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#bancos">Bancos</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#migracao">Migração</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="configuracao.html">Configuração</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="deploy.html">Deploy e operação</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="testes.html">Testes</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="disc.html">Metodologia DISC e referências</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Teste de Perfil DISC · Documentação técnica</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html" class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Dados e privacidade</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/VILLA-1984/disc/edit/main/docs/dados.md">Edit on VILLA-1984/disc</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="dados-e-privacidade">Dados e privacidade<a class="headerlink" href="#dados-e-privacidade" title="Permanent link">&para;</a></h1>
+<p>Os dados de quem se cadastra são <strong>pessoais (LGPD)</strong>.</p>
+<h2 id="o-que-e-gravado">O que é gravado<a class="headerlink" href="#o-que-e-gravado" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Dado</th>
+<th>Quando</th>
+<th>Onde</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nome e WhatsApp</td>
+<td>Só de quem escolhe receber o resultado</td>
+<td>Tabela de participantes</td>
+</tr>
+<tr>
+<td>Resumo do resultado (porcentagens por fator, natural e adaptado)</td>
+<td>Ao concluir</td>
+<td>Ligado ao cadastro; para anônimos, só com um ID</td>
+</tr>
+<tr>
+<td>Código aleatório da partida, evento e animal</td>
+<td>Ao concluir</td>
+<td><code>partidas_contadas</code></td>
+</tr>
+<tr>
+<td>Configuração do jogo (sem dados pessoais)</td>
+<td>Ao salvar em <code>/admin/jogo</code></td>
+<td><code>configuracoes</code> (uma linha JSON)</td>
+</tr>
+<tr>
+<td>Eventos</td>
+<td>Ao criar</td>
+<td>Tabela de eventos</td>
+</tr>
+<tr>
+<td>Logo</td>
+<td>Ao enviar</td>
+<td>Mesmo banco, linha própria</td>
+</tr>
+</tbody>
+</table>
+<h2 id="o-que-nunca-e-gravado">O que <strong>nunca</strong> é gravado<a class="headerlink" href="#o-que-nunca-e-gravado" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>As palavras escolhidas.</strong> Só o resumo.</li>
+<li>O número de WhatsApp digitado pela equipe para enviar a um anônimo (serve só para abrir a conversa).</li>
+<li>Qualquer dado que identifique alguém no ranking.</li>
+</ul>
+<h2 id="anonimos">Anônimos<a class="headerlink" href="#anonimos" title="Permanent link">&para;</a></h2>
+<p>Quem joga sem cadastro recebe um ID (<code>ABC-123</code>) e o resultado é <strong>apagado em 5 minutos</strong> (<code>TEMPO_ANONIMO_MS</code>). O prazo é aplicado no servidor: o resultado vencido nunca é devolvido e é apagado na próxima gravação ou consulta, pois <strong>não há rotina agendada</strong> (a Vercel não tem).</p>
+<h2 id="bancos">Bancos<a class="headerlink" href="#bancos" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Turso (libSQL):</strong> quando <code>TURSO_DATABASE_URL</code> existe. Modo da Vercel. Dados em serviço de nuvem fora do Brasil, na região indicada na URL.</li>
+<li><strong>SQLite embutido:</strong> <code>data/participantes.db</code>, criado sozinho. Modo da feira. <code>RUA_BANCO_LOCAL=1</code> força este modo.</li>
+</ul>
+<p><code>data/</code> não é versionada. Faça backup se os cadastros importarem. Exportar: <code>npm run exportar &gt; participantes.csv</code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Defina quem acessa o banco e por quanto tempo os cadastros são mantidos.</p>
+</div>
+<h2 id="migracao">Migração<a class="headerlink" href="#migracao" title="Permanent link">&para;</a></h2>
+<p>O banco ganha colunas novas sozinho (por exemplo <code>evento_id</code>), sem perder dados. Partidas antigas, de antes dos eventos, contam como "sem evento".</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="api.html" class="btn btn-neutral float-left" title="API"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="configuracao.html" class="btn btn-neutral float-right" title="Configuração">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/VILLA-1984/disc" class="fa fa-code-fork" style="color: #fcfcfc"> VILLA-1984/disc</a>
+        </span>
+    
+    
+      <span><a href="api.html" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="configuracao.html" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = ".";</script>
+    <script src="js/theme_extra.js"></script>
+    <script src="js/theme.js"></script>
+      <script src="search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

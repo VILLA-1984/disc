@@ -36,10 +36,10 @@ npm test
 
 ## Esta documentação
 
-Feita com [MkDocs](https://www.mkdocs.org/). Para ler e editar localmente:
+Feita com [MkDocs](https://www.mkdocs.org/) e servida em `/docs`, **só para a equipe** (mesmo usuário e senha de `/admin`). Para ler e editar localmente:
 
 ```powershell
 pip install -r requirements-docs.txt
 mkdocs serve           # http://127.0.0.1:8000
-mkdocs build           # gera a pasta site/ (não versionada)
+npm run docs           # regenera docs-site/ (versionada)
 ```

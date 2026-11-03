@@ -8,7 +8,8 @@
     "start": "next start",
     "feira": "next build && next start -H 0.0.0.0 -p 3000",
     "test": "vitest run",
-    "exportar": "node scripts/exportar.mjs"
+    "exportar": "node scripts/exportar.mjs",
+    "docs": "node scripts/gerar-docs.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { IcConfig, IcEventos, IcInicio, IcJogo, IcManual, IcResultados, IcSair } from './IconesEquipe';
+import { IcConfig, IcDisc, IcDocs, IcEventos, IcInicio, IcJogo, IcManual, IcResultados, IcSair } from './IconesEquipe';
 
 type Item = { href: string; rotulo: string; icone: React.ReactNode; novaAba?: boolean };
 
@@ -15,6 +15,8 @@ const ITENS: Item[] = [
     { href: '/whatsapp', rotulo: 'Envio de resultados', icone: <IcResultados /> },
     { href: '/', rotulo: 'Abrir o jogo', icone: <IcJogo />, novaAba: true },
     { href: '/manual', rotulo: 'Manual', icone: <IcManual />, novaAba: true },
+    { href: '/disc', rotulo: 'Sobre o DISC', icone: <IcDisc />, novaAba: true },
+    { href: '/docs', rotulo: 'Documentação', icone: <IcDocs />, novaAba: true },
 ];
 
 /**

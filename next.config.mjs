@@ -3,6 +3,8 @@ const nextConfig = {
     reactStrictMode: true,
     // O cliente do Turso traz binarios nativos: fica fora do pacote do servidor (necessario no Vercel).
     serverExternalPackages: ['@libsql/client', 'libsql'],
+    // A documentacao tecnica (docs-site/) e lida do disco pela rota /docs; sem isto a Vercel nao a levaria ao servidor.
+    outputFileTracingIncludes: { '/docs/[[...caminho]]': ['./docs-site/**/*'] },
     // Erro de digitacao comum no endereco da tela de envio dos resultados.
     async redirects() {
         return [{ source: '/whatsaap', destination: '/whatsapp', permanent: false }];

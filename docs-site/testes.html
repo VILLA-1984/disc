@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://rua-das-palavras.vercel.app/docs/testes.html" />
+      <link rel="shortcut icon" href="img/favicon.ico" />
+    <title>Testes - Teste de Perfil DISC · Documentação técnica</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Testes";
+        var mkdocs_page_input_path = "testes.md";
+        var mkdocs_page_url = "/docs/testes.html";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="index.html" class="icon icon-home"> Teste de Perfil DISC · Documentação técnica
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="index.html">Início</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="arquitetura.html">Arquitetura</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="partida.html">Fluxo da partida</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="pontuacao.html">Pontuação e ciclo de palavras</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="api.html">API</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="dados.html">Dados e privacidade</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="configuracao.html">Configuração</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="deploy.html">Deploy e operação</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Testes</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#unidade-vitest">Unidade (Vitest)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#ponta-a-ponta-playwright">Ponta a ponta (Playwright)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#painel-de-desempenho">Painel de desempenho</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="disc.html">Metodologia DISC e referências</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Teste de Perfil DISC · Documentação técnica</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html" class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Testes</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/VILLA-1984/disc/edit/main/docs/testes.md">Edit on VILLA-1984/disc</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="testes">Testes<a class="headerlink" href="#testes" title="Permanent link">&para;</a></h1>
+<h2 id="unidade-vitest">Unidade (Vitest)<a class="headerlink" href="#unidade-vitest" title="Permanent link">&para;</a></h2>
+<pre><code class="language-powershell">npm test
+</code></pre>
+<p>Ficam em <code>tests/</code> e cobrem: sorteio e rodada (<code>gameRound</code>), ciclo, armazenamento e migração do banco, configuração, eventos, envios, totais, logo, endereço e mensagem de WhatsApp.</p>
+<h2 id="ponta-a-ponta-playwright">Ponta a ponta (Playwright)<a class="headerlink" href="#ponta-a-ponta-playwright" title="Permanent link">&para;</a></h2>
+<p>Com o servidor no ar em <code>RUA_URL</code> (padrão <code>http://127.0.0.1:3100</code>):</p>
+<pre><code class="language-powershell">node e2e/partida.mjs [pasta] [3d|lateral]
+</code></pre>
+<p>Há roteiros por área em <code>e2e/</code>: <code>admin</code>, <code>envios</code>, <code>eventos</code>, <code>navegacao</code>, <code>mobile</code>, <code>rio</code>, <code>trilhos</code>, <code>espaco</code>. As capturas vão para <code>e2e/capturas/</code> (fora do git) e devem ser <strong>olhadas</strong>, não só executadas.</p>
+<h2 id="painel-de-desempenho">Painel de desempenho<a class="headerlink" href="#painel-de-desempenho" title="Permanent link">&para;</a></h2>
+<p>O parâmetro <code>?fps=1</code> na URL do jogo mostra o painel de FPS, útil para testar modelos glTF e cenários pesados.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="deploy.html" class="btn btn-neutral float-left" title="Deploy e operação"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="disc.html" class="btn btn-neutral float-right" title="Metodologia DISC e referências">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/VILLA-1984/disc" class="fa fa-code-fork" style="color: #fcfcfc"> VILLA-1984/disc</a>
+        </span>
+    
+    
+      <span><a href="deploy.html" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="disc.html" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = ".";</script>
+    <script src="js/theme_extra.js"></script>
+    <script src="js/theme.js"></script>
+      <script src="search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

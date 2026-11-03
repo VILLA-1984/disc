@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://rua-das-palavras.vercel.app/docs/deploy.html" />
+      <link rel="shortcut icon" href="img/favicon.ico" />
+    <title>Deploy e operação - Teste de Perfil DISC · Documentação técnica</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Deploy e opera\u00e7\u00e3o";
+        var mkdocs_page_input_path = "deploy.md";
+        var mkdocs_page_url = "/docs/deploy.html";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="index.html" class="icon icon-home"> Teste de Perfil DISC · Documentação técnica
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="index.html">Início</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="arquitetura.html">Arquitetura</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="partida.html">Fluxo da partida</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="pontuacao.html">Pontuação e ciclo de palavras</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="api.html">API</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="dados.html">Dados e privacidade</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="configuracao.html">Configuração</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Deploy e operação</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#vercel-producao">Vercel (produção)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#antes-de-publicar">Antes de publicar</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#modo-feira-estande">Modo feira (estande)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#manual-de-uso">Manual de uso</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#esta-documentacao">Esta documentação</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="testes.html">Testes</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="disc.html">Metodologia DISC e referências</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Teste de Perfil DISC · Documentação técnica</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html" class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Deploy e operação</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/VILLA-1984/disc/edit/main/docs/deploy.md">Edit on VILLA-1984/disc</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="deploy-e-operacao">Deploy e operação<a class="headerlink" href="#deploy-e-operacao" title="Permanent link">&para;</a></h1>
+<h2 id="vercel-producao">Vercel (produção)<a class="headerlink" href="#vercel-producao" title="Permanent link">&para;</a></h2>
+<p>Projeto <code>rua-das-palavras</code>, ligado a <code>VILLA-1984/disc</code>, branch <code>main</code>. <strong>Cada push na <code>main</code> publica sozinho</strong>; outras branches e pull requests ganham endereço de pré-visualização.</p>
+<ol>
+<li>Em <strong>Settings → Environment Variables</strong>, cadastre <code>TURSO_DATABASE_URL</code>, <code>TURSO_AUTH_TOKEN</code>, <code>RUA_SEGREDO</code>, <code>USER_AREA_ADM</code> e <code>PASS_AREA_ADM</code>. Opcional: <code>RUA_URL_PUBLICA</code>. <strong>Não</strong> defina <code>RUA_BANCO_LOCAL</code>.</li>
+<li>Faça novo deploy depois de cadastrar as variáveis.</li>
+<li>Confira jogando uma partida e rodando <code>npm run exportar</code>.</li>
+</ol>
+<p>O <code>next.config.mjs</code> mantém <code>@libsql/client</code> e <code>libsql</code> fora do pacote do servidor (<code>serverExternalPackages</code>), por trazerem binários nativos.</p>
+<h2 id="antes-de-publicar">Antes de publicar<a class="headerlink" href="#antes-de-publicar" title="Permanent link">&para;</a></h2>
+<ol>
+<li><code>npm run build</code></li>
+<li><code>npm test</code></li>
+<li>O teste de ponta a ponta da tela mexida (<code>e2e/</code>), olhando as capturas.</li>
+<li>Commit em português explicando o porquê, depois push.</li>
+</ol>
+<h2 id="modo-feira-estande">Modo feira (estande)<a class="headerlink" href="#modo-feira-estande" title="Permanent link">&para;</a></h2>
+<pre><code class="language-powershell">npm run feira   # compila e sobe na porta 3000, acessível na rede (-H 0.0.0.0)
+</code></pre>
+<p>Crie o evento em <code>/eventos</code> e abra <code>/e/&lt;evento&gt;</code> no computador do estande. O QR code usa o IP do computador na rede. Celular e computador precisam estar na <strong>mesma rede Wi-Fi</strong>, e o Windows precisa permitir o Node.js na rede privada. Redes de eventos costumam isolar aparelhos: teste antes ou leve um roteador próprio.</p>
+<h2 id="manual-de-uso">Manual de uso<a class="headerlink" href="#manual-de-uso" title="Permanent link">&para;</a></h2>
+<p>Fica em <code>/manual</code> (<code>src/app/manual/page.tsx</code>); os prints, em <code>public/manual/</code>. Quando uma tela mudar, regenere os prints:</p>
+<pre><code class="language-powershell"># com o servidor no ar e RUA_DADOS apontando para uma pasta temporária
+node e2e/capturar-manual.mjs
+</code></pre>
+<h2 id="esta-documentacao">Esta documentação<a class="headerlink" href="#esta-documentacao" title="Permanent link">&para;</a></h2>
+<p>Os arquivos ficam em <code>docs/</code> e a configuração em <code>mkdocs.yml</code>. O site gerado fica em <code>docs-site/</code> (<strong>versionada</strong>, para o build da Vercel não precisar de Python) e é servido pela rota <code>/docs</code> <strong>só para quem entrou na área da equipe</strong> (mesmo usuário e senha de <code>/admin</code>; sem sessão, vai para o login).</p>
+<p>Depois de mexer em <code>docs/</code> ou <code>mkdocs.yml</code>, regenere e faça o commit de <code>docs-site/</code> junto:</p>
+<pre><code class="language-powershell">pip install -r requirements-docs.txt
+npm run docs
+</code></pre>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="configuracao.html" class="btn btn-neutral float-left" title="Configuração"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="testes.html" class="btn btn-neutral float-right" title="Testes">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/VILLA-1984/disc" class="fa fa-code-fork" style="color: #fcfcfc"> VILLA-1984/disc</a>
+        </span>
+    
+    
+      <span><a href="configuracao.html" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="testes.html" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = ".";</script>
+    <script src="js/theme_extra.js"></script>
+    <script src="js/theme.js"></script>
+      <script src="search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

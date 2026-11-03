@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import AdminLogin from '@/components/AdminLogin';
-import { IcConfig, IcEventos, IcJogo, IcManual, IcResultados, IcTelao } from '@/components/IconesEquipe';
+import { IcConfig, IcDisc, IcDocs, IcEventos, IcJogo, IcManual, IcResultados, IcTelao } from '@/components/IconesEquipe';
 import NavAdmin from '@/components/NavAdmin';
 import { ANIMAIS } from '@/jogo/animals.js';
 import { adminAtivo, sessaoAdminValida } from '@/server/admin';
@@ -98,6 +98,22 @@ export default async function PaginaPainel() {
             titulo: 'Manual',
             texto: 'O passo a passo para quem aplica o teste. Abre em outra aba.',
             icone: <IcManual tamanho={30} />,
+            detalhe: null,
+            novaAba: true,
+        },
+        {
+            href: '/disc',
+            titulo: 'Sobre o DISC',
+            texto: 'O que é a metodologia, os quatro fatores, os limites e as referências. Abre em outra aba.',
+            icone: <IcDisc tamanho={30} />,
+            detalhe: null,
+            novaAba: true,
+        },
+        {
+            href: '/docs',
+            titulo: 'Documentação técnica',
+            texto: 'Arquitetura, API, dados e operação. Só para a equipe, com o mesmo usuário e senha. Abre em outra aba.',
+            icone: <IcDocs tamanho={30} />,
             detalhe: null,
             novaAba: true,
         },

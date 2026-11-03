@@ -44,3 +44,11 @@ export const IcTelao = (p: Props) => (
 export const IcSair = (p: Props) => (
     <Base {...p}><path d="M9 4H5v16h4M16 8l4 4-4 4M20 12H9" /></Base>
 );
+
+export const IcDisc = (p: Props) => (
+    <Base {...p}><rect x="4" y="4" width="7" height="7" rx="1.5" /><rect x="13" y="4" width="7" height="7" rx="1.5" /><rect x="4" y="13" width="7" height="7" rx="1.5" /><rect x="13" y="13" width="7" height="7" rx="1.5" /></Base>
+);
+
+export const IcDocs = (p: Props) => (
+    <Base {...p}><path d="M9 8l-4 4 4 4M15 8l4 4-4 4M13.5 5l-3 14" /></Base>
+);

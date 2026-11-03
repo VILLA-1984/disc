@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://rua-das-palavras.vercel.app/docs/arquitetura.html" />
+      <link rel="shortcut icon" href="img/favicon.ico" />
+    <title>Arquitetura - Teste de Perfil DISC · Documentação técnica</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Arquitetura";
+        var mkdocs_page_input_path = "arquitetura.md";
+        var mkdocs_page_url = "/docs/arquitetura.html";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="index.html" class="icon icon-home"> Teste de Perfil DISC · Documentação técnica
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="index.html">Início</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Arquitetura</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#visao-geral">Visão geral</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#pastas">Pastas</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#modulos-do-servidor-srcserver">Módulos do servidor (src/server/)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#decisoes-de-projeto">Decisões de projeto</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#projeto-irmao-laravel">Projeto irmão (Laravel)</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="partida.html">Fluxo da partida</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="pontuacao.html">Pontuação e ciclo de palavras</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="api.html">API</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="dados.html">Dados e privacidade</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="configuracao.html">Configuração</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="deploy.html">Deploy e operação</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="testes.html">Testes</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="disc.html">Metodologia DISC e referências</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Teste de Perfil DISC · Documentação técnica</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html" class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Arquitetura</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/VILLA-1984/disc/edit/main/docs/arquitetura.md">Edit on VILLA-1984/disc</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="arquitetura">Arquitetura<a class="headerlink" href="#arquitetura" title="Permanent link">&para;</a></h1>
+<h2 id="visao-geral">Visão geral<a class="headerlink" href="#visao-geral" title="Permanent link">&para;</a></h2>
+<pre><code>Navegador (three.js)                 Servidor Next.js                    Banco
+────────────────────                 ────────────────                    ─────
+src/jogo/*.js   ── fetch ──────────► src/app/api/*  (route handlers)
+src/components  ◄── token assinado ─ src/server/*   (regras e dados) ──► Turso (nuvem)
+                                                                       └► SQLite (feira)
+</code></pre>
+<p>O servidor <strong>não guarda a partida</strong>: a rodada sorteada viaja no navegador dentro de um <strong>token assinado (HMAC)</strong>. Ao concluir, o servidor refaz a partida a partir das decisões e confere contra o token.</p>
+<h2 id="pastas">Pastas<a class="headerlink" href="#pastas" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Pasta</th>
+<th>Conteúdo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/app/</code></td>
+<td>Páginas e rotas (App Router): <code>/</code>, <code>/e/[slug]</code>, <code>/e/[slug]/telao</code>, <code>/admin</code>, <code>/admin/jogo</code>, <code>/eventos</code>, <code>/whatsapp</code>, <code>/manual</code>, <code>/disc</code> e <code>api/*</code>.</td>
+</tr>
+<tr>
+<td><code>src/components/</code></td>
+<td>Componentes React das telas (partida, telão, painel da equipe, navbar etc.).</td>
+</tr>
+<tr>
+<td><code>src/jogo/</code></td>
+<td>Front do jogo em JavaScript: cena 3D (<code>game3d.js</code>), cenários (<code>cenarios.js</code>, <code>espaco.js</code>), modelos glTF (<code>modelos.js</code>), avatares, áudio, relatório e o ciclo de palavras (<code>ciclo.js</code>).</td>
+</tr>
+<tr>
+<td><code>src/server/</code></td>
+<td>Regras e acesso a dados, só no servidor.</td>
+</tr>
+<tr>
+<td><code>tests/</code></td>
+<td>Testes de unidade (Vitest).</td>
+</tr>
+<tr>
+<td><code>e2e/</code></td>
+<td>Testes de ponta a ponta e captura dos prints do manual (Playwright).</td>
+</tr>
+<tr>
+<td><code>scripts/</code></td>
+<td><code>exportar.mjs</code> (CSV dos cadastros) e utilitários.</td>
+</tr>
+<tr>
+<td><code>public/</code></td>
+<td>Imagens do manual, modelos 3D e sons.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="modulos-do-servidor-srcserver">Módulos do servidor (<code>src/server/</code>)<a class="headerlink" href="#modulos-do-servidor-srcserver" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Arquivo</th>
+<th>Responsabilidade</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>palavras.ts</code> / <code>palavras.json</code></td>
+<td>Lista de 48 palavras com o fator DISC de cada uma. <strong>Nunca sai do servidor.</strong></td>
+</tr>
+<tr>
+<td><code>gameRound.ts</code></td>
+<td>Modo "pares": duas palavras por portão, de fatores diferentes.</td>
+</tr>
+<tr>
+<td><code>ciclo.ts</code></td>
+<td>Modo "ciclo" (uma palavra por vez): sorteio das voltas e conferência.</td>
+</tr>
+<tr>
+<td><code>pontuacao.ts</code></td>
+<td>Percentual por fator a partir das palavras escolhidas.</td>
+</tr>
+<tr>
+<td><code>token.ts</code></td>
+<td>Assinatura e verificação do token da partida e do cookie da equipe.</td>
+</tr>
+<tr>
+<td><code>db.ts</code></td>
+<td>Acesso ao banco nos dois modos (Turso e SQLite), sempre assíncrono.</td>
+</tr>
+<tr>
+<td><code>eventos.ts</code></td>
+<td>Eventos: slug, ligar e desligar, contagem.</td>
+</tr>
+<tr>
+<td><code>envios.ts</code></td>
+<td>Resultados para a equipe enviar; prazo de 5 minutos para anônimos.</td>
+</tr>
+<tr>
+<td><code>totais.ts</code></td>
+<td>Contadores públicos do ranking.</td>
+</tr>
+<tr>
+<td><code>configuracao.ts</code></td>
+<td>Configuração editável do jogo: validar, salvar, restaurar.</td>
+</tr>
+<tr>
+<td><code>logo.ts</code></td>
+<td>Logo enviada pela equipe (PNG, JPEG ou WebP, até 1 MB).</td>
+</tr>
+<tr>
+<td><code>admin.ts</code></td>
+<td>Login da equipe e cookie de sessão.</td>
+</tr>
+<tr>
+<td><code>endereco.ts</code> / <code>enderecoAtual.ts</code></td>
+<td>Endereço do jogo para o QR code.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="decisoes-de-projeto">Decisões de projeto<a class="headerlink" href="#decisoes-de-projeto" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Código compartilhado navegador/servidor.</strong> <code>src/jogo/ciclo.js</code> é usado pelos dois: o navegador sabe qual palavra vem agora, o servidor refaz a partida e confere. Existe uma cópia dessas regras no projeto irmão em Laravel: mudou uma, mude a outra.</li>
+<li><strong>O fator DISC nunca vai ao navegador.</strong> O cliente só recebe <code>id</code> e texto das palavras.</li>
+<li><strong>Sem estado de partida no servidor.</strong> Token assinado, válido por 6 horas.</li>
+<li><strong>Dois bancos, uma interface.</strong> Turso na Vercel (sem disco permanente) e SQLite na feira (sem depender da internet).</li>
+<li><strong>Cenário é só visual.</strong> Cenário e meio de locomoção não alteram portões, ciclo nem pontuação.</li>
+<li><strong>Sem envio automático por WhatsApp.</strong> Só a API paga da Meta permitiria; hoje a equipe toca em Enviar (<code>https://wa.me/55&lt;número&gt;?text=&lt;mensagem&gt;</code>).</li>
+</ul>
+<h2 id="projeto-irmao-laravel">Projeto irmão (Laravel)<a class="headerlink" href="#projeto-irmao-laravel" title="Permanent link">&para;</a></h2>
+<p>O mesmo jogo existe em Laravel. O front compartilhado (<code>game3d.js</code>, <code>cenarios.js</code>, <code>espaco.js</code>, <code>rua.css</code>, <code>avatars.js</code>, <code>audio.js</code>, <code>report.js</code>, <code>ciclo.js</code>) é o mesmo nos dois; só <code>entrada.js</code> e <code>animals.js</code> divergem. Ficam <strong>só no Next</strong>: cadastro opcional, ranking e telão, eventos, painel da equipe, envio de resultados, logo, Turso e Vercel.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="index.html" class="btn btn-neutral float-left" title="Início"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="partida.html" class="btn btn-neutral float-right" title="Fluxo da partida">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/VILLA-1984/disc" class="fa fa-code-fork" style="color: #fcfcfc"> VILLA-1984/disc</a>
+        </span>
+    
+    
+      <span><a href="index.html" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="partida.html" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = ".";</script>
+    <script src="js/theme_extra.js"></script>
+    <script src="js/theme.js"></script>
+      <script src="search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

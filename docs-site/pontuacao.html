@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://rua-das-palavras.vercel.app/docs/pontuacao.html" />
+      <link rel="shortcut icon" href="img/favicon.ico" />
+    <title>Pontuação e ciclo de palavras - Teste de Perfil DISC · Documentação técnica</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Pontua\u00e7\u00e3o e ciclo de palavras";
+        var mkdocs_page_input_path = "pontuacao.md";
+        var mkdocs_page_url = "/docs/pontuacao.html";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="index.html" class="icon icon-home"> Teste de Perfil DISC · Documentação técnica
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="index.html">Início</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="arquitetura.html">Arquitetura</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="partida.html">Fluxo da partida</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Pontuação e ciclo de palavras</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#regra-de-pontuacao">Regra de pontuação</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#ciclo-de-palavras-uma-por-vez">Ciclo de palavras ("uma por vez")</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#funcoes-principais-srcserverciclots">Funções principais (src/server/ciclo.ts)</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#modo-pares-gameroundts">Modo pares (gameRound.ts)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#lista-de-palavras">Lista de palavras</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#animais">Animais</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="api.html">API</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="dados.html">Dados e privacidade</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="configuracao.html">Configuração</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="deploy.html">Deploy e operação</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="testes.html">Testes</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="disc.html">Metodologia DISC e referências</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Teste de Perfil DISC · Documentação técnica</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html" class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Pontuação e ciclo de palavras</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/VILLA-1984/disc/edit/main/docs/pontuacao.md">Edit on VILLA-1984/disc</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="pontuacao-e-ciclo-de-palavras">Pontuação e ciclo de palavras<a class="headerlink" href="#pontuacao-e-ciclo-de-palavras" title="Permanent link">&para;</a></h1>
+<h2 id="regra-de-pontuacao">Regra de pontuação<a class="headerlink" href="#regra-de-pontuacao" title="Permanent link">&para;</a></h2>
+<p>A pontuação usa <strong>só as palavras escolhidas</strong>, sem peso pela volta em que foram pegas. Para cada etapa, <code>percentuais()</code> em <code>src/server/pontuacao.ts</code> conta quantas palavras de cada fator (D, I, S, C) foram escolhidas e devolve a proporção <strong>dentro da própria pessoa</strong>. Pessoas não são comparadas entre si.</p>
+<p>O resultado é uma <strong>leitura lúdica, não um diagnóstico</strong>.</p>
+<h2 id="ciclo-de-palavras-uma-por-vez">Ciclo de palavras ("uma por vez")<a class="headerlink" href="#ciclo-de-palavras-uma-por-vez" title="Permanent link">&para;</a></h2>
+<p>Em cada etapa passam as 48 palavras, uma por portão, e a pessoa <strong>pega</strong> ou <strong>deixa passar</strong>. As pegas saem do jogo; as deixadas voltam na volta seguinte, até completar o número de palavras por etapa (padrão 12, configurável de 6 a 36).</p>
+<ul>
+<li>A primeira volta mostra <strong>todas</strong> as palavras antes de qualquer repetição.</li>
+<li>Cada volta traz blocos com uma palavra de cada fator, para nenhum fator ficar todo no começo ou no fim.</li>
+<li>Se as palavras que restam forem exatamente as que faltam, entram sozinhas (marcadas como <strong>automáticas</strong>).</li>
+<li>Se as 6 voltas (<code>VOLTAS</code>) acabarem e ainda faltar, entram as primeiras que restam.</li>
+<li>As duas etapas (<code>ETAPAS = 2</code>) usam as mesmas palavras.</li>
+</ul>
+<h3 id="funcoes-principais-srcserverciclots">Funções principais (<code>src/server/ciclo.ts</code>)<a class="headerlink" href="#funcoes-principais-srcserverciclots" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Função</th>
+<th>O que faz</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sortearPalavras</code></td>
+<td>Sorteia o conjunto da partida, repartido entre os quatro fatores.</td>
+</tr>
+<tr>
+<td><code>montarCiclo</code></td>
+<td>Monta as voltas de cada etapa (<code>RodadaCiclo</code>).</td>
+</tr>
+<tr>
+<td><code>resolverCiclo</code></td>
+<td>Refaz a partida a partir das decisões e devolve <code>{ escolhidas, automaticas, voltas }</code> por etapa.</td>
+</tr>
+</tbody>
+</table>
+<p>As regras puras estão em <code>src/jogo/ciclo.js</code>, <strong>o mesmo arquivo</strong> usado pelo navegador.</p>
+<h2 id="modo-pares-gameroundts">Modo pares (<code>gameRound.ts</code>)<a class="headerlink" href="#modo-pares-gameroundts" title="Permanent link">&para;</a></h2>
+<p>Em cada portão a pessoa vê duas palavras de fatores diferentes e escolhe uma. Os portões se distribuem de forma equilibrada entre as seis combinações de fatores; cada palavra aparece no máximo uma vez por etapa e a etapa 2 nunca repete um par da etapa 1. Portões por etapa: de 6 a 24 (padrão 12).</p>
+<h2 id="lista-de-palavras">Lista de palavras<a class="headerlink" href="#lista-de-palavras" title="Permanent link">&para;</a></h2>
+<p><code>src/server/palavras.json</code>: 48 palavras, 12 por fator, formato <code>{ "id": 1, "word": "Decidido", "code": "D" }</code>. É uma lista <strong>rascunho, ainda não validada por profissional com formação em DISC</strong>. São necessárias pelo menos 12 palavras por fator para 12 portões por etapa.</p>
+<h2 id="animais">Animais<a class="headerlink" href="#animais" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Fator</th>
+<th>Animal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>D</td>
+<td>Tubarão</td>
+</tr>
+<tr>
+<td>I</td>
+<td>Águia</td>
+</tr>
+<tr>
+<td>S</td>
+<td>Gato</td>
+</tr>
+<tr>
+<td>C</td>
+<td>Lobo</td>
+</tr>
+</tbody>
+</table>
+<p>Quando nenhum fator se destaca, o resultado é <strong>Equilibrado</strong>.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="partida.html" class="btn btn-neutral float-left" title="Fluxo da partida"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="api.html" class="btn btn-neutral float-right" title="API">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/VILLA-1984/disc" class="fa fa-code-fork" style="color: #fcfcfc"> VILLA-1984/disc</a>
+        </span>
+    
+    
+      <span><a href="partida.html" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="api.html" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = ".";</script>
+    <script src="js/theme_extra.js"></script>
+    <script src="js/theme.js"></script>
+      <script src="search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

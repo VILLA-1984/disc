@@ -15,6 +15,3 @@ data/.segredo
 .vercel/
 e2e/capturas/
 e2e/capturas-mobile*/
-
-# Documentacao gerada (MkDocs)
-site/
