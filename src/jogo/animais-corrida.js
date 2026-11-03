@@ -537,8 +537,9 @@ const MOVIMENTOS = {
 const MODELOS_3D = {
     lobo: { arquivo: '/modelos/animais/lobo.glb', comprimento: 2.6, clip: /gallop/i },
     tubarao: { arquivo: '/modelos/animais/tubarao.glb', comprimento: 3.4, clip: /swim/i },
-    // Feito no Blender (blender/gato.py); se faltar, vale o gato montado no codigo (animais-procedurais.js).
+    // Gato e aguia: feitos no Blender (blender/*.py); se faltarem, valem os montados no codigo (animais-procedurais.js).
     gato: { arquivo: '/modelos/animais/gato.glb', comprimento: 2.0, clip: /run/i },
+    aguia: { arquivo: '/modelos/animais/aguia.glb', comprimento: 3.0, clip: /fly/i },
 };
 const MOVIMENTOS_3D = ['corre', 'margem', 'nada', 'espirito', 'voa', 'constelacao'];
 

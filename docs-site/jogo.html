@@ -241,12 +241,12 @@
 <li>Configuração salva no banco (<code>animaisNaCorrida</code>, <code>animaisACada</code> e <code>animaisDuracao</code>); configurações antigas, sem esses campos, usam o padrão.</li>
 </ul>
 <h2 id="modelos-proprios-blender">Modelos próprios (Blender)<a class="headerlink" href="#modelos-proprios-blender" title="Permanent link">&para;</a></h2>
-<p>O <strong>gato</strong> é feito por nós no Blender (5.2, instalado pelo winget), <strong>sem abrir a janela</strong>: o script <code>blender/gato.py</code> modela o animal com formas simples (o tronco é um volume único feito de "metabolas"), cria o esqueleto, anima o ciclo <code>Run</code> (16 quadros, 24 fps, em laço), exporta o GLB e renderiza imagens de pré-visualização (lado, trás e 3/4, em três momentos da corrida).</p>
+<p>O <strong>gato</strong> (<code>blender/gato.py</code>) e a <strong>águia-de-cabeça-branca</strong> (<code>blender/aguia.py</code>) são feitos por nós no Blender (5.2, instalado pelo winget), <strong>sem abrir a janela</strong>. Cada script modela o animal com formas simples, cria o esqueleto, anima um ciclo em laço (<code>Run</code> no gato, <code>Fly</code> na águia; 16 quadros a 24 fps), exporta o GLB e renderiza imagens de pré-visualização (lado, trás e 3/4, em três momentos). No gato o tronco é um volume único feito de "metabolas" e as listras tigradas são faces pintadas do próprio tronco; na águia as asas têm penas secundárias e sete primárias, e o script descobre sozinho o eixo de rotação que levanta cada osso.</p>
 <pre><code class="language-powershell">&amp; 'C:\Program Files\Blender Foundation\Blender 5.2lender.exe' --background --factory-startup --python blender/gato.py -- &lt;pasta_de_previas&gt; --glb &lt;arquivo.glb&gt;
 </code></pre>
 <ul>
 <li><strong>Convenções:</strong> o animal olha para <strong>-Y</strong> no Blender (vira +Z no glTF, como o lobo; o jogo gira 180° ao carregar), Z para cima e patas em z = 0.</li>
-<li><strong>Depois de exportar</strong>, o arquivo é otimizado com o <code>gltf-transform</code> (quantização da malha) e colocado em <code>public/modelos/animais/</code>. O gato ficou com ~105 KB e 3,6 mil triângulos.</li>
+<li><strong>Depois de exportar</strong>, o arquivo é otimizado com o <code>gltf-transform</code> (quantização da malha) e colocado em <code>public/modelos/animais/</code>. O gato ficou com ~120 KB e 4,1 mil triângulos; a águia, com ~120 KB e 4,1 mil.</li>
 <li>Para entrar no jogo, registre o arquivo em <code>MODELOS_3D</code> (<code>animais-corrida.js</code>) com o nome do clipe. O animal montado no código (<code>animais-procedurais.js</code>) continua como plano B.</li>
 <li>Os arquivos <code>.blend</code> e as imagens de pré-visualização não são versionados.</li>
 </ul>

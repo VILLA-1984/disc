@@ -50,14 +50,14 @@ Opção do painel (`/admin/jogo` → "Animais na corrida", **desligada por padr�
 
 ## Modelos próprios (Blender)
 
-O **gato** é feito por nós no Blender (5.2, instalado pelo winget), **sem abrir a janela**: o script `blender/gato.py` modela o animal com formas simples (o tronco é um volume único feito de "metabolas"), cria o esqueleto, anima o ciclo `Run` (16 quadros, 24 fps, em laço), exporta o GLB e renderiza imagens de pré-visualização (lado, trás e 3/4, em três momentos da corrida).
+O **gato** (`blender/gato.py`) e a **águia-de-cabeça-branca** (`blender/aguia.py`) são feitos por nós no Blender (5.2, instalado pelo winget), **sem abrir a janela**. Cada script modela o animal com formas simples, cria o esqueleto, anima um ciclo em laço (`Run` no gato, `Fly` na águia; 16 quadros a 24 fps), exporta o GLB e renderiza imagens de pré-visualização (lado, trás e 3/4, em três momentos). No gato o tronco é um volume único feito de "metabolas" e as listras tigradas são faces pintadas do próprio tronco; na águia as asas têm penas secundárias e sete primárias, e o script descobre sozinho o eixo de rotação que levanta cada osso.
 
 ```powershell
 & 'C:\Program Files\Blender Foundation\Blender 5.2lender.exe' --background --factory-startup --python blender/gato.py -- <pasta_de_previas> --glb <arquivo.glb>
 ```
 
 - **Convenções:** o animal olha para **-Y** no Blender (vira +Z no glTF, como o lobo; o jogo gira 180° ao carregar), Z para cima e patas em z = 0.
-- **Depois de exportar**, o arquivo é otimizado com o `gltf-transform` (quantização da malha) e colocado em `public/modelos/animais/`. O gato ficou com ~105 KB e 3,6 mil triângulos.
+- **Depois de exportar**, o arquivo é otimizado com o `gltf-transform` (quantização da malha) e colocado em `public/modelos/animais/`. O gato ficou com ~120 KB e 4,1 mil triângulos; a águia, com ~120 KB e 4,1 mil.
 - Para entrar no jogo, registre o arquivo em `MODELOS_3D` (`animais-corrida.js`) com o nome do clipe. O animal montado no código (`animais-procedurais.js`) continua como plano B.
 - Os arquivos `.blend` e as imagens de pré-visualização não são versionados.
 

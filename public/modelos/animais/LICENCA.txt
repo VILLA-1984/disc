@@ -3,6 +3,7 @@ Origem: Quaternius (https://quaternius.com), via https://poly.pizza
   - lobo.glb:    "Wolf" (https://poly.pizza/m/P1gU3Qkr9r), pacote Low Poly Animals.
   - tubarao.glb: "Great White Shark" (https://poly.pizza/m/AyHTK3zUSG), pacote Low Poly Objects.
   - gato.glb:    modelo proprio do projeto, feito no Blender pelo script blender/gato.py (sem terceiros).
+  - aguia.glb:   modelo proprio do projeto (aguia-de-cabeca-branca), feito no Blender pelo script blender/aguia.py (sem terceiros).
 Licenca dos dois primeiros: CC0 1.0 (dominio publico) - uso livre, sem exigencia de credito; o credito e dado por cortesia.
 Alteracoes: lobo.glb teve as animacoes removidas, exceto "Gallop", e a malha quantizada (KHR_mesh_quantization) para
 caber em ~140 KB. tubarao.glb sem alteracoes (animacao "Swim").
