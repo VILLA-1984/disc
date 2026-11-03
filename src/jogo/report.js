@@ -1,5 +1,6 @@
 import { ANIMAIS, ORDEM_FATORES, FATOR_ANIMAL, resolverAnimais } from './animals.js';
 import { sons } from './audio.js';
+import { soltarConfete } from './confete.js';
 
 /**
  * Relatorio gamificado do jogo: suspense, revelacao do animal com efeitos e som proprios, e depois
@@ -318,6 +319,7 @@ export function mostrarRelatorio({
     const botaoPular = rel.querySelector('[data-acao="pular"]');
     const botaoCalmo = rel.querySelector('[data-acao="calmo"]');
     const temporizadores = [];
+    let fimConfete = null;
     const calmo = () => rel.classList.contains('rel--calmo');
 
     function mostrarConteudo() {
@@ -333,6 +335,12 @@ export function mostrarRelatorio({
 
         rel.classList.add('revelado');
         sons[tema.som]?.();
+
+        if (!calmo()) {
+            const cores = principal ? [principal.cor, '#ffd166', '#ffffff'] : Object.values(ANIMAIS).map((a) => a.cor);
+            fimConfete = soltarConfete(rel, cores);
+        }
+
         anuncio.textContent = principal
             ? `Você é ${principal.artigo} ${principal.nome}. ${principal.slogan}`
             : 'Os quatro animais vivem em você. Equilíbrio também é um estilo.';
@@ -360,6 +368,7 @@ export function mostrarRelatorio({
         tema: chaveTema,
         fechar() {
             temporizadores.forEach(clearTimeout);
+            fimConfete?.();
             rel.remove();
         },
     };

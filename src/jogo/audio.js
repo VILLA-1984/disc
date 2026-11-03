@@ -21,6 +21,25 @@ try {
     // sem localStorage (modo privado): segue com o som ligado
 }
 
+// Aba oculta ou tela bloqueada: o contexto de audio e suspenso (motor, clima e musica calam) e retomado ao voltar.
+let suspensoPorNos = false;
+
+if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+        if (!ctx) {
+            return;
+        }
+
+        if (document.hidden && ctx.state === 'running') {
+            suspensoPorNos = true;
+            ctx.suspend();
+        } else if (!document.hidden && suspensoPorNos) {
+            suspensoPorNos = false;
+            ctx.resume();
+        }
+    });
+}
+
 export function estaMudo() {
     return mudo;
 }

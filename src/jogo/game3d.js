@@ -305,6 +305,34 @@ export function criarJogo3D(opcoes) {
     parent.appendChild(renderer.domElement);
     const painelDesempenho = criarPainelDesempenho(renderer, parent);
 
+    // O navegador (principalmente em celular fraco) pode tomar o contexto WebGL do jogo. Sem tratar, a cena congela sem
+    // explicacao; aqui o jogo para de desenhar, avisa e volta sozinho quando o contexto e devolvido.
+    let contextoPerdido = false;
+    const avisoContexto = document.createElement('div');
+    avisoContexto.setAttribute('role', 'status');
+    avisoContexto.textContent = 'A imagem do jogo foi interrompida pelo aparelho. Aguarde um instante…';
+    avisoContexto.style.cssText = 'position:absolute;inset:0;z-index:35;display:none;align-items:center;justify-content:center;padding:24px;text-align:center;font-weight:600;color:#fff;background:rgba(13,43,78,.85)';
+    parent.appendChild(avisoContexto);
+    const aoPerderContexto = (evento) => {
+        evento.preventDefault();
+        contextoPerdido = true;
+        avisoContexto.style.display = 'flex';
+    };
+    const aoRestaurarContexto = () => {
+        contextoPerdido = false;
+        avisoContexto.style.display = 'none';
+        ultimoQuadro = performance.now();
+    };
+    renderer.domElement.addEventListener('webglcontextlost', aoPerderContexto);
+    renderer.domElement.addEventListener('webglcontextrestored', aoRestaurarContexto);
+
+    // Qualidade adaptativa: se a media de quadros por segundo ficar baixa, baixa a resolucao do desenho (so desce).
+    let ratioAtual = Math.min(window.devicePixelRatio || 1, 2);
+    let janelaDt = 0;
+    let janelaQuadros = 0;
+    let janelasLentas = 0;
+    let aquecimento = 3; // segundos iniciais ignorados (os modelos e as texturas ainda estao entrando)
+
     const cena = new THREE.Scene();
     const ceu = criarCeu();
     ceu.desenhar(CLIMAS.sol.ceuTopo, CLIMAS.sol.ceuBase);
@@ -742,6 +770,7 @@ export function criarJogo3D(opcoes) {
 
     // Fumaca (veiculos) ou poeira (a pe e cadeiras) soltas no turbo.
     const particulas = [];
+    const reservaParticulas = []; // malhas ja criadas, de volta do fim da vida: evita criar material a cada particula
     const particulaGeo = new THREE.SphereGeometry(0.12, 8, 6);
     let proximaParticula = 0;
     let agoraSeg = 0;
@@ -765,6 +794,13 @@ export function criarJogo3D(opcoes) {
     const faiscas = [];
     let ultimoQuadro = performance.now();
     let rodando = true;
+    // Voltar para a aba depois de um tempo nao pode virar um salto: recomeca a contar o tempo daqui.
+    const aoVoltarParaAba = () => {
+        if (!document.hidden) {
+            ultimoQuadro = performance.now();
+        }
+    };
+    document.addEventListener('visibilitychange', aoVoltarParaAba);
     let quadroId = 0;
 
     // Mesmas cores e textos dos botoes embaixo do jogo (rua.css: --lado-esq e --lado-dir).
@@ -972,8 +1008,10 @@ export function criarJogo3D(opcoes) {
     /** Fumaca escura saindo do escape (veiculos a motor) ou poeira clara nos pes (os demais). */
     function soltarParticula() {
         const motor = somDoMeio === 'motor' && !mundo;
-        const material = new THREE.MeshBasicMaterial({ color: motor ? 0x59616b : (mundo ? 0xeaf6ff : 0xe9dfcb), transparent: true, opacity: 0.55, depthWrite: false });
-        const m = new THREE.Mesh(particulaGeo, material);
+        const m = reservaParticulas.pop() ?? new THREE.Mesh(particulaGeo, new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.55, depthWrite: false }));
+        m.material.color.setHex(motor ? 0x59616b : (mundo ? 0xeaf6ff : 0xe9dfcb));
+        m.material.opacity = 0.55;
+        m.scale.set(1, 1, 1);
         const traseira = motor ? 1.9 : 0.55;
         m.position.set(avatar.grupo.position.x + (motor ? 0.2 : (Math.random() - 0.5) * 0.4), motor ? 0.4 : 0.12, traseira);
         cena.add(m);
@@ -992,7 +1030,7 @@ export function criarJogo3D(opcoes) {
 
             if (p.vida <= 0) {
                 cena.remove(p.m);
-                p.m.material.dispose();
+                reservaParticulas.push(p.m);
                 particulas.splice(i, 1);
             }
         }
@@ -1179,8 +1217,36 @@ export function criarJogo3D(opcoes) {
         }
 
         quadroId = requestAnimationFrame(quadro);
-        const dt = Math.min(0.05, (agora - ultimoQuadro) / 1000);
+        const bruto = (agora - ultimoQuadro) / 1000;
+        const dt = Math.min(0.05, bruto);
         ultimoQuadro = agora;
+
+        if (contextoPerdido) {
+            return;
+        }
+
+        // Janelas de 2 s: duas seguidas abaixo de ~38 fps baixam a resolucao (nunca abaixo de 1).
+        if (aquecimento > 0) {
+            aquecimento -= Math.min(0.1, bruto);
+        } else if (!document.hidden && bruto < 0.5) {
+            janelaDt += bruto;
+            janelaQuadros++;
+
+            if (janelaDt >= 2) {
+                janelasLentas = janelaQuadros / janelaDt < 38 ? janelasLentas + 1 : 0;
+
+                if (janelasLentas >= 2 && ratioAtual > 1) {
+                    ratioAtual = Math.max(1, ratioAtual * 0.75);
+                    renderer.setPixelRatio(ratioAtual);
+                    ajustarTamanho();
+                    janelasLentas = 0;
+                    aquecimento = 2;
+                }
+
+                janelaDt = 0;
+                janelaQuadros = 0;
+            }
+        }
 
         // Segurando a tecla de acelerar a corrida fica bem mais rapida; o avatar ainda para no portao.
         const turbo = acelerando ? (reduzirMovimento ? 1.5 : 1.9) : 1;
@@ -1367,10 +1433,15 @@ export function criarJogo3D(opcoes) {
             window.removeEventListener('keydown', aoTecla);
             window.removeEventListener('keyup', aoSoltar);
             window.removeEventListener('blur', aoPerderFoco);
+            document.removeEventListener('visibilitychange', aoVoltarParaAba);
+            renderer.domElement.removeEventListener('webglcontextlost', aoPerderContexto);
+            renderer.domElement.removeEventListener('webglcontextrestored', aoRestaurarContexto);
+            avisoContexto.remove();
             observador.disconnect();
             continuos.motor.parar();
             continuos.clima.parar();
             particulas.forEach((p) => p.m.material.dispose());
+            reservaParticulas.forEach((m) => m.material.dispose());
             particulaGeo.dispose();
             chuvaGeo.dispose();
             folhasGeo.dispose();

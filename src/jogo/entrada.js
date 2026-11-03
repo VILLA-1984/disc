@@ -103,6 +103,12 @@ export function montar(raiz, api) {
     const totalEtapas = ciclo ? ciclo.etapas.length : etapas.length;
     const escolhasPorEtapa = ciclo ? ciclo.escolher : etapas[0].length;
     const reduzirMovimento = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Vibracao curta no celular ao escolher e ao concluir; fica quieta com "reduzir movimento" e onde nao ha suporte.
+    const vibrar = (padrao) => {
+        if (!reduzirMovimento && typeof navigator.vibrate === 'function') {
+            navigator.vibrate(padrao);
+        }
+    };
 
     raiz.innerHTML = ESTRUTURA;
 
@@ -574,6 +580,7 @@ export function montar(raiz, api) {
             },
             aoEscolher: (escolha) => {
                 sons.escolha();
+                vibrar(25);
                 travarBotoes();
 
                 if (ciclo) {
@@ -620,6 +627,7 @@ export function montar(raiz, api) {
                 }
 
                 sons.fanfarra();
+                vibrar([40, 60, 40, 60, 120]);
                 mostrarFim();
             },
         });
