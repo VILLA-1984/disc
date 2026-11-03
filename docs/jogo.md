@@ -30,7 +30,7 @@ O front do jogo fica em `src/jogo/` (JavaScript puro com three.js). Esta página
 Opção do painel (`/admin/jogo` → "Animais na corrida", **desligada por padrão**). A cada N palavras **pegas** (padrão 4, de 3 a 8; nunca na última da etapa) um animal surge ao lado do avatar, fica nítido e some em cerca de 3,6 s (0,7 s para surgir, 0,9 s para sumir).
 
 - **O animal é sorteado e não tem ligação com o resultado.** É um baralho embaralhado, então os quatro aparecem antes de qualquer repetir. De propósito: o fator DISC de cada palavra continua só no servidor, e mostrar o perfil no meio da partida entregaria o resultado e enviesaria as escolhas seguintes.
-- Cada animal (lobo, gato, águia, tubarão) é **desenhado no código**, de perfil, com pernas, asas e cauda animadas (`animais-corrida.js`), e aparece como um letreiro (sprite) que acompanha o avatar. Não são as silhuetas do relatório, que são emblemas parados.
+- **Lobo e tubarão são modelos 3D** (glTF, CC0, Quaternius; `public/modelos/animais/`) e correm ou nadam **para a frente**, na mesma direção do avatar. **Gato e águia ainda são desenhos 2D de perfil**, feitos no código (`animais-corrida.js`) e mostrados como um letreiro que acompanha o avatar; por serem de perfil, correm de lado. O modelo 3D entra quando já carregou; antes disso, ou se falhar (`?modelos=0`), vale o desenho 2D. Não são as silhuetas do relatório, que são emblemas parados.
 - O movimento depende do cenário e do hábitat de cada animal:
 
 | Cenário | Lobo e gato | Águia | Tubarão |

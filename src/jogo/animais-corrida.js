@@ -7,6 +7,8 @@
  * animal se move em cada cenario (corre, voa, nada, espirito...).
  */
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { modelosLigados } from './modelos.js';
 
 export const LARGURA = 512;
 export const ALTURA = 320;
@@ -526,6 +528,17 @@ const MOVIMENTOS = {
     espirito: { ritmo: 6, altura: 1.5, opacidade: 0.55 },
 };
 
+/**
+ * Modelos 3D prontos (glTF, CC0, Quaternius) para os animais que os tem. Eles correm ou nadam PARA A FRENTE, na mesma
+ * direcao do avatar. Entram no lugar do desenho 2D quando o modelo ja carregou e o animal esta correndo, nadando ou
+ * deslizando (nao na constelacao do espaco nem voando).
+ */
+const MODELOS_3D = {
+    lobo: { arquivo: '/modelos/animais/lobo.glb', comprimento: 2.6, clip: /gallop/i },
+    tubarao: { arquivo: '/modelos/animais/tubarao.glb', comprimento: 3.4, clip: /swim/i },
+};
+const MOVIMENTOS_3D = ['corre', 'margem', 'nada', 'espirito'];
+
 const DURACAO = 3.6;
 const ENTRADA = 0.7;
 const SAIDA = 0.9;
@@ -565,6 +578,74 @@ export function criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCa
     sprite.visible = false;
     cena.add(sprite);
 
+    // Modelos 3D (baixados em segundo plano; ate chegarem, e se falharem, vale o desenho 2D).
+    const prontos = {};
+    const ondas = new THREE.Group();
+    const ondaGeo = new THREE.RingGeometry(0.62, 0.78, 40);
+
+    for (let i = 0; i < 2; i++) {
+        const onda = new THREE.Mesh(ondaGeo, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false }));
+        onda.rotation.x = -Math.PI / 2;
+        ondas.add(onda);
+    }
+
+    ondas.visible = false;
+    cena.add(ondas);
+
+    if (modelosLigados()) {
+        for (const [tipo, cfg] of Object.entries(MODELOS_3D)) {
+            new GLTFLoader().loadAsync(cfg.arquivo).then((gltf) => {
+                const interno = gltf.scene;
+                // Os modelos olham para +z; o jogo anda para -z (para longe da camera e, na vista lateral, para a direita).
+                interno.rotation.y = Math.PI;
+                const raiz = new THREE.Group();
+                raiz.add(interno);
+                raiz.visible = false;
+                raiz.updateMatrixWorld(true);
+                const caixa = new THREE.Box3().setFromObject(raiz);
+                const tamanho = caixa.getSize(new THREE.Vector3());
+                const materiais = new Set();
+
+                interno.traverse((o) => {
+                    if (o.isMesh) {
+                        o.frustumCulled = false; // a malha esqueletica muda de forma: a caixa da pose inicial nao vale
+                        [].concat(o.material).forEach((m) => {
+                            m.transparent = true;
+                            materiais.add(m);
+                        });
+                    }
+                });
+
+                const mixer = new THREE.AnimationMixer(interno);
+                const clip = gltf.animations.find((a) => cfg.clip.test(a.name)) ?? gltf.animations[0];
+
+                if (clip) {
+                    mixer.clipAction(clip).play();
+                }
+
+                cena.add(raiz);
+                prontos[tipo] = {
+                    raiz,
+                    mixer,
+                    materiais: [...materiais],
+                    escala: cfg.comprimento / Math.max(tamanho.x, tamanho.z, 0.001),
+                    pesY: caixa.min.y,
+                    centroY: (caixa.min.y + caixa.max.y) / 2,
+                };
+            }).catch((erro) => console.warn(`modelo ${cfg.arquivo} indisponivel, usando o desenho 2D`, erro));
+        }
+    }
+
+    function esconder() {
+        sprite.visible = false;
+        material.opacity = 0;
+        ondas.visible = false;
+
+        for (const m of Object.values(prontos)) {
+            m.raiz.visible = false;
+        }
+    }
+
     let pegas = 0;
     let baralho = [];
     let ultimo = null;
@@ -596,8 +677,76 @@ export function criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCa
         const tipo = sortear();
         const movimento = HABITATS[cenario]?.[tipo] ?? 'espirito';
 
-        ativo = { tipo, movimento, t: 0, fase: Math.random() * TAU, lado: ladoDoAvatar > 0 ? -1 : 1 };
-        sprite.visible = true;
+        const usa3d = Boolean(prontos[tipo]) && MOVIMENTOS_3D.includes(movimento);
+
+        ativo = { tipo, movimento, t: 0, fase: Math.random() * TAU, lado: ladoDoAvatar > 0 ? -1 : 1, usa3d };
+
+        if (usa3d) {
+            // Com "reduzir movimento" o modelo fica parado numa pose de corrida ou nado.
+            prontos[tipo].mixer.setTime(reduzirMovimento ? 0.15 : 0);
+            prontos[tipo].raiz.visible = true;
+        } else {
+            sprite.visible = true;
+        }
+    }
+
+    /** Atualiza o animal quando e um modelo 3D: mesmo posicionamento do desenho 2D, mas com o corpo de verdade, de frente. */
+    function atualizar3d(dt, avatarX, aparece) {
+        const { movimento, tipo } = ativo;
+        const m = prontos[tipo];
+        const margem = movimento === 'margem';
+        const ampliar = margem && modo === '3d' ? 1.8 : 1;
+        const escala = m.escala * ampliar * (0.92 + 0.08 * aparece);
+        const balanco = reduzirMovimento ? 0 : Math.sin(ativo.t * 4.5) * (movimento === 'espirito' ? 0.18 : 0);
+
+        if (!reduzirMovimento) {
+            m.mixer.update(dt);
+        }
+
+        for (const mat of m.materiais) {
+            mat.opacity = aparece * (movimento === 'espirito' ? 0.55 : 1);
+        }
+
+        m.raiz.scale.setScalar(escala);
+
+        let y;
+
+        if (movimento === 'nada') {
+            y = 0.14 - m.centroY * escala; // o centro fica um pouco acima da linha da agua: dorso e barbatana de fora
+        } else if (movimento === 'espirito') {
+            y = 1.5 + balanco - m.centroY * escala;
+        } else {
+            y = (CHAO[cenario] ?? 0) - m.pesY * escala; // os pes pousam no chao
+        }
+
+        let x;
+        let z;
+
+        if (margem) {
+            x = (modo === '3d' ? ativo.lado : -1) * X_MARGEM;
+            z = modo === '3d' ? -8.5 - ativo.t * 0.3 : -0.4 + Math.sin(ativo.t * 1.4) * 0.5;
+        } else if (modo === '3d') {
+            x = avatarX + ativo.lado * 3.2;
+            z = -0.6 - ativo.t * 0.2;
+        } else {
+            x = avatarX - 2.6;
+            z = -0.4 + Math.sin(ativo.t * 1.4) * 0.5;
+        }
+
+        m.raiz.position.set(x, y, z);
+
+        // Marolas ao redor do tubarao que nada.
+        ondas.visible = movimento === 'nada';
+
+        if (movimento === 'nada') {
+            ondas.position.set(x, 0.04, z);
+            ondas.children.forEach((onda, i) => {
+                const passo = (ativo.t * 0.6 + i * 0.5) % 1;
+
+                onda.scale.setScalar(1.2 + passo * 3.2);
+                onda.material.opacity = (1 - passo) * 0.6 * aparece;
+            });
+        }
     }
 
     return {
@@ -622,8 +771,7 @@ export function criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCa
 
             if (ativo.t >= DURACAO) {
                 ativo = null;
-                sprite.visible = false;
-                material.opacity = 0;
+                esconder();
 
                 return;
             }
@@ -631,6 +779,12 @@ export function criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCa
             const { movimento, tipo } = ativo;
             const parametros = MOVIMENTOS[movimento];
             const aparece = suave(ativo.t / ENTRADA) * (1 - suave((ativo.t - (DURACAO - SAIDA)) / SAIDA));
+
+            if (ativo.usa3d) {
+                atualizar3d(dt, avatarX, aparece);
+
+                return;
+            }
 
             // Com "reduzir movimento" o animal so surge e some, parado, sem galope nem balanco.
             ativo.fase += reduzirMovimento ? 0 : dt * parametros.ritmo;
@@ -669,6 +823,20 @@ export function criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCa
             cena.remove(sprite);
             textura.dispose();
             material.dispose();
+            cena.remove(ondas);
+            ondaGeo.dispose();
+            ondas.children.forEach((o) => o.material.dispose());
+
+            for (const m of Object.values(prontos)) {
+                cena.remove(m.raiz);
+                m.mixer.stopAllAction();
+                m.raiz.traverse((o) => {
+                    if (o.isMesh) {
+                        o.geometry.dispose();
+                    }
+                });
+                m.materiais.forEach((mat) => mat.dispose());
+            }
         },
     };
 }
