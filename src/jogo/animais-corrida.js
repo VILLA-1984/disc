@@ -8,6 +8,7 @@
  */
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { criarAguia3D, criarGato3D } from './animais-procedurais.js';
 import { modelosLigados } from './modelos.js';
 
 export const LARGURA = 512;
@@ -537,7 +538,13 @@ const MODELOS_3D = {
     lobo: { arquivo: '/modelos/animais/lobo.glb', comprimento: 2.6, clip: /gallop/i },
     tubarao: { arquivo: '/modelos/animais/tubarao.glb', comprimento: 3.4, clip: /swim/i },
 };
-const MOVIMENTOS_3D = ['corre', 'margem', 'nada', 'espirito'];
+const MOVIMENTOS_3D = ['corre', 'margem', 'nada', 'espirito', 'voa', 'constelacao'];
+
+/** Gato e aguia nao tem modelo pronto: sao montados no codigo (animais-procedurais.js), tambem virados para a frente. */
+const PROCEDURAIS = {
+    gato: { criar: criarGato3D, comprimento: 2.0 },
+    aguia: { criar: criarAguia3D, comprimento: 3.0 },
+};
 
 const DURACAO = 3.6;
 const ENTRADA = 0.7;
@@ -636,6 +643,26 @@ export function criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCa
         }
     }
 
+    for (const [tipo, cfg] of Object.entries(PROCEDURAIS)) {
+        const obj = cfg.criar();
+
+        obj.raiz.visible = false;
+        obj.animar(0);
+        obj.raiz.updateMatrixWorld(true);
+        const caixa = new THREE.Box3().setFromObject(obj.raiz);
+        const tamanho = caixa.getSize(new THREE.Vector3());
+
+        cena.add(obj.raiz);
+        prontos[tipo] = {
+            raiz: obj.raiz,
+            anim: obj.animar,
+            materiais: obj.materiais,
+            escala: cfg.comprimento / Math.max(tamanho.x, tamanho.z, 0.001),
+            pesY: caixa.min.y,
+            centroY: (caixa.min.y + caixa.max.y) / 2,
+        };
+    }
+
     function esconder() {
         sprite.visible = false;
         material.opacity = 0;
@@ -682,9 +709,33 @@ export function criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCa
         ativo = { tipo, movimento, t: 0, fase: Math.random() * TAU, lado: ladoDoAvatar > 0 ? -1 : 1, usa3d };
 
         if (usa3d) {
-            // Com "reduzir movimento" o modelo fica parado numa pose de corrida ou nado.
-            prontos[tipo].mixer.setTime(reduzirMovimento ? 0.15 : 0);
-            prontos[tipo].raiz.visible = true;
+            const m = prontos[tipo];
+
+            // Com "reduzir movimento" o modelo fica parado numa pose de corrida, voo ou nado.
+            if (m.mixer) {
+                m.mixer.setTime(reduzirMovimento ? 0.15 : 0);
+            } else {
+                m.anim(reduzirMovimento ? 0.6 : ativo.fase);
+            }
+
+            // Constelacao: o corpo vira uma malha de linhas luminosas, que soma luz ao fundo escuro do espaco.
+            for (const mat of m.materiais) {
+                mat.wireframe = movimento === 'constelacao';
+                mat.blending = movimento === 'constelacao' ? THREE.AdditiveBlending : THREE.NormalBlending;
+                mat.depthWrite = movimento !== 'constelacao';
+
+                if (movimento === 'constelacao') {
+                    mat.color.set(0xbcd6ff);
+
+                    if (mat.emissive) {
+                        mat.emissive.set(0x6a9cff);
+                    }
+                }
+
+                mat.needsUpdate = true;
+            }
+
+            m.raiz.visible = true;
         } else {
             sprite.visible = true;
         }
@@ -700,7 +751,12 @@ export function criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCa
         const balanco = reduzirMovimento ? 0 : Math.sin(ativo.t * 4.5) * (movimento === 'espirito' ? 0.18 : 0);
 
         if (!reduzirMovimento) {
-            m.mixer.update(dt);
+            if (m.mixer) {
+                m.mixer.update(dt);
+            } else {
+                ativo.fase += dt * MOVIMENTOS[movimento].ritmo;
+                m.anim(ativo.fase);
+            }
         }
 
         for (const mat of m.materiais) {
@@ -713,8 +769,10 @@ export function criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCa
 
         if (movimento === 'nada') {
             y = 0.14 - m.centroY * escala; // o centro fica um pouco acima da linha da agua: dorso e barbatana de fora
-        } else if (movimento === 'espirito') {
-            y = 1.5 + balanco - m.centroY * escala;
+        } else if (movimento === 'espirito' || movimento === 'constelacao') {
+            y = (movimento === 'constelacao' ? 1.6 : 1.5) + balanco - m.centroY * escala;
+        } else if (movimento === 'voa') {
+            y = 1.3 + (reduzirMovimento ? 0 : Math.sin(ativo.t * 2.4) * 0.2) - m.centroY * escala;
         } else {
             y = (CHAO[cenario] ?? 0) - m.pesY * escala; // os pes pousam no chao
         }
@@ -829,7 +887,7 @@ export function criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCa
 
             for (const m of Object.values(prontos)) {
                 cena.remove(m.raiz);
-                m.mixer.stopAllAction();
+                m.mixer?.stopAllAction();
                 m.raiz.traverse((o) => {
                     if (o.isMesh) {
                         o.geometry.dispose();

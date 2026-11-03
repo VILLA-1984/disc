@@ -181,7 +181,7 @@
 <p>Opção do painel (<code>/admin/jogo</code> → "Animais na corrida", <strong>desligada por padrão</strong>). A cada N palavras <strong>pegas</strong> (padrão 4, de 3 a 8; nunca na última da etapa) um animal surge ao lado do avatar, fica nítido e some em cerca de 3,6 s (0,7 s para surgir, 0,9 s para sumir).</p>
 <ul>
 <li><strong>O animal é sorteado e não tem ligação com o resultado.</strong> É um baralho embaralhado, então os quatro aparecem antes de qualquer repetir. De propósito: o fator DISC de cada palavra continua só no servidor, e mostrar o perfil no meio da partida entregaria o resultado e enviesaria as escolhas seguintes.</li>
-<li><strong>Lobo e tubarão são modelos 3D</strong> (glTF, CC0, Quaternius; <code>public/modelos/animais/</code>) e correm ou nadam <strong>para a frente</strong>, na mesma direção do avatar. <strong>Gato e águia ainda são desenhos 2D de perfil</strong>, feitos no código (<code>animais-corrida.js</code>) e mostrados como um letreiro que acompanha o avatar; por serem de perfil, correm de lado. O modelo 3D entra quando já carregou; antes disso, ou se falhar (<code>?modelos=0</code>), vale o desenho 2D. Não são as silhuetas do relatório, que são emblemas parados.</li>
+<li>Os quatro animais são <strong>3D e correm, voam ou nadam para a frente</strong>, na mesma direção do avatar. <strong>Lobo e tubarão</strong> são modelos glTF (CC0, Quaternius; <code>public/modelos/animais/</code>). <strong>Gato e águia</strong> são montados no código com formas simples (<code>animais-procedurais.js</code>): o gato galopa e a águia bate as asas. Se o modelo glTF ainda não carregou ou falhou (<code>?modelos=0</code>), vale um desenho 2D de perfil (<code>animais-corrida.js</code>). Não são as silhuetas do relatório, que são emblemas parados.</li>
 <li>O movimento depende do cenário e do hábitat de cada animal:</li>
 </ul>
 <table>
@@ -226,13 +226,13 @@
 </tr>
 <tr>
 <td>Espaço</td>
-<td>constelação</td>
+<td>constelação (malha de linhas luminosas)</td>
 <td>constelação</td>
 <td>constelação</td>
 </tr>
 </tbody>
 </table>
-<p><em>Espírito</em> é a silhueta translúcida que desliza, para o animal que não tem hábitat naquele cenário. A <em>constelação</em> recorta o desenho num campo de estrelas, com brilho aditivo.</p>
+<p><em>Espírito</em> é o animal translúcido que desliza, para quem não tem hábitat naquele cenário. A <em>constelação</em> mostra o corpo como uma malha de linhas luminosas (aramado), com brilho aditivo.</p>
 <ul>
 <li>Com "reduzir movimento", o animal só surge e some, parado, sem galope nem balanço.</li>
 <li>Parâmetros de teste na URL: <code>?animais=N</code> liga o recurso (um animal a cada N palavras) e <code>?animal=lobo</code> (ou <code>gato</code>, <code>aguia</code>, <code>tubarao</code>) fixa o animal.</li>
@@ -257,7 +257,7 @@
 </thead>
 <tbody>
 <tr>
-<td><code>audio.js</code>, <code>report.js</code>, <code>game3d.js</code>, <code>confete.js</code>, <code>animais-corrida.js</code>, <code>modelos.js</code>, <code>espaco.js</code>, <code>cenarios.js</code>, <code>avatars.js</code>, <code>ciclo.js</code>, <code>desempenho.js</code></td>
+<td><code>audio.js</code>, <code>report.js</code>, <code>game3d.js</code>, <code>confete.js</code>, <code>animais-corrida.js</code>, <code>animais-procedurais.js</code>, <code>modelos.js</code>, <code>espaco.js</code>, <code>cenarios.js</code>, <code>avatars.js</code>, <code>ciclo.js</code>, <code>desempenho.js</code></td>
 <td>Idênticos: pode copiar o arquivo inteiro.</td>
 </tr>
 <tr>

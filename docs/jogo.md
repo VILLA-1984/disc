@@ -30,7 +30,7 @@ O front do jogo fica em `src/jogo/` (JavaScript puro com three.js). Esta página
 Opção do painel (`/admin/jogo` → "Animais na corrida", **desligada por padrão**). A cada N palavras **pegas** (padrão 4, de 3 a 8; nunca na última da etapa) um animal surge ao lado do avatar, fica nítido e some em cerca de 3,6 s (0,7 s para surgir, 0,9 s para sumir).
 
 - **O animal é sorteado e não tem ligação com o resultado.** É um baralho embaralhado, então os quatro aparecem antes de qualquer repetir. De propósito: o fator DISC de cada palavra continua só no servidor, e mostrar o perfil no meio da partida entregaria o resultado e enviesaria as escolhas seguintes.
-- **Lobo e tubarão são modelos 3D** (glTF, CC0, Quaternius; `public/modelos/animais/`) e correm ou nadam **para a frente**, na mesma direção do avatar. **Gato e águia ainda são desenhos 2D de perfil**, feitos no código (`animais-corrida.js`) e mostrados como um letreiro que acompanha o avatar; por serem de perfil, correm de lado. O modelo 3D entra quando já carregou; antes disso, ou se falhar (`?modelos=0`), vale o desenho 2D. Não são as silhuetas do relatório, que são emblemas parados.
+- Os quatro animais são **3D e correm, voam ou nadam para a frente**, na mesma direção do avatar. **Lobo e tubarão** são modelos glTF (CC0, Quaternius; `public/modelos/animais/`). **Gato e águia** são montados no código com formas simples (`animais-procedurais.js`): o gato galopa e a águia bate as asas. Se o modelo glTF ainda não carregou ou falhou (`?modelos=0`), vale um desenho 2D de perfil (`animais-corrida.js`). Não são as silhuetas do relatório, que são emblemas parados.
 - O movimento depende do cenário e do hábitat de cada animal:
 
 | Cenário | Lobo e gato | Águia | Tubarão |
@@ -40,9 +40,9 @@ Opção do painel (`/admin/jogo` → "Animais na corrida", **desligada por padr�
 | Céu | espírito | voa | espírito |
 | Neve | correm na neve | voa | espírito |
 | Trilhos | correm ao lado da ferrovia | voa | espírito |
-| Espaço | constelação | constelação | constelação |
+| Espaço | constelação (malha de linhas luminosas) | constelação | constelação |
 
-*Espírito* é a silhueta translúcida que desliza, para o animal que não tem hábitat naquele cenário. A *constelação* recorta o desenho num campo de estrelas, com brilho aditivo.
+*Espírito* é o animal translúcido que desliza, para quem não tem hábitat naquele cenário. A *constelação* mostra o corpo como uma malha de linhas luminosas (aramado), com brilho aditivo.
 
 - Com "reduzir movimento", o animal só surge e some, parado, sem galope nem balanço.
 - Parâmetros de teste na URL: `?animais=N` liga o recurso (um animal a cada N palavras) e `?animal=lobo` (ou `gato`, `aguia`, `tubarao`) fixa o animal.
@@ -65,7 +65,7 @@ O mesmo front existe em `resources/js/word-street/` do projeto Laravel. Ao mudar
 
 | Arquivo | Regra |
 |---|---|
-| `audio.js`, `report.js`, `game3d.js`, `confete.js`, `animais-corrida.js`, `modelos.js`, `espaco.js`, `cenarios.js`, `avatars.js`, `ciclo.js`, `desempenho.js` | Idênticos: pode copiar o arquivo inteiro. |
+| `audio.js`, `report.js`, `game3d.js`, `confete.js`, `animais-corrida.js`, `animais-procedurais.js`, `modelos.js`, `espaco.js`, `cenarios.js`, `avatars.js`, `ciclo.js`, `desempenho.js` | Idênticos: pode copiar o arquivo inteiro. |
 | `entrada.js`, `animals.js`, `rua.css` | **Divergem** entre os projetos: **não copie**; aplique a mudança à mão nos dois. |
 
 !!! warning
