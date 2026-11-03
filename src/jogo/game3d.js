@@ -542,8 +542,10 @@ export function criarJogo3D(opcoes) {
 
     // Animais da corrida (opcao do painel; `?animais=N` na URL liga para teste, com um animal a cada N palavras).
     const animaisUrl = typeof location === 'undefined' ? null : new URLSearchParams(location.search).get('animais');
-    const animaisConfig = animaisUrl !== null ? { aCada: Math.max(1, Number(animaisUrl) || 4) } : opcoes.animaisNaCorrida;
-    const animais = animaisConfig ? criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCada: animaisConfig.aCada }) : null;
+    const animaisConfig = animaisUrl !== null
+        ? { aCada: Math.max(1, Number(animaisUrl) || 4), duracao: Number(new URLSearchParams(location.search).get('duracao')) || undefined }
+        : opcoes.animaisNaCorrida;
+    const animais = animaisConfig ? criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCada: animaisConfig.aCada, duracao: animaisConfig.duracao }) : null;
 
     // Quando um modelo pronto (glTF) entra no lugar do veiculo, a pessoa passa a ir por dentro dele.
     const esconderAvatar = () => {

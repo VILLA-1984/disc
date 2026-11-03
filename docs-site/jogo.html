@@ -178,7 +178,7 @@
 <li>O mundo curvo, o tremor, o pulso, o clarão, a vibração e o confete <strong>não acontecem</strong> com <code>prefers-reduced-motion</code> (ou com o botão "Reduzir efeitos" no relatório).</li>
 </ul>
 <h2 id="animais-na-corrida">Animais na corrida<a class="headerlink" href="#animais-na-corrida" title="Permanent link">&para;</a></h2>
-<p>Opção do painel (<code>/admin/jogo</code> → "Animais na corrida", <strong>desligada por padrão</strong>). A cada N palavras <strong>pegas</strong> (padrão 4, de 3 a 8; nunca na última da etapa) um animal surge ao lado do avatar, fica nítido e some em cerca de 3,6 s (0,7 s para surgir, 0,9 s para sumir).</p>
+<p>Opção do painel (<code>/admin/jogo</code> → "Animais na corrida", <strong>desligada por padrão</strong>). A cada N palavras <strong>pegas</strong> (padrão 4, de 3 a 8; nunca na última da etapa) um animal surge ao lado do avatar, fica nítido e some. O <strong>tempo na tela</strong> é configurável no painel (de 2 a 8 s, padrão 3,6 s): um quinto dele é para surgir e um quarto para sumir.</p>
 <ul>
 <li><strong>O animal é sorteado e não tem ligação com o resultado.</strong> É um baralho embaralhado, então os quatro aparecem antes de qualquer repetir. De propósito: o fator DISC de cada palavra continua só no servidor, e mostrar o perfil no meio da partida entregaria o resultado e enviesaria as escolhas seguintes.</li>
 <li>Os quatro animais são <strong>3D e correm, voam ou nadam para a frente</strong>, na mesma direção do avatar. <strong>Lobo e tubarão</strong> são modelos glTF (CC0, Quaternius; <code>public/modelos/animais/</code>). <strong>Gato e águia</strong> são montados no código com formas simples (<code>animais-procedurais.js</code>): o gato galopa e a águia bate as asas. Se o modelo glTF ainda não carregou ou falhou (<code>?modelos=0</code>), vale um desenho 2D de perfil (<code>animais-corrida.js</code>). Não são as silhuetas do relatório, que são emblemas parados.</li>
@@ -235,8 +235,8 @@
 <p><em>Espírito</em> é o animal translúcido que desliza, para quem não tem hábitat naquele cenário. A <em>constelação</em> mostra o corpo como uma malha de linhas luminosas (aramado), com brilho aditivo.</p>
 <ul>
 <li>Com "reduzir movimento", o animal só surge e some, parado, sem galope nem balanço.</li>
-<li>Parâmetros de teste na URL: <code>?animais=N</code> liga o recurso (um animal a cada N palavras) e <code>?animal=lobo</code> (ou <code>gato</code>, <code>aguia</code>, <code>tubarao</code>) fixa o animal.</li>
-<li>Configuração salva no banco (<code>animaisNaCorrida</code> e <code>animaisACada</code>); configurações antigas, sem esses campos, usam o padrão.</li>
+<li>Parâmetros de teste na URL: <code>?animais=N</code> liga o recurso (um animal a cada N palavras), <code>?animal=lobo</code> (ou <code>gato</code>, <code>aguia</code>, <code>tubarao</code>) fixa o animal e <code>?duracao=7</code> muda o tempo na tela.</li>
+<li>Configuração salva no banco (<code>animaisNaCorrida</code>, <code>animaisACada</code> e <code>animaisDuracao</code>); configurações antigas, sem esses campos, usam o padrão.</li>
 </ul>
 <h2 id="som">Som<a class="headerlink" href="#som" title="Permanent link">&para;</a></h2>
 <p>Tudo é sintetizado com a Web Audio API, sem arquivos de áudio. O botão de som no canto da tela liga e desliga, e a escolha fica salva no navegador.</p>

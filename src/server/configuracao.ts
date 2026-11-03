@@ -65,6 +65,7 @@ export function configuracaoPadrao(): Configuracao {
         palavrasPorEtapa: palavras,
         animaisNaCorrida: false,
         animaisACada: LIMITES.animaisACadaPadrao,
+        animaisDuracao: LIMITES.animaisDuracaoPadrao,
         textos: {},
     };
 }
@@ -155,6 +156,15 @@ export function validar(entrada: unknown): Validacao {
         return { ok: false, erro: `Animais na corrida: informe de quantas em quantas palavras (um número inteiro entre ${LIMITES.animaisACadaMin} e ${LIMITES.animaisACadaMax}).` };
     }
 
+    const duracaoBruta = bruta.animaisDuracao === undefined ? padrao.animaisDuracao : bruta.animaisDuracao;
+
+    if (typeof duracaoBruta !== 'number' || !Number.isFinite(duracaoBruta) || duracaoBruta < LIMITES.animaisDuracaoMin || duracaoBruta > LIMITES.animaisDuracaoMax) {
+        return { ok: false, erro: `Animais na corrida: o tempo na tela deve ficar entre ${LIMITES.animaisDuracaoMin} e ${LIMITES.animaisDuracaoMax} segundos.` };
+    }
+
+    // Uma casa decimal basta (3,6 s) e evita valores como 3,6000001 salvos no banco.
+    const animaisDuracao = Math.round(duracaoBruta * 10) / 10;
+
     const textos: Configuracao['textos'] = {};
     const brutos = typeof bruta.textos === 'object' && bruta.textos !== null ? (bruta.textos as Record<string, unknown>) : {};
 
@@ -200,6 +210,7 @@ export function validar(entrada: unknown): Validacao {
             palavrasPorEtapa: palavras,
             animaisNaCorrida: booleano(bruta.animaisNaCorrida, padrao.animaisNaCorrida),
             animaisACada,
+            animaisDuracao,
             textos,
         },
     };

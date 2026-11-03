@@ -143,6 +143,31 @@ describe('validacao', () => {
         expect(r.ok && [r.config.animaisNaCorrida, r.config.animaisACada]).toEqual([false, LIMITES.animaisACadaPadrao]);
     });
 
+    it('o tempo do animal na tela comeca em 3,6 s e configuracoes antigas o recebem', () => {
+        expect(configuracaoPadrao().animaisDuracao).toBe(LIMITES.animaisDuracaoPadrao);
+
+        const { animaisDuracao: _d, ...antiga } = base();
+        const r = validar(antiga);
+
+        expect(r.ok && r.config.animaisDuracao).toBe(LIMITES.animaisDuracaoPadrao);
+    });
+
+    it.each([1.9, 8.1, '3', Number.NaN, Infinity, null])('recusa o tempo do animal na tela invalido (%s)', (valor) => {
+        expect(recusa({ ...base(), animaisDuracao: valor })).toMatch(/Animais na corrida/);
+    });
+
+    it.each([LIMITES.animaisDuracaoMin, 3.5, LIMITES.animaisDuracaoMax])('aceita o tempo do animal na tela (%s s)', (valor) => {
+        const r = validar({ ...base(), animaisDuracao: valor });
+
+        expect(r.ok && r.config.animaisDuracao).toBe(valor);
+    });
+
+    it('arredonda o tempo do animal para uma casa decimal', () => {
+        const r = validar({ ...base(), animaisDuracao: 3.6000001 });
+
+        expect(r.ok && r.config.animaisDuracao).toBe(3.6);
+    });
+
     it.each([2, 9, 4.5, '4', Number.NaN, null])('recusa animais a cada N palavras invalido (%s)', (valor) => {
         expect(recusa({ ...base(), animaisACada: valor })).toMatch(/Animais na corrida/);
     });

@@ -546,9 +546,8 @@ const PROCEDURAIS = {
     aguia: { criar: criarAguia3D, comprimento: 3.0 },
 };
 
-const DURACAO = 3.6;
-const ENTRADA = 0.7;
-const SAIDA = 0.9;
+// Tempo padrao na tela (segundos). O painel pode mudar; um quinto e para surgir e um quarto para sumir.
+const DURACAO_PADRAO = 3.6;
 const suave = (x) => {
     const t = Math.min(1, Math.max(0, x));
 
@@ -560,10 +559,14 @@ const suave = (x) => {
  * @returns {null | {pegou: (total: number) => void, reiniciarEtapa: () => void, atualizar: (dt: number, avatarX: number) => void, destruir: () => void}}
  *   `null` quando o cenario ainda nao tem animais.
  */
-export function criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCada = 4 }) {
+export function criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCada = 4, duracao = DURACAO_PADRAO }) {
     if (!CENARIOS_LIBERADOS.includes(cenario) || !(aCada >= 1)) {
         return null;
     }
+
+    const tempoTotal = Number.isFinite(duracao) ? Math.min(8, Math.max(1, duracao)) : DURACAO_PADRAO;
+    const tempoEntrada = tempoTotal * 0.2;
+    const tempoSaida = tempoTotal * 0.25;
 
     const canvas = document.createElement('canvas');
     canvas.width = LARGURA;
@@ -827,7 +830,7 @@ export function criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCa
 
             ativo.t += dt;
 
-            if (ativo.t >= DURACAO) {
+            if (ativo.t >= tempoTotal) {
                 ativo = null;
                 esconder();
 
@@ -836,7 +839,7 @@ export function criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCa
 
             const { movimento, tipo } = ativo;
             const parametros = MOVIMENTOS[movimento];
-            const aparece = suave(ativo.t / ENTRADA) * (1 - suave((ativo.t - (DURACAO - SAIDA)) / SAIDA));
+            const aparece = suave(ativo.t / tempoEntrada) * (1 - suave((ativo.t - (tempoTotal - tempoSaida)) / tempoSaida));
 
             if (ativo.usa3d) {
                 atualizar3d(dt, avatarX, aparece);

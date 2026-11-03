@@ -388,6 +388,22 @@ export default function Admin({ configInicial, catalogo, textos, escolhaLogo, ve
                     />
                     <small>A cada quantas palavras pegas o animal aparece (de {LIMITES.animaisACadaMin} a {LIMITES.animaisACadaMax}; o padrão é {LIMITES.animaisACadaPadrao}). Ele não aparece na última palavra da etapa.</small>
                 </div>
+
+                <div className="admin-numero">
+                    <input
+                        id="animais-duracao"
+                        type="number"
+                        inputMode="decimal"
+                        min={LIMITES.animaisDuracaoMin}
+                        max={LIMITES.animaisDuracaoMax}
+                        step={0.5}
+                        disabled={!config.animaisNaCorrida}
+                        value={Number.isFinite(config.animaisDuracao) ? config.animaisDuracao : ''}
+                        aria-label="Quantos segundos o animal fica na tela"
+                        onChange={(e) => definir('animaisDuracao', e.target.value === '' ? Number.NaN : Number(e.target.value))}
+                    />
+                    <small>Quantos segundos o animal fica na tela, do surgir ao sumir (de {LIMITES.animaisDuracaoMin} a {LIMITES.animaisDuracaoMax}; o padrão é {String(LIMITES.animaisDuracaoPadrao).replace('.', ',')}). Um quinto do tempo é para surgir e um quarto para sumir.</small>
+                </div>
             </section>
 
             <section className="admin-secao" aria-labelledby="secao-textos">

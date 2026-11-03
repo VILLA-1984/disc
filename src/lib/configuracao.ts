@@ -155,6 +155,8 @@ export type Configuracao = {
     animaisNaCorrida: boolean;
     /** De quantas em quantas palavras pegas o animal aparece. */
     animaisACada: number;
+    /** Quantos segundos o animal fica na tela, do surgir ao sumir. */
+    animaisDuracao: number;
     textos: Partial<Record<ChaveTexto, TextoPersonalizado>>;
 };
 
@@ -168,6 +170,9 @@ export const LIMITES = {
     animaisACadaMin: 3,
     animaisACadaMax: 8,
     animaisACadaPadrao: 4,
+    animaisDuracaoMin: 2,
+    animaisDuracaoMax: 8,
+    animaisDuracaoPadrao: 3.6,
 };
 
 const POR_CHAVE = new Map(TEXTOS.map((t) => [t.chave, t]));

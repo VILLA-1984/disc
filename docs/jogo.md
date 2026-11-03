@@ -27,7 +27,7 @@ O front do jogo fica em `src/jogo/` (JavaScript puro com three.js). Esta página
 
 ## Animais na corrida
 
-Opção do painel (`/admin/jogo` → "Animais na corrida", **desligada por padrão**). A cada N palavras **pegas** (padrão 4, de 3 a 8; nunca na última da etapa) um animal surge ao lado do avatar, fica nítido e some em cerca de 3,6 s (0,7 s para surgir, 0,9 s para sumir).
+Opção do painel (`/admin/jogo` → "Animais na corrida", **desligada por padrão**). A cada N palavras **pegas** (padrão 4, de 3 a 8; nunca na última da etapa) um animal surge ao lado do avatar, fica nítido e some. O **tempo na tela** é configurável no painel (de 2 a 8 s, padrão 3,6 s): um quinto dele é para surgir e um quarto para sumir.
 
 - **O animal é sorteado e não tem ligação com o resultado.** É um baralho embaralhado, então os quatro aparecem antes de qualquer repetir. De propósito: o fator DISC de cada palavra continua só no servidor, e mostrar o perfil no meio da partida entregaria o resultado e enviesaria as escolhas seguintes.
 - Os quatro animais são **3D e correm, voam ou nadam para a frente**, na mesma direção do avatar. **Lobo e tubarão** são modelos glTF (CC0, Quaternius; `public/modelos/animais/`). **Gato e águia** são montados no código com formas simples (`animais-procedurais.js`): o gato galopa e a águia bate as asas. Se o modelo glTF ainda não carregou ou falhou (`?modelos=0`), vale um desenho 2D de perfil (`animais-corrida.js`). Não são as silhuetas do relatório, que são emblemas parados.
@@ -45,8 +45,8 @@ Opção do painel (`/admin/jogo` → "Animais na corrida", **desligada por padr�
 *Espírito* é o animal translúcido que desliza, para quem não tem hábitat naquele cenário. A *constelação* mostra o corpo como uma malha de linhas luminosas (aramado), com brilho aditivo.
 
 - Com "reduzir movimento", o animal só surge e some, parado, sem galope nem balanço.
-- Parâmetros de teste na URL: `?animais=N` liga o recurso (um animal a cada N palavras) e `?animal=lobo` (ou `gato`, `aguia`, `tubarao`) fixa o animal.
-- Configuração salva no banco (`animaisNaCorrida` e `animaisACada`); configurações antigas, sem esses campos, usam o padrão.
+- Parâmetros de teste na URL: `?animais=N` liga o recurso (um animal a cada N palavras), `?animal=lobo` (ou `gato`, `aguia`, `tubarao`) fixa o animal e `?duracao=7` muda o tempo na tela.
+- Configuração salva no banco (`animaisNaCorrida`, `animaisACada` e `animaisDuracao`); configurações antigas, sem esses campos, usam o padrão.
 
 ## Som
 
