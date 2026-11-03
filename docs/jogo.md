@@ -57,7 +57,7 @@ O **gato** (`blender/gato.py`) e a **águia-de-cabeça-branca** (`blender/aguia.
 ```
 
 - **Convenções:** o animal olha para **-Y** no Blender (vira +Z no glTF, como o lobo; o jogo gira 180° ao carregar), Z para cima e patas em z = 0.
-- **Depois de exportar**, o arquivo é otimizado com o `gltf-transform` (quantização da malha) e colocado em `public/modelos/animais/`. O gato ficou com ~120 KB e 4,1 mil triângulos; a águia, com ~120 KB e 4,1 mil.
+- **Depois de exportar**, o arquivo é otimizado com o `gltf-transform` (quantização da malha) e colocado em `public/modelos/animais/`. O gato ficou com ~150 KB e 5,3 mil triângulos; a águia, com ~150 KB e 5,3 mil.
 - Para entrar no jogo, registre o arquivo em `MODELOS_3D` (`animais-corrida.js`) com o nome do clipe. O animal montado no código (`animais-procedurais.js`) continua como plano B.
 - Os arquivos `.blend` e as imagens de pré-visualização não são versionados.
 

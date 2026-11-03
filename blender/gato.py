@@ -54,15 +54,15 @@ OSSOS = [
     ('cauda3', (0, 0.45, 0.60), (0, 0.49, 0.69), 'cauda2'),
     ('cauda4', (0, 0.49, 0.69), (0, 0.49, 0.78), 'cauda3'),
 ]
-PATAS = {  # nome: (x, y do quadril, altura do quadril, joelho, pe)
-    'df': (0.085, -0.17, 0.40, 0.22, 0.03),
-    'de': (-0.085, -0.17, 0.40, 0.22, 0.03),
-    'tf': (0.09, 0.19, 0.40, 0.21, 0.03),
-    'te': (-0.09, 0.19, 0.40, 0.21, 0.03),
-}
-for nome, (x, y, zq, zj, zp) in PATAS.items():
-    OSSOS.append((f'{nome}_cima', (x, y, zq), (x, y + (0.015 if nome[0] == 't' else 0.0), zj), 'raiz'))
-    OSSOS.append((f'{nome}_baixo', (x, y + (0.015 if nome[0] == 't' else 0.0), zj), (x, y, zp), f'{nome}_cima'))
+PATAS = {}  # nome: (quadril, joelho, pe), cada um (x, y, z)
+for lado, sufixo in ((1, 'f'), (-1, 'e')):
+    PATAS['d' + sufixo] = ((lado * 0.085, -0.17, 0.40), (lado * 0.085, -0.19, 0.22), (lado * 0.085, -0.185, 0.03))
+    # Patas de tras de gato: o joelho aponta para a frente e o pe vai para tras (jarrete).
+    PATAS['t' + sufixo] = ((lado * 0.09, 0.19, 0.40), (lado * 0.09, 0.12, 0.23), (lado * 0.09, 0.215, 0.03))
+
+for nome, (quadril, joelho, pe) in PATAS.items():
+    OSSOS.append((f'{nome}_cima', quadril, joelho, 'raiz'))
+    OSSOS.append((f'{nome}_baixo', joelho, pe, f'{nome}_cima'))
 
 arm_dados = bpy.data.armatures.new('Gato')
 arm = bpy.data.objects.new('Gato', arm_dados)
@@ -190,8 +190,8 @@ for lado in (-1, 1):
     esfera('cabeca', LARANJA, (lado * 0.075, -0.45, 0.49), (0.06, 0.06, 0.05), seg=10, aneis=7)  # bochecha
     esfera('cabeca', OLHO, (lado * 0.058, -0.488, 0.545), (0.032, 0.014, 0.034), seg=10, aneis=7)
     esfera('cabeca', PUPILA, (lado * 0.058, -0.5, 0.545), (0.014, 0.006, 0.027), seg=8, aneis=6)
-    cone('cabeca', LARANJA, (lado * 0.078, -0.37, 0.625), 0.052, 0.13, (-0.15, lado * 0.32, 0))
-    cone('cabeca', ROSA, (lado * 0.078, -0.382, 0.62), 0.03, 0.09, (-0.15, lado * 0.32, 0))
+    cone('cabeca', LARANJA, (lado * 0.082, -0.37, 0.64), 0.064, 0.17, (-0.15, lado * 0.30, 0))
+    cone('cabeca', ROSA, (lado * 0.082, -0.384, 0.633), 0.04, 0.12, (-0.15, lado * 0.30, 0))
 esfera('cabeca', CLARO, (0, -0.505, 0.485), (0.065, 0.045, 0.045))  # focinho
 esfera('cabeca', ROSA, (0, -0.545, 0.5), (0.02, 0.012, 0.014), seg=8, aneis=6)  # nariz
 
@@ -211,11 +211,17 @@ for i, (osso, de, ate) in enumerate(cauda):
     esfera(osso, cor, ate, (0.044 - i * 0.006,) * 3, seg=8, aneis=6)
 
 # Patas: coxa, canela e uma pata clara e arredondada.
-for nome, (x, y, zq, zj, zp) in PATAS.items():
-    yj = y + (0.015 if nome[0] == 't' else 0.0)
-    cilindro(f'{nome}_cima', LARANJA, (x, y, zq), (x, yj, zj), 0.07 if nome[0] == 't' else 0.06, 0.045)
-    cilindro(f'{nome}_baixo', LARANJA, (x, yj, zj), (x, y, zp + 0.02), 0.046, 0.034)
-    esfera(f'{nome}_baixo', CLARO, (x, y - 0.012, zp), (0.05, 0.072, 0.036), seg=10, aneis=7)
+for nome, (quadril, joelho, pe) in PATAS.items():
+    traseira = nome[0] == 't'
+    q, j, f = Vector(quadril), Vector(joelho), Vector(pe)
+    lado = 1 if q.x > 0 else -1
+    cilindro(f'{nome}_cima', LARANJA, tuple(q), tuple(j), 0.062 if traseira else 0.055, 0.042)
+    # Volume do musculo: coxa nas patas de tras, ombro nas da frente (acompanha o osso).
+    musculo = q.lerp(j, 0.28)
+    esfera(f'{nome}_cima', LARANJA, tuple(musculo), (0.07, 0.115, 0.115) if traseira else (0.06, 0.09, 0.105), seg=12, aneis=8)
+    esfera(f'{nome}_cima', LARANJA, tuple(j), (0.046, 0.046, 0.046), seg=10, aneis=7)  # joelho redondo
+    cilindro(f'{nome}_baixo', LARANJA, tuple(j), (f.x, f.y, f.z + 0.025), 0.042, 0.03)
+    esfera(f'{nome}_baixo', CLARO, (f.x, f.y - 0.018, f.z), (0.05, 0.078, 0.036), seg=10, aneis=7)
 
 # ------------------------------------------------------------------ junta tudo em uma malha so
 for o in partes:

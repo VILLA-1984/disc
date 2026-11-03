@@ -121,6 +121,7 @@ esfera('raiz', MARROM, (0, -0.02, 0.0), (0.15, 0.36, 0.15))
 esfera('raiz', MARROM, (0, -0.2, 0.01), (0.14, 0.2, 0.14))
 esfera('raiz', MARROM_CLARO, (0, 0.12, -0.02), (0.12, 0.2, 0.11))
 esfera('cabeca', BRANCO, (0, -0.34, 0.05), (0.095, 0.11, 0.09))      # pescoco
+esfera('raiz', MARROM, (0, -0.27, 0.035), (0.125, 0.09, 0.115))        # gola de penas
 esfera('cabeca', BRANCO, (0, -0.42, 0.075), (0.092, 0.095, 0.088))   # cabeca
 
 # Bico: forte e curvo, amarelo, com a ponta em gancho; e os olhos com a sobrancelha "brava".
@@ -132,9 +133,9 @@ for lado in (-1, 1):
     esfera('cabeca', BRANCO, (lado * 0.06, -0.455, 0.128), (0.034, 0.03, 0.01), seg=8, aneis=5, rot=(0, lado * 0.4, 0))
 
 # Cauda branca em leque: penas que abrem para tras.
-for i, ang in enumerate((-26, -13, 0, 13, 26)):
+for i, ang in enumerate((-33, -22, -11, 0, 11, 22, 33)):
     a = math.radians(ang)
-    comp = 0.34 - abs(ang) * 0.002
+    comp = 0.42 - abs(ang) * 0.0025
     centro = Vector((math.sin(a) * comp / 2, 0.32 + math.cos(a) * comp / 2, -0.01))
     esfera('cauda', BRANCO, centro, (0.05, comp / 2, 0.012), seg=8, aneis=4, rot=(0, 0, -a))
 
@@ -157,9 +158,16 @@ for lado, nome in ((1, 'd'), (-1, 'e')):
     for k in range(4):
         pena(f'cotovelo_{nome}', MARROM_ESCURO, (lado * (0.45 + k * 0.09), 0.09, 0.06), 70 + k * 4, lado, 0.24, 0.042, lift=-0.004)
 
-    # Primarias: 7 penas longas em leque a partir do pulso (as da frente mais compridas).
+    # Cobertura: fileiras de penas curtas e claras por cima, como as telhas de um telhado.
+    for k in range(5):
+        pena(f'ombro_{nome}', MARROM_CLARO, (lado * (0.10 + k * 0.07), 0.0, 0.075), 70 + k * 2, lado, 0.17, 0.046, lift=0.004)
+
+    for k in range(5):
+        pena(f'cotovelo_{nome}', MARROM_CLARO, (lado * (0.44 + k * 0.07), 0.035, 0.075), 66 + k * 3, lado, 0.17, 0.046, lift=0.004)
+
+    # Primarias: 7 penas longas em leque a partir do pulso (as da frente mais compridas), com a ponta levantada.
     for k in range(7):
-        pena(f'mao_{nome}', MARROM_ESCURO, (lado * 0.80, 0.07, 0.06), 6 + k * 11, lado, 0.42 - k * 0.025, 0.036)
+        pena(f'mao_{nome}', MARROM_ESCURO, (lado * 0.80, 0.07, 0.06), 6 + k * 11, lado, 0.42 - k * 0.025, 0.036, lift=0.01 - k * 0.001)
 
 # ------------------------------------------------------------------ junta tudo
 for o in partes:
