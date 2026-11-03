@@ -42,6 +42,10 @@ export const AVATARES = [
     // Bloco "Cartun": personagens 3D cartunescos prontos (Kenney "Mini Characters", CC0), com esqueleto e animacao "walk".
     // Os campos de formas simples valem de plano B, como nos humanos.
     { id: 'cartun-mari', grupo: 'cartun', nome: 'Mari', modelo: '/modelos/cartun/mari.glb', retrato: '/modelos/cartun/mari.png', alturaModelo: 1.5, clip: 'sprint', pele: '#b5683f', cabelo: { estilo: 'coque', cor: '#2b2b2f' }, roupa: '#8e5be0', calca: '#4a63d8', detalhe: '#f08a3c', corpo: 'medio', altura: 1, mobilidade: 'anda' },
+    { id: 'cartun-bia', grupo: 'cartun', nome: 'Bia', modelo: '/modelos/cartun/bia.glb', retrato: '/modelos/cartun/bia.png', alturaModelo: 1.5, clip: 'sprint', pele: '#f0c19b', cabelo: { estilo: 'coque', cor: '#d9703c' }, roupa: '#f2b705', calca: '#8e5be0', detalhe: '#ffffff', corpo: 'medio', altura: 1, mobilidade: 'anda' },
+    { id: 'cartun-clara', grupo: 'cartun', nome: 'Clara', modelo: '/modelos/cartun/clara.glb', retrato: '/modelos/cartun/clara.png', alturaModelo: 1.5, clip: 'sprint', pele: '#e0a07a', cabelo: { estilo: 'coque', cor: '#5b6784' }, roupa: '#4a7bd8', calca: '#6b7280', detalhe: '#ffffff', corpo: 'medio', altura: 1, mobilidade: 'anda' },
+    { id: 'cartun-dora', grupo: 'cartun', nome: 'Dora', modelo: '/modelos/cartun/dora.glb', retrato: '/modelos/cartun/dora.png', alturaModelo: 1.5, clip: 'sprint', pele: '#f0c19b', cabelo: { estilo: 'coque', cor: '#d9703c' }, roupa: '#7d8497', calca: '#4a4f57', detalhe: '#ffffff', corpo: 'medio', altura: 1, mobilidade: 'anda' },
+    { id: 'cartun-eva', grupo: 'cartun', nome: 'Eva', modelo: '/modelos/cartun/eva.glb', retrato: '/modelos/cartun/eva.png', alturaModelo: 1.5, clip: 'sprint', pele: '#e8b48f', cabelo: { estilo: 'longo', cor: '#26262b' }, roupa: '#ffffff', calca: '#2b2f36', detalhe: '#ffffff', corpo: 'medio', altura: 1, mobilidade: 'anda' },
 ];
 
 /**
