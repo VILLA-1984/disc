@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { criarAnimaisCorrida } from './animais-corrida.js';
 import { criarAvatar3D } from './avatars.js';
-import { continuos } from './audio.js';
+import { continuos, sons } from './audio.js';
 import { criarPainelDesempenho } from './desempenho.js';
 import { criarEspacoVivo, criarVeiculoEspacial, construirEspaco } from './espaco.js';
 import { MEIOS, construirCeu, construirNeve, construirRio, construirTrilhos, criarAeronave, criarBarco, criarNevasca, criarPassaros, criarPeixes, criarVeiculoNeve, criarVeiculoTrilho } from './cenarios.js';
@@ -549,7 +549,7 @@ export function criarJogo3D(opcoes) {
     const animaisConfig = animaisUrl !== null
         ? { aCada: Math.max(1, Number(animaisUrl) || 4), duracao: Number(new URLSearchParams(location.search).get('duracao')) || undefined }
         : opcoes.animaisNaCorrida;
-    const animais = animaisConfig ? criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCada: animaisConfig.aCada, duracao: animaisConfig.duracao }) : null;
+    const animais = animaisConfig ? criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCada: animaisConfig.aCada, duracao: animaisConfig.duracao, somAnimal: (tipo) => sons[tipo]?.() }) : null;
 
     // Quando um modelo pronto (glTF) entra no lugar do veiculo, a pessoa passa a ir por dentro dele.
     const esconderAvatar = () => {

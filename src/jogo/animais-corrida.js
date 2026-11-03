@@ -541,6 +541,8 @@ const MODELOS_3D = {
     gato: { arquivo: '/modelos/animais/gato.glb', comprimento: 2.0, clip: /run/i },
     aguia: { arquivo: '/modelos/animais/aguia.glb', comprimento: 3.0, clip: /fly/i },
 };
+// Segundos entre uma repeticao e outra do som de cada animal (um pouco mais que a duracao do proprio som).
+const INTERVALO_SOM = { lobo: 3, gato: 2.2, aguia: 1.4, tubarao: 2.2 };
 const MOVIMENTOS_3D = ['corre', 'margem', 'nada', 'espirito', 'voa', 'constelacao'];
 
 /** Gato e aguia nao tem modelo pronto: sao montados no codigo (animais-procedurais.js), tambem virados para a frente. */
@@ -562,7 +564,7 @@ const suave = (x) => {
  * @returns {null | {pegou: (total: number) => void, reiniciarEtapa: () => void, atualizar: (dt: number, avatarX: number) => void, destruir: () => void}}
  *   `null` quando o cenario ainda nao tem animais.
  */
-export function criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCada = 4, duracao = DURACAO_PADRAO }) {
+export function criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCada = 4, duracao = DURACAO_PADRAO, somAnimal = null }) {
     if (!CENARIOS_LIBERADOS.includes(cenario) || !(aCada >= 1)) {
         return null;
     }
@@ -712,7 +714,7 @@ export function criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCa
 
         const usa3d = Boolean(prontos[tipo]) && MOVIMENTOS_3D.includes(movimento);
 
-        ativo = { tipo, movimento, t: 0, fase: Math.random() * TAU, lado: ladoDoAvatar > 0 ? -1 : 1, usa3d };
+        ativo = { tipo, movimento, t: 0, fase: Math.random() * TAU, lado: ladoDoAvatar > 0 ? -1 : 1, usa3d, proximoSom: 0 };
 
         if (usa3d) {
             const m = prontos[tipo];
@@ -829,6 +831,12 @@ export function criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCa
         atualizar(dt, avatarX) {
             if (!ativo) {
                 return;
+            }
+
+            // Som caracteristico enquanto o animal esta na tela: toca ao entrar e se repete pelo tempo em que ele fica visivel.
+            if (somAnimal && ativo.t >= ativo.proximoSom && tempoTotal - ativo.t > 0.4) {
+                somAnimal(ativo.tipo);
+                ativo.proximoSom += INTERVALO_SOM[ativo.tipo] ?? 2;
             }
 
             ativo.t += dt;
