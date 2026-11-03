@@ -362,6 +362,29 @@ export default function Admin({ configInicial, catalogo, textos, escolhaLogo, ve
                 </div>
             </section>
 
+            <section className="admin-secao" aria-labelledby="secao-turbo">
+                <h2 id="secao-turbo">Turbo</h2>
+                <p>Quando a pessoa segura ↑ (ou W, ou toca no botão de acelerar), o avatar corre mais depressa e chega antes ao próximo portão. Aqui você escolhe quanto mais depressa.</p>
+
+                <div className="admin-numero">
+                    <input
+                        id="turbo-forca"
+                        type="number"
+                        inputMode="decimal"
+                        min={LIMITES.turboMin}
+                        max={LIMITES.turboMax}
+                        step={0.1}
+                        value={Number.isFinite(config.turboForca) ? config.turboForca : ''}
+                        aria-label="Força do turbo, em vezes a velocidade normal"
+                        onChange={(e) => definir('turboForca', e.target.value === '' ? Number.NaN : Number(e.target.value))}
+                    />
+                    <small>
+                        De {LIMITES.turboMin} a {LIMITES.turboMax} vezes a velocidade normal; o padrão é {String(LIMITES.turboPadrao).replace('.', ',')}. Com 1 o turbo não acelera nada.
+                        Quanto maior, menos tempo a pessoa tem para ler as palavras antes de decidir. Com “reduzir movimento” o efeito é menor.
+                    </small>
+                </div>
+            </section>
+
             <section className="admin-secao" aria-labelledby="secao-animais">
                 <h2 id="secao-animais">Animais na corrida</h2>
                 <p>De tempos em tempos um animal (lobo, gato, águia ou tubarão) surge, nítido, ao lado do avatar e some. O animal é sorteado e <strong>não tem ligação com o resultado</strong>: é só um efeito.</p>

@@ -564,6 +564,7 @@ export function montar(raiz, api) {
             meio,
             rotulosEtapas: [`Etapa 1 de 2 · ${T('etapa1_titulo')}`, `Etapa 2 de 2 · ${T('etapa2_titulo')}`],
             reduzirMovimento,
+            turboForca: config?.turboForca,
             animaisNaCorrida: config?.animaisNaCorrida ? { aCada: config.animaisACada ?? 4, duracao: config.animaisDuracao } : null,
             aoPasso: () => {
                 const agora = performance.now();

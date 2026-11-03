@@ -152,6 +152,8 @@ export type Configuracao = {
     /** Quantas palavras a pessoa marca em cada etapa (no modo de duas palavras, quantos portoes por etapa). */
     palavrasPorEtapa: number;
     /** Um animal (sorteado, sem ligacao com o resultado) surge correndo, nadando ou voando ao lado do avatar a cada N palavras pegas. */
+    /** Forca do turbo: quantas vezes mais rapido o avatar corre ate o proximo portao ao segurar acelerar (1 = sem turbo). */
+    turboForca: number;
     animaisNaCorrida: boolean;
     /** De quantas em quantas palavras pegas o animal aparece. */
     animaisACada: number;
@@ -167,6 +169,9 @@ export const LIMITES = {
     /** Com duas palavras por portao cada portao usa duas palavras diferentes, entao o maximo e menor. */
     portoesMax: 24,
     textoMax: 600,
+    turboMin: 1,
+    turboMax: 3,
+    turboPadrao: 1.9,
     animaisACadaMin: 3,
     animaisACadaMax: 8,
     animaisACadaPadrao: 4,

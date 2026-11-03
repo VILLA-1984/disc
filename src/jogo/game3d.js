@@ -298,6 +298,10 @@ export function criarJogo3D(opcoes) {
     const cenario = ['rio', 'ar', 'neve', 'trilhos', 'espaco'].includes(opcoes.cenario) ? opcoes.cenario : 'rua'; // ver cenarios.js
     const cfg = CONFIG[modo];
     const velocidadeBase = reduzirMovimento ? VELOCIDADE.reduzida : VELOCIDADE.normal;
+    // Forca do turbo (quantas vezes a velocidade ao segurar acelerar): vem do painel da equipe; `?turbo=2.5` na URL serve
+    // para testar. Sem valor valido, vale o de sempre (1,9). Com "reduzir movimento" o efeito e menor.
+    const turboUrl = typeof location === 'undefined' ? 0 : Number(new URLSearchParams(location.search).get('turbo'));
+    const turboForca = Math.min(3, Math.max(1, turboUrl || opcoes.turboForca || 1.9));
 
     // ------------------------------------------------------------ renderizador
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -1272,7 +1276,7 @@ export function criarJogo3D(opcoes) {
         }
 
         // Segurando a tecla de acelerar a corrida fica bem mais rapida; o avatar ainda para no portao.
-        const turbo = acelerando ? (reduzirMovimento ? 1.5 : 1.9) : 1;
+        const turbo = acelerando ? (reduzirMovimento ? 1 + (turboForca - 1) * 0.55 : turboForca) : 1;
         let alvo = 0;
 
         if (estado === 'correndo' && portao) {

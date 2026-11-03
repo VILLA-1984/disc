@@ -26,6 +26,7 @@ Salva no banco e vale para a instalação onde foi feita (feira e Vercel **não*
 - Logo; cenários e meios liberados; avatares liberados (combinações impossíveis são recusadas).
 - Ranking, minimapa, barra de progresso e painel de totais.
 - Palavras por etapa (6 a 36) e modo das placas (ciclo ou pares).
+- **Força do turbo** (1 a 3 vezes a velocidade normal, padrão 1,9): quanto mais rápido o avatar chega ao próximo portão enquanto se segura acelerar. Com 1 o turbo não acelera. Parâmetro de teste: `?turbo=2.5` na URL.
 - Animais na corrida (liga e desliga, desligado por padrão) e de quantas em quantas palavras pegas eles aparecem (3 a 8, padrão 4) e por quantos segundos ficam na tela (2 a 8, padrão 3,6).
 - Títulos e textos de explicação (15 itens).
 

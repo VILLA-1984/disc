@@ -143,6 +143,25 @@ describe('validacao', () => {
         expect(r.ok && [r.config.animaisNaCorrida, r.config.animaisACada]).toEqual([false, LIMITES.animaisACadaPadrao]);
     });
 
+    it('a forca do turbo comeca em 1,9 e configuracoes antigas a recebem', () => {
+        expect(configuracaoPadrao().turboForca).toBe(LIMITES.turboPadrao);
+
+        const { turboForca: _t, ...antiga } = base();
+        const r = validar(antiga);
+
+        expect(r.ok && r.config.turboForca).toBe(LIMITES.turboPadrao);
+    });
+
+    it.each([0.9, 3.1, '2', Number.NaN, Infinity, null])('recusa a forca do turbo invalida (%s)', (valor) => {
+        expect(recusa({ ...base(), turboForca: valor })).toMatch(/Turbo/);
+    });
+
+    it.each([LIMITES.turboMin, 2.5, LIMITES.turboMax])('aceita a forca do turbo (%s)', (valor) => {
+        const r = validar({ ...base(), turboForca: valor });
+
+        expect(r.ok && r.config.turboForca).toBe(valor);
+    });
+
     it('o tempo do animal na tela comeca em 3,6 s e configuracoes antigas o recebem', () => {
         expect(configuracaoPadrao().animaisDuracao).toBe(LIMITES.animaisDuracaoPadrao);
 

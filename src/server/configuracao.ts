@@ -63,6 +63,7 @@ export function configuracaoPadrao(): Configuracao {
         mostrarProgresso: true,
         modoPlacas: process.env.RUA_MODO === 'pares' ? 'pares' : 'ciclo',
         palavrasPorEtapa: palavras,
+        turboForca: LIMITES.turboPadrao,
         animaisNaCorrida: false,
         animaisACada: LIMITES.animaisACadaPadrao,
         animaisDuracao: LIMITES.animaisDuracaoPadrao,
@@ -149,6 +150,15 @@ export function validar(entrada: unknown): Validacao {
         };
     }
 
+    // Sem o campo (configuracao salva antes desta opcao existir), vale o de fabrica.
+    const turboBruto = bruta.turboForca === undefined ? padrao.turboForca : bruta.turboForca;
+
+    if (typeof turboBruto !== 'number' || !Number.isFinite(turboBruto) || turboBruto < LIMITES.turboMin || turboBruto > LIMITES.turboMax) {
+        return { ok: false, erro: `Turbo: a força deve ficar entre ${LIMITES.turboMin} e ${LIMITES.turboMax} (1 é sem turbo).` };
+    }
+
+    const turboForca = Math.round(turboBruto * 10) / 10;
+
     // Sem o campo (configuracao salva antes desta opcao existir), valem os de fabrica.
     const animaisACada = bruta.animaisACada === undefined ? padrao.animaisACada : bruta.animaisACada;
 
@@ -208,6 +218,7 @@ export function validar(entrada: unknown): Validacao {
             mostrarProgresso: booleano(bruta.mostrarProgresso, padrao.mostrarProgresso),
             modoPlacas,
             palavrasPorEtapa: palavras,
+            turboForca,
             animaisNaCorrida: booleano(bruta.animaisNaCorrida, padrao.animaisNaCorrida),
             animaisACada,
             animaisDuracao,
