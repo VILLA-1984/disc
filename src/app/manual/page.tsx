@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import NavAdmin from '@/components/NavAdmin';
+import { adminAtivo, sessaoAdminValida } from '@/server/admin';
 
 export const metadata: Metadata = {
     title: 'Manual de uso · Teste de Perfil DISC',
@@ -202,111 +204,117 @@ const PERGUNTAS: { pergunta: string; resposta: React.ReactNode }[] = [
     },
 ];
 
-export default function Manual() {
+export default async function Manual() {
+    // A equipe logada ve a barra de navegacao; quem so le a pagina nao ve.
+    const equipe = adminAtivo() && (await sessaoAdminValida());
+
     return (
-        <main className="pagina manual">
-            <div className="cabecalho">
-                <h1>Manual de uso</h1>
-                <Link href="/">Escolher o evento</Link>
-            </div>
-
-            <p className="manual-intro">
-                O <strong>Teste de Perfil DISC</strong> é uma versão em jogo do teste comportamental DISC do SENAC-MT. A pessoa percorre um cenário (rua, rio, céu, neve, trilhos ou espaço) e, em cada portão, escolhe entre as palavras que aparecem. No fim, descobre o seu animal e, se quiser, recebe o resultado pelo WhatsApp, enviado pela equipe.
-            </p>
-
-            <nav className="manual-indice" aria-label="Neste manual">
-                <a href="#jogar">Para quem vai jogar</a>
-                <a href="#aplicar">Para quem aplica o teste</a>
-                <a href="#duvidas">Dúvidas frequentes</a>
-            </nav>
-
-            <h2 id="jogar">Para quem vai jogar</h2>
-
-            <ol className="manual-passos">
-                {PASSOS.map((passo) => (
-                    <li key={passo.imagem}>
-                        <h3>{passo.titulo}</h3>
-                        <div className="manual-passo">
-                            <figure>
-                                <img src={`/manual/${passo.imagem}`} alt={passo.legenda} loading="lazy" />
-                                <figcaption>{passo.legenda}</figcaption>
-                            </figure>
-                            <div className="manual-texto">{passo.texto}</div>
-                        </div>
-                    </li>
-                ))}
-            </ol>
-
-            <h2 id="aplicar">Para quem aplica o teste</h2>
-
-            <div className="manual-bloco">
-                <h3>Antes de usar com candidatos</h3>
-                <ul>
-                    <li>A lista de palavras ainda é um <strong>rascunho, não validado por profissional com formação em DISC</strong>. Revise palavra por palavra antes de aplicar em candidato real.</li>
-                    <li>O resultado é <strong>experimental</strong>: a escolha entre duas palavras não equivale à marcação livre de uma lista, então não deve ser tratado como o relatório oficial.</li>
-                    <li>Faça uma primeira rodada com pessoas da equipe para ver se as telas e as palavras fazem sentido.</li>
-                </ul>
-            </div>
-
-            <div className="manual-bloco">
-                <h3>A área da equipe</h3>
-                <ul>
-                    <li>Entre em <strong>/admin</strong> com o usuário e a senha da equipe. O <strong>Painel da equipe</strong> mostra um resumo (eventos ligados, resultados a enviar, pessoas sem cadastro) e um botão para cada área. Uma barra no alto, com menu sanduíche no celular, leva a todas elas: <strong>Início</strong>, <strong>Configurações</strong>, <strong>Eventos</strong>, <strong>Envio de resultados</strong>, o jogo e este manual.</li>
-                    <li><strong>Configurações</strong> (<strong>/admin/jogo</strong>): quais avatares, cenários e meios ficam liberados, o que aparece na tela (ranking, minimapa, barra de progresso), quantas palavras por etapa, se cada portão traz uma palavra e “Deixar passar” ou duas palavras, a logo e os textos.</li>
-                    <li><strong>Eventos</strong> (<strong>/eventos</strong>): crie cada evento, com o seu ranking, link, QR code e telão, e ligue ou desligue quando quiser.</li>
-                    <li><strong>Envio de resultados</strong> (<strong>/whatsapp</strong>): enviar o resultado pelo WhatsApp, descrito abaixo.</li>
-                    <li>No <strong>telão</strong> (<strong>/e/nome-do-evento/telao</strong>, sem login), acrescente <code>?intervalo=30</code> ao endereço para mudar de quanto em quanto tempo um animal ganha a tela (de 5 a 300 segundos; o padrão é 20).</li>
-                </ul>
-            </div>
-
-            <div className="manual-bloco">
-                <h3>Montar o estande (QR code para jogar no celular)</h3>
-                <ul>
-                    <li>No computador do estande, rode <code>npm run feira</code>. Ele compila o jogo e o deixa acessível a outros aparelhos da rede, na porta 3000.</li>
-                    <li>Entre na área da equipe (<code>http://localhost:3000/admin</code>), crie o evento em <strong>Eventos</strong> e abra o jogo dele nesse computador (<code>/e/nome-do-evento</code>). O QR code da abertura usa sozinho o endereço do computador na rede (por exemplo <code>http://192.168.0.20:3000/e/nome-do-evento</code>).</li>
-                    <li>Computador e celulares precisam estar na <strong>mesma rede Wi-Fi</strong>. Redes de eventos costumam isolar os aparelhos entre si: teste antes com um celular. Uma alternativa segura é levar um roteador próprio ou usar o ponto de acesso de um celular.</li>
-                    <li>Na primeira execução, o Windows pergunta se o Node.js pode receber conexões: permita na <strong>rede privada</strong>. Sem isso, o celular não consegue abrir o endereço.</li>
-                    <li>Se o jogo estiver hospedado na internet, defina <code>RUA_URL_PUBLICA</code> com o endereço real e o QR code passa a usá-lo.</li>
-                    <li>Se a rede mudar (outro Wi-Fi), o endereço muda: reabra a página do evento no computador para o QR code ser gerado de novo.</li>
-                </ul>
-            </div>
-
-            <div className="manual-bloco">
-                <h3>No dia da aplicação</h3>
-                <ul>
-                    <li>Use um navegador atual com WebGL (o jogo foi testado no Edge, no computador). O jogo aceita toque, mas teste antes no aparelho que será usado. Peça para ligar o som.</li>
-                    <li><strong>O jogo só abre dentro de um evento.</strong> Se alguém abrir o endereço principal, vê apenas a escolha dos eventos ligados. Crie e ligue o evento antes de começar.</li>
-                    <li>Para cada evento, crie-o em <strong>/eventos</strong>: ele ganha o seu link com QR code (<strong>/e/nome-do-evento</strong>), o seu ranking e uma tela de <strong>telão</strong> (<strong>/e/nome-do-evento/telao</strong>), que fica aberta mostrando o ranking e, de tempos em tempos, um animal em destaque com animação. Desligue o evento ao terminar.</li>
-                    <li>Deixe a tela <strong>/whatsapp</strong> aberta em um aparelho da equipe (entre com o mesmo usuário e senha do gerenciamento). Ela lista quem terminou o jogo; o botão <strong>Enviar pelo WhatsApp</strong> abre a conversa com a mensagem pronta e <strong>quem toca em Enviar é a equipe</strong>, na conta do aparelho usado. O WhatsApp não permite envio automático sem a API paga da Meta.</li>
-                    <li>Quem se cadastrou aparece em <strong>Com cadastro</strong>, com o botão de marcar como enviado. Quem jogou sem cadastro aparece em <strong>Sem cadastro</strong>, pelo ID, com uma barra que mostra quanto falta para o resultado ser apagado (5 minutos). Se a pessoa não quiser receber, use <strong>Descartar resultado</strong>.</li>
-                </ul>
-            </div>
-
-            <div className="manual-bloco">
-                <h3>Dados guardados</h3>
-                <ul>
-                    <li>Ficam salvos <strong>nome e WhatsApp</strong>, e só de quem escolhe receber o resultado, com as datas de cadastro e de correção, e o <strong>resumo do resultado</strong> (as porcentagens por fator, sem as palavras escolhidas) para a equipe enviar. O banco é o <strong>Turso</strong> (nuvem; é o que o Vercel usa) ou um SQLite embutido no servidor (<code>data/participantes.db</code>, o modo da feira).</li>
-                    <li>Quem joga sem cadastro não deixa registro de pessoa: guarda-se só o resumo do resultado e um ID, por <strong>5 minutos</strong>, e depois tudo é apagado. O número que a equipe digita para enviar a um anônimo <strong>nunca é gravado</strong>.</li>
-                    <li>O painel de totais do jogo usa um contador à parte: para cada partida concluída guarda só um <strong>código aleatório</strong> (para ela não contar duas vezes), o <strong>evento</strong> e o <strong>animal</strong> do resultado, com ou sem cadastro. Nada disso identifica alguém. A lista pública está em <code>/api/totais</code>.</li>
-                    <li>Para exportar os cadastros: <code>npm run exportar &gt; participantes.csv</code>.</li>
-                    <li>São dados pessoais (LGPD). Defina quem acessa o arquivo, por quanto tempo ele é mantido e faça backup da pasta <code>data</code> se os cadastros importarem.</li>
-                </ul>
-            </div>
-
-            <h2 id="duvidas">Dúvidas frequentes</h2>
-
-            <div className="manual-faq">
-                {PERGUNTAS.map((item) => (
-                    <details key={item.pergunta}>
-                        <summary>{item.pergunta}</summary>
-                        <p>{item.resposta}</p>
-                    </details>
-                ))}
-            </div>
-
-            <p className="manual-fim">
-                <Link className="botao" href="/">Escolher o evento e jogar</Link>
-            </p>
-        </main>
+        <>
+            {equipe && <NavAdmin />}
+            <main className="pagina manual">
+                <div className="cabecalho">
+                    <h1>Manual de uso</h1>
+                    <Link href="/">Escolher o evento</Link>
+                </div>
+    
+                <p className="manual-intro">
+                    O <strong>Teste de Perfil DISC</strong> é uma versão em jogo do teste comportamental DISC do SENAC-MT. A pessoa percorre um cenário (rua, rio, céu, neve, trilhos ou espaço) e, em cada portão, escolhe entre as palavras que aparecem. No fim, descobre o seu animal e, se quiser, recebe o resultado pelo WhatsApp, enviado pela equipe.
+                </p>
+    
+                <nav className="manual-indice" aria-label="Neste manual">
+                    <a href="#jogar">Para quem vai jogar</a>
+                    <a href="#aplicar">Para quem aplica o teste</a>
+                    <a href="#duvidas">Dúvidas frequentes</a>
+                </nav>
+    
+                <h2 id="jogar">Para quem vai jogar</h2>
+    
+                <ol className="manual-passos">
+                    {PASSOS.map((passo) => (
+                        <li key={passo.imagem}>
+                            <h3>{passo.titulo}</h3>
+                            <div className="manual-passo">
+                                <figure>
+                                    <img src={`/manual/${passo.imagem}`} alt={passo.legenda} loading="lazy" />
+                                    <figcaption>{passo.legenda}</figcaption>
+                                </figure>
+                                <div className="manual-texto">{passo.texto}</div>
+                            </div>
+                        </li>
+                    ))}
+                </ol>
+    
+                <h2 id="aplicar">Para quem aplica o teste</h2>
+    
+                <div className="manual-bloco">
+                    <h3>Antes de usar com candidatos</h3>
+                    <ul>
+                        <li>A lista de palavras ainda é um <strong>rascunho, não validado por profissional com formação em DISC</strong>. Revise palavra por palavra antes de aplicar em candidato real.</li>
+                        <li>O resultado é <strong>experimental</strong>: a escolha entre duas palavras não equivale à marcação livre de uma lista, então não deve ser tratado como o relatório oficial.</li>
+                        <li>Faça uma primeira rodada com pessoas da equipe para ver se as telas e as palavras fazem sentido.</li>
+                    </ul>
+                </div>
+    
+                <div className="manual-bloco">
+                    <h3>A área da equipe</h3>
+                    <ul>
+                        <li>Entre em <strong>/admin</strong> com o usuário e a senha da equipe. O <strong>Painel da equipe</strong> mostra um resumo (eventos ligados, resultados a enviar, pessoas sem cadastro) e um botão para cada área. Uma barra no alto, com menu sanduíche no celular, leva a todas elas: <strong>Início</strong>, <strong>Configurações</strong>, <strong>Eventos</strong>, <strong>Envio de resultados</strong>, o jogo e este manual.</li>
+                        <li><strong>Configurações</strong> (<strong>/admin/jogo</strong>): quais avatares, cenários e meios ficam liberados, o que aparece na tela (ranking, minimapa, barra de progresso), quantas palavras por etapa, se cada portão traz uma palavra e “Deixar passar” ou duas palavras, a logo e os textos.</li>
+                        <li><strong>Eventos</strong> (<strong>/eventos</strong>): crie cada evento, com o seu ranking, link, QR code e telão, e ligue ou desligue quando quiser.</li>
+                        <li><strong>Envio de resultados</strong> (<strong>/whatsapp</strong>): enviar o resultado pelo WhatsApp, descrito abaixo.</li>
+                        <li>No <strong>telão</strong> (<strong>/e/nome-do-evento/telao</strong>, sem login), acrescente <code>?intervalo=30</code> ao endereço para mudar de quanto em quanto tempo um animal ganha a tela (de 5 a 300 segundos; o padrão é 20).</li>
+                    </ul>
+                </div>
+    
+                <div className="manual-bloco">
+                    <h3>Montar o estande (QR code para jogar no celular)</h3>
+                    <ul>
+                        <li>No computador do estande, rode <code>npm run feira</code>. Ele compila o jogo e o deixa acessível a outros aparelhos da rede, na porta 3000.</li>
+                        <li>Entre na área da equipe (<code>http://localhost:3000/admin</code>), crie o evento em <strong>Eventos</strong> e abra o jogo dele nesse computador (<code>/e/nome-do-evento</code>). O QR code da abertura usa sozinho o endereço do computador na rede (por exemplo <code>http://192.168.0.20:3000/e/nome-do-evento</code>).</li>
+                        <li>Computador e celulares precisam estar na <strong>mesma rede Wi-Fi</strong>. Redes de eventos costumam isolar os aparelhos entre si: teste antes com um celular. Uma alternativa segura é levar um roteador próprio ou usar o ponto de acesso de um celular.</li>
+                        <li>Na primeira execução, o Windows pergunta se o Node.js pode receber conexões: permita na <strong>rede privada</strong>. Sem isso, o celular não consegue abrir o endereço.</li>
+                        <li>Se o jogo estiver hospedado na internet, defina <code>RUA_URL_PUBLICA</code> com o endereço real e o QR code passa a usá-lo.</li>
+                        <li>Se a rede mudar (outro Wi-Fi), o endereço muda: reabra a página do evento no computador para o QR code ser gerado de novo.</li>
+                    </ul>
+                </div>
+    
+                <div className="manual-bloco">
+                    <h3>No dia da aplicação</h3>
+                    <ul>
+                        <li>Use um navegador atual com WebGL (o jogo foi testado no Edge, no computador). O jogo aceita toque, mas teste antes no aparelho que será usado. Peça para ligar o som.</li>
+                        <li><strong>O jogo só abre dentro de um evento.</strong> Se alguém abrir o endereço principal, vê apenas a escolha dos eventos ligados. Crie e ligue o evento antes de começar.</li>
+                        <li>Para cada evento, crie-o em <strong>/eventos</strong>: ele ganha o seu link com QR code (<strong>/e/nome-do-evento</strong>), o seu ranking e uma tela de <strong>telão</strong> (<strong>/e/nome-do-evento/telao</strong>), que fica aberta mostrando o ranking e, de tempos em tempos, um animal em destaque com animação. Desligue o evento ao terminar.</li>
+                        <li>Deixe a tela <strong>/whatsapp</strong> aberta em um aparelho da equipe (entre com o mesmo usuário e senha do gerenciamento). Ela lista quem terminou o jogo; o botão <strong>Enviar pelo WhatsApp</strong> abre a conversa com a mensagem pronta e <strong>quem toca em Enviar é a equipe</strong>, na conta do aparelho usado. O WhatsApp não permite envio automático sem a API paga da Meta.</li>
+                        <li>Quem se cadastrou aparece em <strong>Com cadastro</strong>, com o botão de marcar como enviado. Quem jogou sem cadastro aparece em <strong>Sem cadastro</strong>, pelo ID, com uma barra que mostra quanto falta para o resultado ser apagado (5 minutos). Se a pessoa não quiser receber, use <strong>Descartar resultado</strong>.</li>
+                    </ul>
+                </div>
+    
+                <div className="manual-bloco">
+                    <h3>Dados guardados</h3>
+                    <ul>
+                        <li>Ficam salvos <strong>nome e WhatsApp</strong>, e só de quem escolhe receber o resultado, com as datas de cadastro e de correção, e o <strong>resumo do resultado</strong> (as porcentagens por fator, sem as palavras escolhidas) para a equipe enviar. O banco é o <strong>Turso</strong> (nuvem; é o que o Vercel usa) ou um SQLite embutido no servidor (<code>data/participantes.db</code>, o modo da feira).</li>
+                        <li>Quem joga sem cadastro não deixa registro de pessoa: guarda-se só o resumo do resultado e um ID, por <strong>5 minutos</strong>, e depois tudo é apagado. O número que a equipe digita para enviar a um anônimo <strong>nunca é gravado</strong>.</li>
+                        <li>O painel de totais do jogo usa um contador à parte: para cada partida concluída guarda só um <strong>código aleatório</strong> (para ela não contar duas vezes), o <strong>evento</strong> e o <strong>animal</strong> do resultado, com ou sem cadastro. Nada disso identifica alguém. A lista pública está em <code>/api/totais</code>.</li>
+                        <li>Para exportar os cadastros: <code>npm run exportar &gt; participantes.csv</code>.</li>
+                        <li>São dados pessoais (LGPD). Defina quem acessa o arquivo, por quanto tempo ele é mantido e faça backup da pasta <code>data</code> se os cadastros importarem.</li>
+                    </ul>
+                </div>
+    
+                <h2 id="duvidas">Dúvidas frequentes</h2>
+    
+                <div className="manual-faq">
+                    {PERGUNTAS.map((item) => (
+                        <details key={item.pergunta}>
+                            <summary>{item.pergunta}</summary>
+                            <p>{item.resposta}</p>
+                        </details>
+                    ))}
+                </div>
+    
+                <p className="manual-fim">
+                    <Link className="botao" href="/">Escolher o evento e jogar</Link>
+                </p>
+            </main>
+        </>
     );
 }
