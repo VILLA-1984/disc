@@ -87,7 +87,8 @@ def parte(obj, osso, mat, suave=True):
     bpy.context.view_layer.objects.active = obj
     obj.select_set(True)
     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-    obj.data.materials.append(mat)
+    if mat is not None:
+        obj.data.materials.append(mat)
 
     if suave:
         bpy.ops.object.shade_smooth()
@@ -129,8 +130,8 @@ def cilindro(osso, mat, de, ate, r1, r2):
 
 # Tronco: um volume organico unico, feito de "metabolas" (blobs que se fundem): peito, ombros, barriga e quadril/coxas.
 mb = bpy.data.metaballs.new('Tronco')
-mb.resolution = 0.045
-mb.render_resolution = 0.045
+mb.resolution = 0.034
+mb.render_resolution = 0.034
 mb.threshold = 0.6
 tronco_obj = bpy.data.objects.new('Tronco', mb)
 cena.collection.objects.link(tronco_obj)
@@ -160,11 +161,28 @@ malha_tronco = bpy.data.meshes.new_from_object(avaliado)
 bpy.data.objects.remove(tronco_obj)
 tronco_obj = bpy.data.objects.new('Tronco', malha_tronco)
 cena.collection.objects.link(tronco_obj)
-parte(tronco_obj, 'raiz', LARANJA)
+
+# Pintura do pelo: as listras e a barriga clara sao FACES do proprio tronco (nao pecas extras), entao acompanham o corpo.
+for m in (LARANJA, LISTRA, CLARO):
+    tronco_obj.data.materials.append(m)
+
+for poligono in tronco_obj.data.polygons:
+    x, y, z = poligono.center
+    indice = 0
+
+    if z < 0.385 and -0.28 < y < 0.12:
+        indice = 2  # barriga e peito claros
+    elif z > 0.37 and -0.2 < y < 0.34:
+        # Listras inclinadas, que descem pelos flancos e passam pelo dorso (tambem se veem de tras).
+        fase = ((y + 0.2 - 0.32 * (0.5 - z)) / 0.095) % 1.0
+
+        if fase < 0.42:
+            indice = 1
+
+    poligono.material_index = indice
+
+parte(tronco_obj, 'raiz', None)
 print('triangulos do tronco:', sum(len(p.vertices) - 2 for p in tronco_obj.data.polygons))
-esfera('raiz', CLARO, (0, -0.2, 0.355), (0.075, 0.12, 0.06))  # peito claro
-for y in (-0.06, 0.08, 0.2):  # listras do dorso
-    esfera('raiz', LISTRA, (0, y, 0.545), (0.1, 0.022, 0.026), seg=10, aneis=6)
 
 # Cabeca: larga, focinho curto, bochechas, olhos grandes e orelhas pontudas.
 esfera('cabeca', LARANJA, (0, -0.395, 0.52), (0.135, 0.12, 0.115))
@@ -177,19 +195,27 @@ for lado in (-1, 1):
 esfera('cabeca', CLARO, (0, -0.505, 0.485), (0.065, 0.045, 0.045))  # focinho
 esfera('cabeca', ROSA, (0, -0.545, 0.5), (0.02, 0.012, 0.014), seg=8, aneis=6)  # nariz
 
+for lado in (-1, 1):
+    for k in range(3):  # bigodes
+        cilindro('cabeca', CLARO, (lado * 0.045, -0.52, 0.49 + k * 0.014), (lado * 0.17, -0.47, 0.50 + (k - 1) * 0.035), 0.004, 0.0015)
+
+for dx, dy in ((0.0, 0.0), (-0.035, 0.012), (0.035, 0.012)):  # marca em "M" na testa
+    esfera('cabeca', LISTRA, (dx, -0.455 - dy, 0.618), (0.012, 0.03, 0.008), seg=8, aneis=5)
+
 # Cauda comprida e levantada; a ponta e escura.
 cauda = [('cauda1', (0, 0.28, 0.46), (0, 0.38, 0.52)), ('cauda2', (0, 0.38, 0.52), (0, 0.45, 0.60)),
          ('cauda3', (0, 0.45, 0.60), (0, 0.49, 0.69)), ('cauda4', (0, 0.49, 0.69), (0, 0.49, 0.78))]
 for i, (osso, de, ate) in enumerate(cauda):
-    cilindro(osso, LISTRA if i == 3 else LARANJA, de, ate, 0.036 - i * 0.003, 0.033 - i * 0.003)
-    esfera(osso, LISTRA if i == 3 else LARANJA, ate, (0.032 - i * 0.003,) * 3, seg=8, aneis=6)
+    cor = LISTRA if i % 2 == 1 or i == 3 else LARANJA
+    cilindro(osso, cor, de, ate, 0.05 - i * 0.006, 0.044 - i * 0.006)
+    esfera(osso, cor, ate, (0.044 - i * 0.006,) * 3, seg=8, aneis=6)
 
 # Patas: coxa, canela e uma pata clara e arredondada.
 for nome, (x, y, zq, zj, zp) in PATAS.items():
     yj = y + (0.015 if nome[0] == 't' else 0.0)
-    cilindro(f'{nome}_cima', LARANJA, (x, y, zq), (x, yj, zj), 0.058 if nome[0] == 't' else 0.05, 0.04)
-    cilindro(f'{nome}_baixo', LARANJA, (x, yj, zj), (x, y, zp + 0.02), 0.04, 0.03)
-    esfera(f'{nome}_baixo', CLARO, (x, y - 0.012, zp), (0.04, 0.06, 0.032), seg=10, aneis=7)
+    cilindro(f'{nome}_cima', LARANJA, (x, y, zq), (x, yj, zj), 0.07 if nome[0] == 't' else 0.06, 0.045)
+    cilindro(f'{nome}_baixo', LARANJA, (x, yj, zj), (x, y, zp + 0.02), 0.046, 0.034)
+    esfera(f'{nome}_baixo', CLARO, (x, y - 0.012, zp), (0.05, 0.072, 0.036), seg=10, aneis=7)
 
 # ------------------------------------------------------------------ junta tudo em uma malha so
 for o in partes:
