@@ -763,7 +763,7 @@ const ALTURA_HUMANO = 1.78;
 
 /** O modelo so serve a quem anda a pe ou usa cadeira de rodas na rua (nos outros cenarios e meios vale o avatar de formas simples). */
 function usaModelo(spec) {
-    return Boolean(spec.modelo) && modelosLigados() && ['anda', 'cadeira'].includes(spec.mobilidade ?? 'anda')
+    return Boolean(spec.modelo) && modelosLigados() && ['anda', 'cadeira', 'bengala'].includes(spec.mobilidade ?? 'anda')
         && !spec.semModelo && !spec.noBarco && !spec.nadando && !spec.bombeando;
 }
 
@@ -825,8 +825,23 @@ export function criarAvatar3D(spec) {
         }
 
         // Acessorios (cadeira de rodas, bengala...): ja vem alinhados com o personagem, entram junto dele.
-        for (const arquivo of spec.acessorios ?? []) {
-            new GLTFLoader().loadAsync(arquivo).then((acessorio) => { humano.add(acessorio.scene); }).catch(() => undefined);
+        // Pode ser so o arquivo ou {arquivo, osso, posicao, rotacao}: com `osso` a peca acompanha o osso (ex.: a bengala na mao).
+        for (const item of spec.acessorios ?? []) {
+            const { arquivo, osso, posicao, rotacao } = typeof item === 'string' ? { arquivo: item } : item;
+
+            new GLTFLoader().loadAsync(arquivo).then((acessorio) => {
+                const peca = acessorio.scene;
+
+                if (posicao) {
+                    peca.position.set(...posicao);
+                }
+
+                if (rotacao) {
+                    peca.rotation.set(...rotacao);
+                }
+
+                (osso ? humano.getObjectByName(osso) ?? humano : humano).add(peca);
+            }).catch(() => undefined);
         }
 
         base.grupo.children.forEach((c) => { c.visible = false; });

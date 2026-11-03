@@ -88,6 +88,8 @@ export function montar(raiz, api) {
 
     // Configuracao da area de gerenciamento (so o Next.js a envia): o que esta liberado e visivel, e os textos.
     const config = api.config ?? null;
+    // Nome do avatar na tela de escolha: o que a equipe definiu no painel ou o original.
+    const nomeAvatar = (a) => config?.nomesAvatares?.[a.id] ?? a.nome;
     const avataresLivres = (() => {
         // `?humanos=1` na URL mostra o bloco de humanos mesmo que o evento ainda nao o tenha liberado (para testar).
         const forcar = new URLSearchParams(location.search);
@@ -397,8 +399,8 @@ export function montar(raiz, api) {
         const retratos = gerarRetratos(avataresLivres, { largura: 220, altura: 280 });
         const opcaoDeAvatar = (a) => `
                     <button type="button" class="avatar-op" role="radio" aria-checked="${a.id === avatarId}" data-id="${a.id}" ${avatarCabe(a, cenario, meio) ? '' : 'disabled'}>
-                        ${a.retrato ? `<img src="${a.retrato}" alt="" loading="lazy">` : (retratos.get(a.id) ? `<img src="${retratos.get(a.id)}" alt="">` : `<span class="avatar-ini" style="background:${a.roupa}">${a.nome[0]}</span>`)}
-                        <span>${a.nome}</span>
+                        ${a.retrato ? `<img src="${a.retrato}" alt="" loading="lazy">` : (retratos.get(a.id) ? `<img src="${retratos.get(a.id)}" alt="">` : `<span class="avatar-ini" style="background:${a.roupa}">${escapar(nomeAvatar(a)[0])}</span>`)}
+                        <span>${escapar(nomeAvatar(a))}</span>
                     </button>`;
 
         mostrarCartao({

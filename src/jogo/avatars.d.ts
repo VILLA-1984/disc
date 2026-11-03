@@ -6,3 +6,5 @@ export type EspecificacaoAvatar = {
 };
 
 export const AVATARES: EspecificacaoAvatar[];
+
+export function gerarRetratos(specs: EspecificacaoAvatar[], opcoes?: { largura?: number; altura?: number }): Map<string, string>;

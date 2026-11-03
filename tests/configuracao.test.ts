@@ -143,6 +143,30 @@ describe('validacao', () => {
         expect(r.ok && [r.config.animaisNaCorrida, r.config.animaisACada]).toEqual([false, LIMITES.animaisACadaPadrao]);
     });
 
+    it('os nomes dos avatares comecam sem troca e configuracoes antigas ficam com os nomes originais', () => {
+        expect(configuracaoPadrao().nomesAvatares).toEqual({});
+
+        const { nomesAvatares: _n, ...antiga } = base();
+        const r = validar(antiga);
+
+        expect(r.ok && r.config.nomesAvatares).toEqual({});
+    });
+
+    it('guarda os nomes trocados (sem espacos sobrando e no tamanho maximo) e descarta ids desconhecidos e nomes vazios', () => {
+        const longo = 'x'.repeat(LIMITES.nomeAvatarMax + 10);
+        const r = validar({ ...base(), nomesAvatares: { ana: '  Aninha   Silva ', bruno: '   ', inexistente: 'Fulano', carla: longo, davi: 42 } });
+
+        expect(r.ok && r.config.nomesAvatares).toEqual({ ana: 'Aninha Silva', carla: 'x'.repeat(LIMITES.nomeAvatarMax) });
+    });
+
+    it('o catalogo traz o grupo e o retrato de cada avatar para o painel', () => {
+        const ana = montarCatalogo().avatares.find((a) => a.id === 'humano-ana');
+        const comum = montarCatalogo().avatares.find((a) => a.id === 'ana');
+
+        expect(ana).toMatchObject({ nome: 'Ana', grupo: 'humanos', retrato: '/modelos/avatares/ana.png' });
+        expect(comum).toMatchObject({ grupo: null, retrato: null });
+    });
+
     it('a forca do turbo comeca em 1,9 e configuracoes antigas a recebem', () => {
         expect(configuracaoPadrao().turboForca).toBe(LIMITES.turboPadrao);
 

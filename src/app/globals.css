@@ -332,6 +332,14 @@ body {
 .admin-opcao span { display: grid; gap: 1px; }
 .admin-opcao strong { font-size: 0.95rem; color: var(--texto); }
 .admin-opcao small { color: var(--suave); font-size: 0.8rem; }
+.admin-grade-avatares { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.admin-avatar { align-items: center; cursor: default; }
+.admin-avatar-icone { width: 46px; height: 58px; object-fit: contain; flex: none; border-radius: 8px; background: #f3f7fc; }
+.admin-avatar-icone.vazio { display: grid; place-items: center; font-weight: 700; color: var(--suave); }
+.admin-avatar > span { flex: 1; min-width: 0; }
+.admin-avatar .admin-avatar-nome { width: 100%; height: auto; margin: 0; accent-color: auto; box-sizing: border-box; font: inherit; font-weight: 700; font-size: 0.95rem; padding: 3px 6px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--texto); }
+.admin-avatar .admin-avatar-nome:hover, .admin-avatar .admin-avatar-nome:focus { border-color: var(--azul); background: #fff; outline: none; }
+.admin-avatar .admin-avatar-nome::placeholder { color: var(--texto); opacity: 1; }
 
 .admin-cenario { padding: 12px 0; border-top: 1px solid var(--borda); }
 .admin-cenario:first-of-type { border-top: 0; padding-top: 0; }

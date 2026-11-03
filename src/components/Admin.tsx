@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { LIMITES, type ChaveTexto, type Configuracao, type TextoDefinicao } from '@/lib/configuracao';
 import type { Catalogo } from '@/server/configuracao';
 import AdminLogo from './AdminLogo';
@@ -35,8 +35,41 @@ export default function Admin({ configInicial, catalogo, textos, escolhaLogo, ve
 
     const alterado = JSON.stringify(config) !== JSON.stringify(salvo);
 
+    // Icones dos avatares de formas simples: desenhados no navegador (o mesmo desenho da tela de escolha do jogo).
+    const [icones, setIcones] = useState<Record<string, string>>({});
+
+    useEffect(() => {
+        let ativo = true;
+
+        import('@/jogo/avatars.js').then(({ AVATARES, gerarRetratos }) => {
+            if (!ativo) {
+                return;
+            }
+
+            const mapa = gerarRetratos(AVATARES.filter((a) => !a.retrato), { largura: 110, altura: 140 });
+            setIcones(Object.fromEntries(mapa));
+        }).catch(() => undefined);
+
+        return () => { ativo = false; };
+    }, []);
+
     function alternar(lista: Lista, id: string) {
         setConfig((atual) => ({ ...atual, [lista]: atual[lista].includes(id) ? atual[lista].filter((x) => x !== id) : [...atual[lista], id] }));
+        setMensagem(null);
+    }
+
+    function definirNomeAvatar(id: string, nome: string) {
+        setConfig((atual) => {
+            const nomes = { ...atual.nomesAvatares };
+
+            if (nome.trim() === '') {
+                delete nomes[id];
+            } else {
+                nomes[id] = nome;
+            }
+
+            return { ...atual, nomesAvatares: nomes };
+        });
         setMensagem(null);
     }
 
@@ -267,15 +300,31 @@ export default function Admin({ configInicial, catalogo, textos, escolhaLogo, ve
                     <button type="button" className="admin-link" onClick={() => definirLista('avatares', [])}>Desmarcar todos</button>
                 </div>
 
-                <div className="admin-grade">
+                <p>Cada avatar tem o ícone e um campo para <strong>trocar o nome</strong> que aparece na escolha (deixe em branco para manter o original).</p>
+
+                <div className="admin-grade admin-grade-avatares">
                     {catalogo.avatares.map((avatar) => {
                         const ligado = config.avatares.includes(avatar.id);
+                        const icone = avatar.retrato ?? icones[avatar.id];
+                        const bloco = avatar.grupo === 'humanos' ? 'humano 3D' : (avatar.grupo === 'cartun' ? 'cartun' : null);
 
                         return (
-                            <label key={avatar.id} className={`admin-opcao${ligado ? ' marcada' : ''}`}>
-                                <input type="checkbox" checked={ligado} onChange={() => alternar('avatares', avatar.id)} />
-                                <span><strong>{avatar.nome}</strong><small>{ROTULO_MOBILIDADE[avatar.mobilidade] ?? avatar.mobilidade}</small></span>
-                            </label>
+                            <div key={avatar.id} className={`admin-opcao admin-avatar${ligado ? ' marcada' : ''}`}>
+                                <input type="checkbox" checked={ligado} aria-label={`Liberar ${config.nomesAvatares[avatar.id] ?? avatar.nome}`} onChange={() => alternar('avatares', avatar.id)} />
+                                {icone ? <img className="admin-avatar-icone" src={icone} alt="" /> : <span className="admin-avatar-icone vazio" aria-hidden="true">{avatar.nome[0]}</span>}
+                                <span>
+                                    <input
+                                        type="text"
+                                        className="admin-avatar-nome"
+                                        value={config.nomesAvatares[avatar.id] ?? ''}
+                                        placeholder={avatar.nome}
+                                        maxLength={LIMITES.nomeAvatarMax}
+                                        aria-label={`Nome de ${avatar.nome} na escolha de avatar`}
+                                        onChange={(e) => definirNomeAvatar(avatar.id, e.target.value)}
+                                    />
+                                    <small>{[ROTULO_MOBILIDADE[avatar.mobilidade] ?? avatar.mobilidade, bloco].filter(Boolean).join(' · ')}</small>
+                                </span>
+                            </div>
                         );
                     })}
                 </div>

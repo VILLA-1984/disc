@@ -135,6 +135,8 @@ export type TextoPersonalizado = { texto?: string; mostrar?: boolean };
 export type Configuracao = {
     /** Avatares liberados (ids). */
     avatares: string[];
+    /** Nome de cada avatar na tela de escolha, quando a equipe troca o original (id -> nome). Ausente = nome original. */
+    nomesAvatares: Record<string, string>;
     /** Cenarios liberados (chaves: rua, rio, ar, neve, trilhos). */
     cenarios: string[];
     /** Meios de locomocao liberados (chaves: barco, veleiro, aviao, ...). */
@@ -169,6 +171,7 @@ export const LIMITES = {
     /** Com duas palavras por portao cada portao usa duas palavras diferentes, entao o maximo e menor. */
     portoesMax: 24,
     textoMax: 600,
+    nomeAvatarMax: 24,
     turboMin: 1,
     turboMax: 3,
     turboPadrao: 1.9,

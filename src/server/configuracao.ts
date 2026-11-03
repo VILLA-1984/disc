@@ -11,7 +11,7 @@ import { gravarConfiguracao, lerConfiguracao } from './db';
 const CHAVE = 'jogo';
 
 export type Catalogo = {
-    avatares: { id: string; nome: string; mobilidade: string }[];
+    avatares: { id: string; nome: string; mobilidade: string; grupo: string | null; retrato: string | null }[];
     cenarios: { chave: string; nome: string; descricao: string; temMeios: boolean; avatares: string[] }[];
     meios: { chave: string; cenario: string; nome: string; descricao: string; avatares: string[] }[];
 };
@@ -27,7 +27,7 @@ const compativeis = (aceita: (mobilidade: string) => boolean) => ID_AVATARES.fil
 /** Tudo o que existe no jogo, para a tela de gerenciamento listar e avisar de combinacoes impossiveis. */
 export function montarCatalogo(): Catalogo {
     return {
-        avatares: AVATARES.map((a) => ({ id: a.id, nome: a.grupo === 'humanos' ? `${a.nome} (humano 3D)` : a.grupo === 'cartun' ? `${a.nome} (cartun)` : a.nome, mobilidade: a.mobilidade ?? 'anda' })),
+        avatares: AVATARES.map((a) => ({ id: a.id, nome: a.nome, mobilidade: a.mobilidade ?? 'anda', grupo: (a.grupo as string | undefined) ?? null, retrato: (a.retrato as string | undefined) ?? null })),
         cenarios: CHAVES_CENARIOS.map((chave) => ({
             chave,
             nome: CENARIOS[chave].nome,
@@ -54,6 +54,7 @@ export function configuracaoPadrao(): Configuracao {
 
     return {
         avatares: [...ID_AVATARES],
+        nomesAvatares: {},
         cenarios: [...CHAVES_CENARIOS],
         meios: [...CHAVES_MEIOS],
         mostrarTotais: true,
@@ -94,6 +95,17 @@ export function validar(entrada: unknown): Validacao {
     const padrao = configuracaoPadrao();
     const avatares = filtrar(bruta.avatares, ID_AVATARES);
     const cenarios = filtrar(bruta.cenarios, CHAVES_CENARIOS);
+    const nomesAvatares: Record<string, string> = {};
+
+    if (typeof bruta.nomesAvatares === 'object' && bruta.nomesAvatares !== null) {
+        for (const [id, valor] of Object.entries(bruta.nomesAvatares as Record<string, unknown>)) {
+            const nome = typeof valor === 'string' ? valor.replace(/\s+/g, ' ').trim().slice(0, LIMITES.nomeAvatarMax) : '';
+
+            if (ID_AVATARES.includes(id) && nome !== '') {
+                nomesAvatares[id] = nome;
+            }
+        }
+    }
     const meios = filtrar(bruta.meios, CHAVES_MEIOS);
 
     if (avatares.length === 0) {
@@ -209,6 +221,7 @@ export function validar(entrada: unknown): Validacao {
         ok: true,
         config: {
             avatares,
+            nomesAvatares,
             cenarios,
             meios,
             mostrarTotais: booleano(bruta.mostrarTotais, padrao.mostrarTotais),
