@@ -27,12 +27,16 @@ afterAll(() => {
 });
 
 describe('configuracao de fabrica', () => {
-    it('libera tudo, mostra tudo e comeca em 12 palavras por etapa', () => {
+    it('e a configuracao que a equipe deixou aplicada: 15 palavras, duas por portao, turbo 2,5 e animais ligados', () => {
         const padrao = configuracaoPadrao();
         const catalogo = montarCatalogo();
 
-        expect(padrao.palavrasPorEtapa).toBe(12);
-        expect(padrao.avatares).toHaveLength(catalogo.avatares.length);
+        expect(padrao.palavrasPorEtapa).toBe(15);
+        expect(padrao.modoPlacas).toBe('pares');
+        expect([padrao.turboForca, padrao.animaisNaCorrida, padrao.animaisACada, padrao.animaisDuracao]).toEqual([2.5, true, 3, 4.5]);
+        // todos os avatares, menos o humano 3D (Ana), que a equipe marca no painel quando quiser
+        expect(padrao.avatares).toEqual(catalogo.avatares.map((a) => a.id).filter((id) => id !== 'humano-ana'));
+        expect(padrao.nomesAvatares).toEqual({ 'cartun-eva': 'Leidy' });
         expect(padrao.cenarios).toEqual(catalogo.cenarios.map((c) => c.chave));
         expect(padrao.meios).toEqual(catalogo.meios.map((m) => m.chave));
         expect([padrao.mostrarTotais, padrao.mostrarRanking, padrao.mostrarMinimapa, padrao.mostrarProgresso]).toEqual([true, true, true, true]);
@@ -130,21 +134,21 @@ describe('validacao', () => {
         expect(r.ok).toBe(true);
     });
 
-    it('os animais na corrida comecam desligados, a cada 4 palavras', () => {
+    it('os animais na corrida comecam ligados, a cada 3 palavras', () => {
         const padrao = configuracaoPadrao();
 
-        expect([padrao.animaisNaCorrida, padrao.animaisACada]).toEqual([false, LIMITES.animaisACadaPadrao]);
+        expect([padrao.animaisNaCorrida, padrao.animaisACada]).toEqual([true, LIMITES.animaisACadaPadrao]);
     });
 
     it('configuracao salva antes dos animais continua valida e usa os de fabrica', () => {
         const { animaisNaCorrida: _a, animaisACada: _b, ...antiga } = base();
         const r = validar(antiga);
 
-        expect(r.ok && [r.config.animaisNaCorrida, r.config.animaisACada]).toEqual([false, LIMITES.animaisACadaPadrao]);
+        expect(r.ok && [r.config.animaisNaCorrida, r.config.animaisACada]).toEqual([true, LIMITES.animaisACadaPadrao]);
     });
 
-    it('os nomes dos avatares comecam sem troca e configuracoes antigas ficam com os nomes originais', () => {
-        expect(configuracaoPadrao().nomesAvatares).toEqual({});
+    it('os nomes dos avatares comecam com a troca da fabrica e configuracoes antigas ficam com os nomes originais', () => {
+        expect(configuracaoPadrao().nomesAvatares).toEqual({ 'cartun-eva': 'Leidy' });
 
         const { nomesAvatares: _n, ...antiga } = base();
         const r = validar(antiga);
@@ -223,24 +227,24 @@ describe('validacao', () => {
     });
 
     it.each([5, 37, 12.5, '12', Number.NaN, null])('recusa palavras por etapa invalidas (%s)', (valor) => {
-        expect(recusa({ ...base(), palavrasPorEtapa: valor })).toMatch(/Palavras por etapa/);
+        expect(recusa({ ...base(), modoPlacas: 'ciclo', palavrasPorEtapa: valor })).toMatch(/Palavras por etapa/);
     });
 
     it.each([LIMITES.palavrasMin, 12, LIMITES.palavrasMax])('aceita palavras por etapa dentro do limite (%i)', (valor) => {
-        const r = validar({ ...base(), palavrasPorEtapa: valor });
+        const r = validar({ ...base(), modoPlacas: 'ciclo', palavrasPorEtapa: valor });
 
         expect(r.ok && r.config.palavrasPorEtapa).toBe(valor);
     });
 
-    it('o modo das placas e ciclo por padrao e aceita so ciclo ou pares', () => {
-        expect(configuracaoPadrao().modoPlacas).toBe('ciclo');
+    it('o modo das placas e pares por padrao e aceita so ciclo ou pares', () => {
+        expect(configuracaoPadrao().modoPlacas).toBe('pares');
         // configuracao salva antes da opcao existir (sem o campo) continua valendo, no modo de fabrica
-        expect(validar(base()).ok && (validar(base()) as { config: { modoPlacas: string } }).config.modoPlacas).toBe('ciclo');
+        expect(validar(base()).ok && (validar(base()) as { config: { modoPlacas: string } }).config.modoPlacas).toBe('pares');
         expect(recusa({ ...base(), modoPlacas: 'misto' })).toMatch(/Placas dos portões/);
 
-        const r = validar({ ...base(), modoPlacas: 'pares' });
+        const r = validar({ ...base(), modoPlacas: 'ciclo' });
 
-        expect(r.ok && r.config.modoPlacas).toBe('pares');
+        expect(r.ok && r.config.modoPlacas).toBe('ciclo');
     });
 
     it('com duas palavras por portao o maximo por etapa e menor', () => {
@@ -278,7 +282,7 @@ describe('validacao', () => {
         try {
             expect(configuracaoPadrao().palavrasPorEtapa).toBe(20);
             process.env.RUA_ESCOLHER = '99';
-            expect(configuracaoPadrao().palavrasPorEtapa).toBe(12);
+            expect(configuracaoPadrao().palavrasPorEtapa).toBe(15);
         } finally {
             delete process.env.RUA_ESCOLHER;
         }
@@ -318,7 +322,7 @@ describe('gravacao da configuracao', () => {
         const { carregarConfiguracao, restaurarConfiguracao, salvarConfiguracao } = await import('../src/server/configuracao');
         const { gravarConfiguracao } = await import('../src/server/db');
 
-        expect((await carregarConfiguracao()).palavrasPorEtapa).toBe(12); // nada salvo: fabrica
+        expect((await carregarConfiguracao()).palavrasPorEtapa).toBe(15); // nada salvo: fabrica
 
         const nova = { ...configuracaoPadrao(), palavrasPorEtapa: 14, mostrarMinimapa: false, cenarios: ['rua', 'rio'], textos: { titulo_geral: { texto: 'Meu teste' } } };
         await salvarConfiguracao(nova);
@@ -338,11 +342,11 @@ describe('gravacao da configuracao', () => {
         await gravarConfiguracao('jogo', '{"avatares":[],"palavrasPorEtapa":12}');
         expect((await carregarConfiguracao()).avatares.length).toBeGreaterThan(1);
         await gravarConfiguracao('jogo', 'isto nao e json');
-        expect((await carregarConfiguracao()).palavrasPorEtapa).toBe(12);
+        expect((await carregarConfiguracao()).palavrasPorEtapa).toBe(15);
 
         // Restaurar apaga o que estava salvo.
         await salvarConfiguracao(nova);
-        expect((await restaurarConfiguracao()).palavrasPorEtapa).toBe(12);
+        expect((await restaurarConfiguracao()).palavrasPorEtapa).toBe(15);
         expect((await carregarConfiguracao()).mostrarMinimapa).toBe(true);
     }
 

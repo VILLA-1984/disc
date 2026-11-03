@@ -177,9 +177,9 @@
 <li>Logo; cenários e meios liberados; avatares liberados (combinações impossíveis são recusadas).</li>
 <li><strong>Avatares:</strong> cada um aparece no painel com o <strong>ícone</strong> (o mesmo da tela de escolha) e um campo para <strong>trocar o nome</strong> mostrado na escolha (até 24 caracteres; em branco mantém o original). Os nomes trocados ficam em <code>nomesAvatares</code> (id → nome) na configuração; os blocos Humanos e Cartun aparecem marcados com a origem.</li>
 <li>Ranking, minimapa, barra de progresso e painel de totais.</li>
-<li>Palavras por etapa (6 a 36) e modo das placas (ciclo ou pares).</li>
-<li><strong>Força do turbo</strong> (1 a 3 vezes a velocidade normal, padrão 1,9): quanto mais rápido o avatar chega ao próximo portão enquanto se segura acelerar. Com 1 o turbo não acelera. Parâmetro de teste: <code>?turbo=2.5</code> na URL.</li>
-<li>Animais na corrida (liga e desliga, desligado por padrão) e de quantas em quantas palavras pegas eles aparecem (3 a 8, padrão 4) e por quantos segundos ficam na tela (2 a 8, padrão 3,6).</li>
+<li>Palavras por etapa (6 a 36, padrão 15) e modo das placas (ciclo ou pares; padrão pares).</li>
+<li><strong>Força do turbo</strong> (1 a 3 vezes a velocidade normal, padrão 2,5): quanto mais rápido o avatar chega ao próximo portão enquanto se segura acelerar. Com 1 o turbo não acelera. Parâmetro de teste: <code>?turbo=2.5</code> na URL.</li>
+<li>Animais na corrida (liga e desliga, ligados por padrão) e de quantas em quantas palavras pegas eles aparecem (3 a 8, padrão 3) e por quantos segundos ficam na tela (2 a 8, padrão 4,5).</li>
 <li>Títulos e textos de explicação (15 itens).</li>
 </ul>
 <p>A validação é feita no servidor (<code>src/server/configuracao.ts</code>). Se o que está salvo ficar inválido, o jogo usa o padrão de fábrica em vez de quebrar. "Voltar ao padrão" apaga o que foi salvo (a logo não é afetada).</p>

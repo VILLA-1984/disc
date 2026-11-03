@@ -45,7 +45,49 @@ export function montarCatalogo(): Catalogo {
     };
 }
 
-/** Configuracao de fabrica: tudo liberado, tudo visivel, 12 palavras por etapa e os textos originais. */
+/**
+ * Avatares liberados na configuracao de fabrica: os de formas simples e o bloco Cartun inteiro (com a cadeira de rodas).
+ * O humano 3D (Ana) fica de fora; quem quiser o marca no painel.
+ */
+const AVATARES_DE_FABRICA = [
+    'ana',
+    'bruno',
+    'carla',
+    'davi',
+    'elisa',
+    'fatima',
+    'gabriel',
+    'haru',
+    'iara',
+    'joao',
+    'rafa',
+    'beto',
+    'lucio',
+    'maya',
+    'nair',
+    'cartun-mari',
+    'cartun-bia',
+    'cartun-clara',
+    'cartun-dora',
+    'cartun-eva',
+    'cartun-fabi',
+    'cartun-nando',
+    'cartun-caio',
+    'cartun-dario',
+    'cartun-eder',
+    'cartun-gil',
+    'cartun-hugo',
+    'cartun-fabi-cadeira',
+];
+
+/** Nomes trocados na configuracao de fabrica (id -> nome na escolha de avatar). */
+const NOMES_DE_FABRICA: Record<string, string> = { 'cartun-eva': 'Leidy' };
+
+/**
+ * Configuracao de fabrica ("Voltar ao padrao"): copia da configuracao que a equipe deixou aplicada em 03/11/2026 -
+ * 15 palavras por etapa, duas palavras por portao, turbo 2,5, animais na corrida ligados (a cada 3 palavras, 4,5 s na tela),
+ * todos os cenarios e meios, os avatares acima e o texto da tela inicial ajustado (em TEXTOS).
+ */
 export function configuracaoPadrao(): Configuracao {
     const doAmbiente = Number(process.env.RUA_ESCOLHER);
     const palavras = Number.isInteger(doAmbiente) && doAmbiente >= LIMITES.palavrasMin && doAmbiente <= LIMITES.palavrasMax
@@ -53,8 +95,8 @@ export function configuracaoPadrao(): Configuracao {
         : LIMITES.palavrasPadrao;
 
     return {
-        avatares: [...ID_AVATARES],
-        nomesAvatares: {},
+        avatares: ID_AVATARES.filter((id) => AVATARES_DE_FABRICA.includes(id)),
+        nomesAvatares: { ...NOMES_DE_FABRICA },
         cenarios: [...CHAVES_CENARIOS],
         meios: [...CHAVES_MEIOS],
         mostrarTotais: true,
@@ -62,10 +104,10 @@ export function configuracaoPadrao(): Configuracao {
         mostrarTotaisInicio: true,
         mostrarMinimapa: true,
         mostrarProgresso: true,
-        modoPlacas: process.env.RUA_MODO === 'pares' ? 'pares' : 'ciclo',
+        modoPlacas: process.env.RUA_MODO === 'ciclo' ? 'ciclo' : 'pares',
         palavrasPorEtapa: palavras,
         turboForca: LIMITES.turboPadrao,
-        animaisNaCorrida: false,
+        animaisNaCorrida: true,
         animaisACada: LIMITES.animaisACadaPadrao,
         animaisDuracao: LIMITES.animaisDuracaoPadrao,
         textos: {},

@@ -51,7 +51,7 @@ export type TextoDefinicao = {
 
 export const TEXTOS: TextoDefinicao[] = [
     { chave: 'titulo_geral', rotulo: 'Título do teste', onde: 'Tela inicial, cabeçalho do jogo e cartão de abertura', padrao: 'Teste de Perfil DISC', podeOcultar: false, longo: false },
-    { chave: 'cadastro_intro', rotulo: 'Explicação da tela inicial', onde: 'Tela inicial, abaixo do título', padrao: 'Você descobre o seu animal no fim do jogo. Se quiser, também pode receber o resultado pelo WhatsApp: é opcional.', podeOcultar: true, longo: true },
+    { chave: 'cadastro_intro', rotulo: 'Explicação da tela inicial', onde: 'Tela inicial, abaixo do título', padrao: 'Você descobre o seu perfil animal no fim do jogo. Se quiser, também pode receber o resultado pelo WhatsApp: é opcional.', podeOcultar: true, longo: true },
     { chave: 'cadastro_pergunta', rotulo: 'Pergunta sobre receber o resultado', onde: 'Tela inicial, acima das duas opções', padrao: 'Quer receber o seu resultado pelo WhatsApp?', podeOcultar: false, longo: false },
     {
         modo: 'ciclo', chave: 'abertura_texto',
@@ -167,20 +167,20 @@ export type Configuracao = {
 export const LIMITES = {
     palavrasMin: 6,
     palavrasMax: 36,
-    palavrasPadrao: 12,
+    palavrasPadrao: 15,
     /** Com duas palavras por portao cada portao usa duas palavras diferentes, entao o maximo e menor. */
     portoesMax: 24,
     textoMax: 600,
     nomeAvatarMax: 24,
     turboMin: 1,
     turboMax: 3,
-    turboPadrao: 1.9,
+    turboPadrao: 2.5,
     animaisACadaMin: 3,
     animaisACadaMax: 8,
-    animaisACadaPadrao: 4,
+    animaisACadaPadrao: 3,
     animaisDuracaoMin: 2,
     animaisDuracaoMax: 8,
-    animaisDuracaoPadrao: 3.6,
+    animaisDuracaoPadrao: 4.5,
 };
 
 const POR_CHAVE = new Map(TEXTOS.map((t) => [t.chave, t]));
