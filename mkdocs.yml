@@ -17,6 +17,7 @@ nav:
   - Fluxo da partida: partida.md
   - Pontuação e ciclo de palavras: pontuacao.md
   - API: api.md
+  - Jogo, efeitos e desempenho: jogo.md
   - Dados e privacidade: dados.md
   - Configuração: configuracao.md
   - Deploy e operação: deploy.md

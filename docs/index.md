@@ -19,6 +19,7 @@ Esta documentação é para quem **desenvolve e opera** o sistema. Para quem jog
 - [Fluxo da partida](partida.md): do cadastro ao resultado, passo a passo.
 - [Pontuação e ciclo de palavras](pontuacao.md): como o servidor monta e confere a partida.
 - [API](api.md): rotas públicas e da equipe.
+- [Jogo, efeitos e desempenho](jogo.md): qualidade adaptativa, som, câmera, vibração e o que é compartilhado com o Laravel.
 - [Dados e privacidade](dados.md): o que é gravado, onde e por quanto tempo.
 - [Configuração](configuracao.md): variáveis de ambiente e painel.
 - [Deploy e operação](deploy.md): Vercel, Turso e modo feira.

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://rua-das-palavras.vercel.app/docs/jogo.html" />
+      <link rel="shortcut icon" href="img/favicon.ico" />
+    <title>Jogo, efeitos e desempenho - Teste de Perfil DISC · Documentação técnica</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Jogo, efeitos e desempenho";
+        var mkdocs_page_input_path = "jogo.md";
+        var mkdocs_page_url = "/docs/jogo.html";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="index.html" class="icon icon-home"> Teste de Perfil DISC · Documentação técnica
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="index.html">Início</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="arquitetura.html">Arquitetura</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="partida.html">Fluxo da partida</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="pontuacao.html">Pontuação e ciclo de palavras</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="api.html">API</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Jogo, efeitos e desempenho</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#desempenho">Desempenho</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#robustez">Robustez</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#movimento-e-camera">Movimento e câmera</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#som">Som</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#feedback-ao-jogador">Feedback ao jogador</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#o-que-e-compartilhado-com-o-laravel">O que é compartilhado com o Laravel</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#ainda-nao-feito">Ainda não feito</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="dados.html">Dados e privacidade</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="configuracao.html">Configuração</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="deploy.html">Deploy e operação</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="testes.html">Testes</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="disc.html">Metodologia DISC e referências</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Teste de Perfil DISC · Documentação técnica</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html" class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Jogo, efeitos e desempenho</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/VILLA-1984/disc/edit/main/docs/jogo.md">Edit on VILLA-1984/disc</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="jogo-efeitos-e-desempenho">Jogo: efeitos e desempenho<a class="headerlink" href="#jogo-efeitos-e-desempenho" title="Permanent link">&para;</a></h1>
+<p>O front do jogo fica em <code>src/jogo/</code> (JavaScript puro com three.js). Esta página reúne o que o jogo faz além da lógica da partida: efeitos, som e proteções de desempenho. Boa parte desse código é <strong>compartilhada com o projeto Laravel</strong>; veja o quadro no fim.</p>
+<h2 id="desempenho">Desempenho<a class="headerlink" href="#desempenho" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Recurso</th>
+<th>Onde</th>
+<th>Como funciona</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Resolução limitada</td>
+<td><code>game3d.js</code></td>
+<td>A pixel ratio do renderizador nunca passa de 2.</td>
+</tr>
+<tr>
+<td>Qualidade adaptativa</td>
+<td><code>game3d.js</code> (<code>quadro</code>)</td>
+<td>Janelas de 2 s. Duas seguidas abaixo de ~38 fps baixam a pixel ratio em 25% (mínimo 1). <strong>Só desce</strong>, nunca volta. Os 3 primeiros segundos são ignorados, porque os modelos ainda estão entrando.</td>
+</tr>
+<tr>
+<td>Partículas reaproveitadas</td>
+<td><code>game3d.js</code> (<code>soltarParticula</code>)</td>
+<td>A fumaça e a poeira do turbo reutilizam as malhas e os materiais em vez de criar novos (limite de 36 ao mesmo tempo).</td>
+</tr>
+<tr>
+<td>Pré-carregamento dos modelos</td>
+<td><code>cenarios.js</code> (<code>precarregarModeloDoMeio</code>)</td>
+<td>O glTF do meio começa a baixar na tela de escolha do cenário, para entrar na cena sem trocar no meio da corrida.</td>
+</tr>
+<tr>
+<td>Painel de desempenho</td>
+<td><code>desempenho.js</code></td>
+<td>Com <code>?fps=1</code> na URL: fps, chamadas de desenho, triângulos, geometrias e texturas.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="robustez">Robustez<a class="headerlink" href="#robustez" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Contexto WebGL perdido.</strong> Se o aparelho tomar o contexto (comum em celular fraco), o jogo para de desenhar, mostra um aviso e volta sozinho quando o navegador devolve o contexto (<code>webglcontextlost</code> e <code>webglcontextrestored</code>).</li>
+<li><strong>Aba oculta.</strong> O <code>AudioContext</code> é suspenso e retomado ao voltar (<code>audio.js</code>), e o relógio do jogo recomeça, para não haver salto de tempo.</li>
+<li><strong>Modelos glTF.</strong> Se um modelo não carregar, o veículo feito em código continua valendo (<code>?modelos=0</code> na URL força esse modo, para comparação).</li>
+</ul>
+<h2 id="movimento-e-camera">Movimento e câmera<a class="headerlink" href="#movimento-e-camera" title="Permanent link">&para;</a></h2>
+<ul>
+<li>No turbo, o campo de visão abre e a câmera treme de forma <strong>suave</strong> (senoides de períodos diferentes, não sorteio a cada quadro).</li>
+<li>Ao escolher uma palavra, o campo de visão dá um pulso curto e volta.</li>
+<li>Na passagem para a etapa 2, um clarão (<code>.rua-transicao</code>) se dissolve sobre a cena.</li>
+<li>O mundo curvo, o tremor, o pulso, o clarão, a vibração e o confete <strong>não acontecem</strong> com <code>prefers-reduced-motion</code> (ou com o botão "Reduzir efeitos" no relatório).</li>
+</ul>
+<h2 id="som">Som<a class="headerlink" href="#som" title="Permanent link">&para;</a></h2>
+<p>Tudo é sintetizado com a Web Audio API, sem arquivos de áudio. O botão de som no canto da tela liga e desliga, e a escolha fica salva no navegador.</p>
+<p>A música de fundo tem <strong>um clima por cenário</strong> (<code>ESTILOS_MUSICA</code> em <code>audio.js</code>): andamento, timbre, oitava e baixo próprios para rua, rio, céu, neve, trilhos e espaço. A música de abertura é a da rua e troca quando o cenário é escolhido.</p>
+<h2 id="feedback-ao-jogador">Feedback ao jogador<a class="headerlink" href="#feedback-ao-jogador" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Vibração</strong> (<code>navigator.vibrate</code>) de 25 ms ao escolher e um padrão curto ao concluir, só onde o aparelho tem suporte.</li>
+<li><strong>Confete</strong> (<code>confete.js</code>) na revelação do animal, nas cores dele. É um canvas que se apaga sozinho depois de cerca de 2,8 s.</li>
+</ul>
+<h2 id="o-que-e-compartilhado-com-o-laravel">O que é compartilhado com o Laravel<a class="headerlink" href="#o-que-e-compartilhado-com-o-laravel" title="Permanent link">&para;</a></h2>
+<p>O mesmo front existe em <code>resources/js/word-street/</code> do projeto Laravel. Ao mudar o jogo, a mudança vai para os dois.</p>
+<table>
+<thead>
+<tr>
+<th>Arquivo</th>
+<th>Regra</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>audio.js</code>, <code>report.js</code>, <code>game3d.js</code>, <code>confete.js</code>, <code>modelos.js</code>, <code>espaco.js</code>, <code>cenarios.js</code>, <code>avatars.js</code>, <code>ciclo.js</code>, <code>desempenho.js</code></td>
+<td>Idênticos: pode copiar o arquivo inteiro.</td>
+</tr>
+<tr>
+<td><code>entrada.js</code>, <code>animals.js</code>, <code>rua.css</code></td>
+<td><strong>Divergem</strong> entre os projetos: <strong>não copie</strong>; aplique a mudança à mão nos dois.</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Copiar <code>entrada.js</code> ou <code>rua.css</code> do Next por cima do Laravel quebra o jogo de lá (imports, textos configuráveis e CSS diferentes). Já aconteceu uma vez.</p>
+</div>
+<h2 id="ainda-nao-feito">Ainda não feito<a class="headerlink" href="#ainda-nao-feito" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Mapeamento de tons (<em>tone mapping</em>) para melhorar o contraste dos cenários.</li>
+<li>Controle de volume (hoje só existe o mudo).</li>
+<li>Compressão dos modelos glTF (Draco ou meshopt). Hoje somam cerca de 600 KB, então não é urgente.</li>
+</ul>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="api.html" class="btn btn-neutral float-left" title="API"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="dados.html" class="btn btn-neutral float-right" title="Dados e privacidade">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/VILLA-1984/disc" class="fa fa-code-fork" style="color: #fcfcfc"> VILLA-1984/disc</a>
+        </span>
+    
+    
+      <span><a href="api.html" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="dados.html" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = ".";</script>
+    <script src="js/theme_extra.js"></script>
+    <script src="js/theme.js"></script>
+      <script src="search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
