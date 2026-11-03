@@ -28,6 +28,13 @@ export default function AdminLogin({ titulo = 'Gerenciamento', texto = 'Digite o
                 return;
             }
 
+            // Quem veio da documentacao (/docs) volta para ela; so esse destino e aceito, para o link nao levar a outro lugar.
+            if (new URLSearchParams(window.location.search).get('voltar') === '/docs') {
+                window.location.assign('/docs');
+
+                return;
+            }
+
             window.location.reload();
         } catch {
             setErro('Sem conexão. Tente de novo.');
