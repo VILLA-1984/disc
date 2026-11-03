@@ -443,7 +443,7 @@ const LINHA_DAGUA = 178;
 // ------------------------------------------------------------------ controlador
 
 /** Cenarios ja liberados para os animais (os demais entram um a um). */
-const CENARIOS_LIBERADOS = ['rua', 'rio'];
+const CENARIOS_LIBERADOS = ['rua', 'rio', 'ar'];
 
 /**
  * Como cada animal se move em cada cenario: `corre` (no chao), `voa` (no ar) ou `espirito` (silhueta translucida que
@@ -452,6 +452,8 @@ const CENARIOS_LIBERADOS = ['rua', 'rio'];
 const HABITATS = {
     rua: { lobo: 'corre', gato: 'corre', aguia: 'voa', tubarao: 'espirito' },
     rio: { lobo: 'margem', gato: 'margem', aguia: 'voa', tubarao: 'nada' },
+    // No ceu so a aguia voa de verdade; os outros planam como espiritos entre as nuvens.
+    ar: { lobo: 'espirito', gato: 'espirito', aguia: 'voa', tubarao: 'espirito' },
 };
 
 /** Altura do chao onde o animal pisa (a areia da margem do rio fica um pouco acima da agua). */
