@@ -407,6 +407,18 @@
 @keyframes rua-linhas-3d { from { transform: scale(1); } to { transform: scale(1.14); } }
 @keyframes rua-linhas-lateral { from { background-position: 0 0; } to { background-position: -120px 0; } }
 @media (prefers-reduced-motion: reduce) { .rua-app .rua-linhas { display: none; } }
+
+/* Passagem para a etapa seguinte: um clarao suave que se dissolve sobre a cena (so quando ha movimento permitido). */
+.rua-app .rua-transicao {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    pointer-events: none;
+    background: radial-gradient(circle at 50% 55%, rgba(255, 255, 255, 0.95), rgba(31, 111, 184, 0.85));
+    animation: rua-transicao 1s ease-out forwards;
+}
+@keyframes rua-transicao { from { opacity: 1; } to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .rua-app .rua-transicao { display: none; } }
 /*
  * Modo imersivo (so em aparelhos de toque, a partir do inicio da partida): o jogo ocupa a tela toda, em pe ou deitado,
  * e as duas palavras e o botao de acelerar ficam sobre o jogo, translucidos. Entra em tela cheia onde o navegador

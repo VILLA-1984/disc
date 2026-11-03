@@ -528,6 +528,15 @@ export function montar(raiz, api) {
             aoClicar: () => {
                 fecharCartao();
 
+                // Da segunda etapa em diante a cena "respira": um clarao curto marca a passagem.
+                if (indice > 0 && !reduzirMovimento) {
+                    const clarao = document.createElement('div');
+                    clarao.className = 'rua-transicao';
+                    clarao.setAttribute('aria-hidden', 'true');
+                    clarao.addEventListener('animationend', () => clarao.remove());
+                    palco.appendChild(clarao);
+                }
+
                 if (ciclo) {
                     prepararCiclo(indice);
                 }
