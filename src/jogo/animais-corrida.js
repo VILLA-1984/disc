@@ -542,7 +542,7 @@ const MODELOS_3D = {
     aguia: { arquivo: '/modelos/animais/aguia.glb', comprimento: 3.0, clip: /fly/i },
 };
 // Segundos entre uma repeticao e outra do som de cada animal (um pouco mais que a duracao do proprio som).
-const INTERVALO_SOM = { lobo: 3, gato: 2.2, aguia: 1.4, tubarao: 2.2 };
+const INTERVALO_SOM = { lobo: 3.2, gato: 2.2, aguia: 1.4, tubarao: 2.0 };
 const MOVIMENTOS_3D = ['corre', 'margem', 'nada', 'espirito', 'voa', 'constelacao'];
 
 /** Gato e aguia nao tem modelo pronto: sao montados no codigo (animais-procedurais.js), tambem virados para a frente. */

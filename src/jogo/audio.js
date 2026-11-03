@@ -175,6 +175,70 @@ function ruido({ dur = 0.3, vol = 0.1, atraso = 0, filtro = { tipo: 'lowpass', f
     fonte.stop(t + dur + 0.05);
 }
 
+/**
+ * Uivo de lobo: voz (dente-de-serra) passando por dois filtros de "oooh", que sobe devagar, segura com um vibrato que vai
+ * crescendo e desce arrastado. Duas vozes levemente desafinadas dao corpo; um sopro de ar completa.
+ */
+function uivo() {
+    if (!ctx) {
+        return;
+    }
+
+    const t = ctx.currentTime;
+    const dur = 3.0;
+    const saida = ctx.createGain();
+    saida.connect(mestre);
+    saida.gain.setValueAtTime(0.0001, t);
+    saida.gain.exponentialRampToValueAtTime(0.5, t + 0.45);
+    saida.gain.setValueAtTime(0.5, t + 1.7);
+    saida.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+
+    const formantes = [[480, 5, 1.0], [1050, 6, 0.55]].map(([freq, q, ganho]) => {
+        const f = ctx.createBiquadFilter();
+        f.type = 'bandpass';
+        f.frequency.value = freq;
+        f.Q.value = q;
+        const g = ctx.createGain();
+        g.gain.value = ganho * 0.55;
+        f.connect(g);
+        g.connect(saida);
+
+        return f;
+    });
+
+    // Vibrato lento, que comeca fraco e aumenta no meio do uivo.
+    const lfo = ctx.createOscillator();
+    lfo.frequency.value = 5.2;
+    const lfoGanho = ctx.createGain();
+    lfoGanho.gain.setValueAtTime(0, t);
+    lfoGanho.gain.linearRampToValueAtTime(0, t + 0.7);
+    lfoGanho.gain.linearRampToValueAtTime(16, t + 1.5);
+    lfoGanho.gain.linearRampToValueAtTime(8, t + dur);
+    lfo.connect(lfoGanho);
+    lfo.start(t);
+    lfo.stop(t + dur + 0.1);
+
+    for (const desafino of [-9, 9]) {
+        const osc = ctx.createOscillator();
+        osc.type = 'sawtooth';
+        osc.detune.value = desafino;
+        osc.frequency.setValueAtTime(330, t);
+        osc.frequency.linearRampToValueAtTime(560, t + 0.9);
+        osc.frequency.linearRampToValueAtTime(600, t + 1.7);
+        osc.frequency.linearRampToValueAtTime(400, t + dur);
+        lfoGanho.connect(osc.frequency);
+
+        for (const f of formantes) {
+            osc.connect(f);
+        }
+
+        osc.start(t);
+        osc.stop(t + dur + 0.1);
+    }
+
+    ruido({ dur: dur - 0.4, vol: 0.018, ataque: 0.5, filtro: { tipo: 'bandpass', freq: 1500, q: 1.2 } });
+}
+
 // ------------------------------------------------------------------ efeitos do jogo
 
 export const sons = {
@@ -226,12 +290,7 @@ export const sons = {
 
     // Animais: aproximacoes sintetizadas, feitas para serem divertidas e nao realistas.
     lobo() {
-        // Uivo: nota longa que sobe, segura e desce, com vibrato.
-        const t0 = 0;
-        tom({ freq: 330, fim: 560, dur: 0.9, tipo: 'sawtooth', vol: 0.09, atraso: t0, ataque: 0.25, filtro: { tipo: 'lowpass', freq: 1400, q: 3 }, vibrato: { hz: 5.5, fundo: 9 } });
-        tom({ freq: 560, fim: 420, dur: 1.5, tipo: 'sawtooth', vol: 0.085, atraso: t0 + 0.85, ataque: 0.05, filtro: { tipo: 'lowpass', freq: 1200, q: 3 }, vibrato: { hz: 6, fundo: 12 } });
-        tom({ freq: 280, fim: 210, dur: 0.9, tipo: 'sine', vol: 0.06, atraso: t0 + 2.1, ataque: 0.05 });
-        ruido({ dur: 2.8, vol: 0.02, atraso: t0, filtro: { tipo: 'bandpass', freq: 900, q: 0.8 } });
+        uivo();
     },
 
     aguia() {
@@ -243,14 +302,14 @@ export const sons = {
     },
 
     tubarao() {
-        // Tema de aproximacao: duas notas graves, uma onda de agua e bolhas.
-        tom({ freq: 55, dur: 0.55, tipo: 'sine', vol: 0.3, atraso: 0 });
-        tom({ freq: 58.3, dur: 0.7, tipo: 'sine', vol: 0.3, atraso: 0.6 });
-        tom({ freq: 110, dur: 0.55, tipo: 'triangle', vol: 0.1, atraso: 0 });
-        tom({ freq: 116.6, dur: 0.7, tipo: 'triangle', vol: 0.1, atraso: 0.6 });
-        ruido({ dur: 2, vol: 0.07, ataque: 1, filtro: { tipo: 'lowpass', freq: 300, fim: 1400, q: 1 } });
-        for (let i = 0; i < 5; i++) {
-            tom({ freq: 500 + i * 120, fim: 900 + i * 160, dur: 0.07, tipo: 'sine', vol: 0.06, atraso: 1.2 + i * 0.11 });
+        // Agua passando: uma onda que cresce e some, bolhas subindo e um "bum" grave e curto do corpo grande cortando a agua.
+        ruido({ dur: 1.7, vol: 0.09, ataque: 0.7, filtro: { tipo: 'bandpass', freq: 220, fim: 1100, q: 0.9 } });
+        ruido({ dur: 1.2, vol: 0.04, atraso: 0.35, ataque: 0.5, filtro: { tipo: 'highpass', freq: 1800, q: 0.5 } });
+        tom({ freq: 150, fim: 70, dur: 0.5, tipo: 'sine', vol: 0.16, atraso: 0.5, ataque: 0.04 });
+
+        for (let i = 0; i < 6; i++) {
+            const base = 420 + Math.random() * 500;
+            tom({ freq: base, fim: base * 1.9, dur: 0.09, tipo: 'sine', vol: 0.05, atraso: 0.9 + i * 0.13 + Math.random() * 0.05 });
         }
     },
 
