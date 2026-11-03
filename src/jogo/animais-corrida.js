@@ -443,7 +443,7 @@ const LINHA_DAGUA = 178;
 // ------------------------------------------------------------------ controlador
 
 /** Cenarios ja liberados para os animais (os demais entram um a um). */
-const CENARIOS_LIBERADOS = ['rua', 'rio', 'ar', 'neve'];
+const CENARIOS_LIBERADOS = ['rua', 'rio', 'ar', 'neve', 'trilhos'];
 
 /**
  * Como cada animal se move em cada cenario: `corre` (no chao), `voa` (no ar) ou `espirito` (silhueta translucida que
@@ -456,10 +456,12 @@ const HABITATS = {
     ar: { lobo: 'espirito', gato: 'espirito', aguia: 'voa', tubarao: 'espirito' },
     // Na neve o lobo e o gato correm ao lado do avatar; o tubarao nao tem habitat ali.
     neve: { lobo: 'corre', gato: 'corre', aguia: 'voa', tubarao: 'espirito' },
+    // Nos trilhos os animais correm na brita, ao lado da ferrovia.
+    trilhos: { lobo: 'corre', gato: 'corre', aguia: 'voa', tubarao: 'espirito' },
 };
 
 /** Altura do chao onde o animal pisa (a areia da margem do rio fica um pouco acima da agua). */
-const CHAO = { rua: 0, rio: 0.2, neve: 0 };
+const CHAO = { rua: 0, rio: 0.2, neve: 0, trilhos: 0.05 };
 
 /** Distancia do centro do rio ate a areia, onde lobo e gato correm. */
 const X_MARGEM = 7.4;
