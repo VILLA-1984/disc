@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { modelosLigados } from './modelos.js';
 
 /**
  * Avatares do jogo: uma especificacao simples (cor de pele, cabelo, acessorios, corpo, mobilidade)
@@ -33,6 +35,10 @@ export const AVATARES = [
     { id: 'lucio', nome: 'Seu Lúcio', pele: '#7a4a30', cabelo: { estilo: 'curto', cor: '#d9d9d9' }, barba: 'bigode', oculos: 'quadrado', roupa: '#ffffff', calca: '#2b3a4f', detalhe: '#1f6fb8', corpo: 'largo', altura: 1, mobilidade: 'taxi' },
     { id: 'maya', nome: 'Maya', pele: '#c99774', cabelo: { estilo: 'coque', cor: '#1a1210' }, roupa: '#7b4fa3', calca: '#1f2a36', detalhe: '#f2b705', corCadeira: '#7b4fa3', corpo: 'esguio', altura: 0.98, mobilidade: 'cadeira-corrida' },
     { id: 'nair', nome: 'Dona Nair', pele: '#f0c8a4', cabelo: { estilo: 'coque', cor: '#e4e4e4' }, oculos: 'redondo', roupa: '#c0553a', calca: '#4b3a2a', detalhe: '#f6e7c1', corpo: 'medio', altura: 0.93, mobilidade: 'andador' },
+    // Bloco "Humanos": modelos 3D realistas (blender/humano.py). Cada um tem tambem os campos do avatar de formas
+    // simples, que valem como plano B (sem rede, arquivo ausente, `?modelos=0`) e nos meios em que o modelo nao serve
+    // (barco, nado, draisina). `modelo` e o glTF animado ("Walk") e `retrato` o busto pre-renderizado da tela de escolha.
+    { id: 'humano-ana', grupo: 'humanos', nome: 'Ana', modelo: '/modelos/avatares/ana.glb', retrato: '/modelos/avatares/ana.png', pele: '#5a3825', cabelo: { estilo: 'curto', cor: '#17100d' }, roupa: '#f08a3c', calca: '#0d2b4e', detalhe: '#ffffff', corpo: 'esguio', altura: 0.98, mobilidade: 'anda' },
 ];
 
 /**
@@ -421,7 +427,7 @@ function construirAndador(corpo) {
  *
  * @returns {{grupo: THREE.Group, animar: (fase: number, ritmo: number) => void, altura: number, info: object}}
  */
-export function criarAvatar3D(spec) {
+function criarAvatarProcedural(spec) {
     const raiz = new THREE.Group();
     const corpo = new THREE.Group();
     raiz.add(corpo);
@@ -735,6 +741,94 @@ export function criarAvatar3D(spec) {
     return { grupo: raiz, animar, altura: (taxi ? 2.0 : 2.15) * escala, info };
 }
 
+
+/** Altura (em unidades do jogo) de um humano de modelo 3D com `altura` = 1. */
+const ALTURA_HUMANO = 1.78;
+
+/** O modelo realista so serve a quem anda a pe e fora do barco, da agua e da draisina. */
+function usaModelo(spec) {
+    return Boolean(spec.modelo) && modelosLigados() && (spec.mobilidade ?? 'anda') === 'anda'
+        && !spec.noBarco && !spec.nadando && !spec.bombeando;
+}
+
+/** Baixa o arquivo do modelo antes de precisar (ex.: quando a pessoa escolhe o avatar); o navegador guarda no cache. */
+export function precarregarAvatar(spec) {
+    if (usaModelo(spec) && typeof fetch === 'function') {
+        fetch(spec.modelo).catch(() => undefined);
+    }
+}
+
+/**
+ * Constroi o avatar 3D. Comeca com o de formas simples (que tambem e o plano B) e, se a especificacao tem `modelo`,
+ * troca o corpo pelo humano realista (glTF com esqueleto e animacao "Walk") assim que ele chega.
+ */
+export function criarAvatar3D(spec) {
+    const base = criarAvatarProcedural(spec);
+
+    if (!usaModelo(spec)) {
+        return base;
+    }
+
+    let mixer = null;
+    let ultimo = typeof performance === 'undefined' ? 0 : performance.now();
+    const animarProcedural = base.animar;
+
+    new GLTFLoader().loadAsync(spec.modelo).then((gltf) => {
+        const humano = gltf.scene;
+        humano.rotation.y = Math.PI; // o modelo olha para +z; o jogo anda para -z
+        const pivo = new THREE.Group();
+        pivo.add(humano);
+        pivo.updateMatrixWorld(true);
+        const caixa = new THREE.Box3().setFromObject(pivo);
+        const escala = (ALTURA_HUMANO * (spec.altura ?? 1)) / (caixa.max.y - caixa.min.y);
+        pivo.scale.setScalar(escala);
+        pivo.position.y = -caixa.min.y * escala;
+
+        humano.traverse((o) => {
+            if (!o.isMesh) {
+                return;
+            }
+
+            o.frustumCulled = false; // a malha esqueletica muda de forma: a caixa da pose inicial nao vale
+
+            // As cores da roupa vem da especificacao (a pessoa pode trocar a camiseta na tela de escolha).
+            for (const material of [].concat(o.material)) {
+                if (material.name === 'camiseta' && spec.roupa) {
+                    material.color.set(spec.roupa);
+                } else if (material.name === 'calca' && spec.calca) {
+                    material.color.set(spec.calca);
+                }
+            }
+        });
+
+        mixer = new THREE.AnimationMixer(humano);
+        const clip = gltf.animations.find((a) => /walk/i.test(a.name)) ?? gltf.animations[0];
+
+        if (clip) {
+            mixer.clipAction(clip).play();
+        }
+
+        base.grupo.children.forEach((c) => { c.visible = false; });
+        base.grupo.add(pivo);
+    }).catch(() => undefined);
+
+    return {
+        ...base,
+        animar(fase, ritmo) {
+            if (!mixer) {
+                animarProcedural(fase, ritmo);
+
+                return;
+            }
+
+            const agora = performance.now();
+            const dt = Math.min(0.05, (agora - ultimo) / 1000);
+            ultimo = agora;
+            mixer.update(dt * Math.min(Math.max(ritmo, 0), 2.2));
+        },
+    };
+}
+
 // ---------------------------------------------------------------------- retratos
 
 /**
@@ -780,7 +874,11 @@ export function gerarRetratos(specs, { largura = 220, altura = 260 } = {}) {
     camera.updateProjectionMatrix();
 
     for (const spec of specs) {
-        const { grupo, info } = criarAvatar3D(spec);
+        if (spec.retrato) {
+            continue; // o humano tem o busto pre-renderizado (a tela de escolha usa spec.retrato)
+        }
+
+        const { grupo, info } = criarAvatarProcedural(spec);
         const centroY = info.retrato.centro * (spec.altura ?? 1);
         grupo.rotation.y = 0.5;
         cena.add(grupo);

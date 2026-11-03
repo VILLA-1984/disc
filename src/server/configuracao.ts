@@ -27,7 +27,7 @@ const compativeis = (aceita: (mobilidade: string) => boolean) => ID_AVATARES.fil
 /** Tudo o que existe no jogo, para a tela de gerenciamento listar e avisar de combinacoes impossiveis. */
 export function montarCatalogo(): Catalogo {
     return {
-        avatares: AVATARES.map((a) => ({ id: a.id, nome: a.nome, mobilidade: a.mobilidade ?? 'anda' })),
+        avatares: AVATARES.map((a) => ({ id: a.id, nome: a.grupo === 'humanos' ? `${a.nome} (humano 3D)` : a.nome, mobilidade: a.mobilidade ?? 'anda' })),
         cenarios: CHAVES_CENARIOS.map((chave) => ({
             chave,
             nome: CENARIOS[chave].nome,

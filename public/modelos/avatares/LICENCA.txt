@@ -1,0 +1,3 @@
+Humanos 3D (blender/humano.py): gerados com o add-on MPFB2 (https://github.com/makehumancommunity/mpfb2, GPL v3) e o pacote
+"makehuman_system_assets" (https://static.makehumancommunity.org/assets/assetpacks/makehuman_system_assets.html), cujos
+recursos (malha base, peles, cabelos, olhos, roupas) sao CC0 1.0. Os modelos exportados (.glb) e os retratos sao do projeto.

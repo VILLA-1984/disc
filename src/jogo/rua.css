@@ -205,6 +205,9 @@
 
 /* escolha do avatar */
 .rua-app .avatares { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin: 4px 0 8px; }
+.rua-app .avatares-grupo { margin: 10px 0 2px; font-size: 0.95rem; color: var(--azul-escuro, #0d2b4e); }
+.rua-app .avatares-grupo small { font-weight: 400; opacity: 0.7; margin-left: 6px; }
+.rua-app .avatar-op img[src$=".png"][loading] { max-width: 64px; border-radius: 6px; }
 .rua-app .opcoes-linha { display: grid; grid-template-columns: 1.15fr 1.25fr; gap: 12px; align-items: start; }
 .rua-app .cartao-conteudo.largo { padding: 16px 22px; }
 .rua-app .cartao-conteudo.largo h2 { margin: 2px 0 6px; }

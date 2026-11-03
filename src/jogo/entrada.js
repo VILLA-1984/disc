@@ -1,4 +1,4 @@
-import { AVATARES, CORES_ROUPA, gerarRetratos } from './avatars.js';
+import { AVATARES, CORES_ROUPA, gerarRetratos, precarregarAvatar } from './avatars.js';
 import { alternarMudo, estaMudo, iniciarAudio, iniciarMusica, pararMusica, sons } from './audio.js';
 import { CENARIOS, MEIOS, avatarCabe, meioPadrao, precarregarModeloDoMeio, regraDe, textosDe } from './cenarios.js';
 import { paraHtml, textoDe } from '../lib/configuracao';
@@ -83,7 +83,9 @@ export function montar(raiz, api) {
     // Configuracao da area de gerenciamento (so o Next.js a envia): o que esta liberado e visivel, e os textos.
     const config = api.config ?? null;
     const avataresLivres = (() => {
-        const lista = AVATARES.filter((a) => !config?.avatares || config.avatares.includes(a.id));
+        // `?humanos=1` na URL mostra o bloco de humanos mesmo que o evento ainda nao o tenha liberado (para testar).
+        const forcarHumanos = new URLSearchParams(location.search).get('humanos') === '1';
+        const lista = AVATARES.filter((a) => !config?.avatares || config.avatares.includes(a.id) || (forcarHumanos && a.grupo === 'humanos'));
 
         return lista.length ? lista : AVATARES;
     })();
@@ -387,6 +389,11 @@ export function montar(raiz, api) {
 
     function escolherAvatar() {
         const retratos = gerarRetratos(avataresLivres, { largura: 220, altura: 280 });
+        const opcaoDeAvatar = (a) => `
+                    <button type="button" class="avatar-op" role="radio" aria-checked="${a.id === avatarId}" data-id="${a.id}" ${avatarCabe(a, cenario, meio) ? '' : 'disabled'}>
+                        ${a.retrato ? `<img src="${a.retrato}" alt="" loading="lazy">` : (retratos.get(a.id) ? `<img src="${retratos.get(a.id)}" alt="">` : `<span class="avatar-ini" style="background:${a.roupa}">${a.nome[0]}</span>`)}
+                        <span>${a.nome}</span>
+                    </button>`;
 
         mostrarCartao({
             sobretitulo: 'Antes de começar',
@@ -395,11 +402,9 @@ export function montar(raiz, api) {
             botao: 'Começar',
             corpoHtml: `${paragrafo('avatar_texto')}
                 <p class="rolar-aviso">↓ Role até o fim: depois dos avatares há mais escolhas (cenário, meio e vista) e só então o botão Começar.</p>
-                <div class="avatares" role="radiogroup" aria-label="Avatar">${avataresLivres.map((a) => `
-                    <button type="button" class="avatar-op" role="radio" aria-checked="${a.id === avatarId}" data-id="${a.id}" ${avatarCabe(a, cenario, meio) ? '' : 'disabled'}>
-                        ${retratos.get(a.id) ? `<img src="${retratos.get(a.id)}" alt="">` : `<span class="avatar-ini" style="background:${a.roupa}">${a.nome[0]}</span>`}
-                        <span>${a.nome}</span>
-                    </button>`).join('')}</div>
+                <div class="avatares" role="radiogroup" aria-label="Avatar">${avataresLivres.filter((a) => !a.grupo).map(opcaoDeAvatar).join('')}</div>
+                ${avataresLivres.some((a) => a.grupo === 'humanos') ? `<h3 class="avatares-grupo">Humanos <small>modelos 3D realistas</small></h3>
+                <div class="avatares" role="radiogroup" aria-label="Avatar humano">${avataresLivres.filter((a) => a.grupo === 'humanos').map(opcaoDeAvatar).join('')}</div>` : ''}
                 <div class="opcoes-linha">
                     <div class="cores" role="group" aria-label="Cor da roupa"><span>Cor da roupa</span>
                         <button type="button" class="cor-op" data-cor="" aria-pressed="${corRoupa === null}" aria-label="Cor original" title="Cor original">★</button>
@@ -421,6 +426,7 @@ export function montar(raiz, api) {
                 for (const botao of botoes) {
                     botao.addEventListener('click', () => {
                         avatarId = botao.dataset.id;
+                        precarregarAvatar(especificacaoEscolhida());
                         botoes.forEach((b) => b.setAttribute('aria-checked', String(b === botao)));
                     });
                 }
@@ -551,7 +557,7 @@ export function montar(raiz, api) {
         // A musica ganha o clima do cenario escolhido (a de abertura e a da rua).
         iniciarMusica(cenario);
         const spec = especificacaoEscolhida();
-        retratoAtual = gerarRetratos([spec], { largura: 320, altura: 400 }).get(spec.id) ?? '';
+        retratoAtual = spec.retrato ?? gerarRetratos([spec], { largura: 320, altura: 400 }).get(spec.id) ?? '';
         ajustarControles();
 
         jogo = criarJogo3D({

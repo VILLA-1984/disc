@@ -27,6 +27,13 @@ O front do jogo fica em `src/jogo/` (JavaScript puro com three.js). Esta página
 
 ## Animais na corrida
 
+### Avatares humanos 3D (bloco "Humanos")
+
+Além dos avatares de formas simples, a tela de escolha tem um bloco **Humanos** com personagens 3D realistas, feitos no Blender por `blender/humano.py` a partir do **MPFB2** (add-on GPL; os recursos usados — malha, pele, cabelos e roupas — são CC0). Cada personagem é uma entrada em `PERSONAGENS` no script (gênero, idade, biotipo, pele, cabelo e cores da roupa); um comando gera o corpo de baixo polígono (~12 mil triângulos), veste, cria o esqueleto (`game_engine`, 53 ossos), faz a animação `Walk`, exporta o `.glb` (~1 MB) em `public/modelos/avatares/` e renderiza o busto usado na tela de escolha.
+
+- No jogo (`avatars.js`) o humano nasce com o avatar de formas simples, que continua sendo o **plano B** (sem rede, `?modelos=0`) e vale nos meios em que o modelo não serve (barco, nado, draisina, veículos); o modelo troca o corpo assim que chega. A camiseta e a calça seguem as cores da especificação (a pessoa pode trocar a cor da roupa).
+- O painel lista os humanos como "Nome (humano 3D)". Eventos com a lista de avatares já salva precisam **marcá-los** em `/admin/jogo`; `?humanos=1` na URL mostra o bloco para testar.
+
 Opção do painel (`/admin/jogo` → "Animais na corrida", **desligada por padrão**). A cada N palavras **pegas** (padrão 4, de 3 a 8; nunca na última da etapa) um animal surge ao lado do avatar, fica nítido e some. O **tempo na tela** é configurável no painel (de 2 a 8 s, padrão 3,6 s): um quinto dele é para surgir e um quarto para sumir.
 
 - **O animal é sorteado e não tem ligação com o resultado.** É um baralho embaralhado, então os quatro aparecem antes de qualquer repetir. De propósito: o fator DISC de cada palavra continua só no servidor, e mostrar o perfil no meio da partida entregaria o resultado e enviesaria as escolhas seguintes.
