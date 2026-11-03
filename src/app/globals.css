@@ -654,3 +654,6 @@ body {
 .evento-escolha:hover { border-color: var(--azul); background: #fff; transform: translateY(-1px); }
 .evento-escolha:focus-visible { outline: 3px solid var(--laranja); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .evento-escolha { transition: none; } .evento-escolha:hover { transform: none; } }
+
+.manual-referencias { margin: 0; padding-left: 22px; }
+.manual-referencias li { margin-bottom: 10px; max-width: 72ch; }
