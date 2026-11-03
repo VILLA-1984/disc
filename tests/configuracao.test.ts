@@ -130,6 +130,29 @@ describe('validacao', () => {
         expect(r.ok).toBe(true);
     });
 
+    it('os animais na corrida comecam desligados, a cada 4 palavras', () => {
+        const padrao = configuracaoPadrao();
+
+        expect([padrao.animaisNaCorrida, padrao.animaisACada]).toEqual([false, LIMITES.animaisACadaPadrao]);
+    });
+
+    it('configuracao salva antes dos animais continua valida e usa os de fabrica', () => {
+        const { animaisNaCorrida: _a, animaisACada: _b, ...antiga } = base();
+        const r = validar(antiga);
+
+        expect(r.ok && [r.config.animaisNaCorrida, r.config.animaisACada]).toEqual([false, LIMITES.animaisACadaPadrao]);
+    });
+
+    it.each([2, 9, 4.5, '4', Number.NaN, null])('recusa animais a cada N palavras invalido (%s)', (valor) => {
+        expect(recusa({ ...base(), animaisACada: valor })).toMatch(/Animais na corrida/);
+    });
+
+    it.each([LIMITES.animaisACadaMin, 4, LIMITES.animaisACadaMax])('aceita animais a cada %i palavras', (valor) => {
+        const r = validar({ ...base(), animaisNaCorrida: true, animaisACada: valor });
+
+        expect(r.ok && [r.config.animaisNaCorrida, r.config.animaisACada]).toEqual([true, valor]);
+    });
+
     it.each([5, 37, 12.5, '12', Number.NaN, null])('recusa palavras por etapa invalidas (%s)', (valor) => {
         expect(recusa({ ...base(), palavrasPorEtapa: valor })).toMatch(/Palavras por etapa/);
     });

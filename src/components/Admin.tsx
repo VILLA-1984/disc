@@ -362,6 +362,34 @@ export default function Admin({ configInicial, catalogo, textos, escolhaLogo, ve
                 </div>
             </section>
 
+            <section className="admin-secao" aria-labelledby="secao-animais">
+                <h2 id="secao-animais">Animais na corrida</h2>
+                <p>De tempos em tempos um animal (lobo, gato, águia ou tubarão) surge, nítido, ao lado do avatar e some. O animal é sorteado e <strong>não tem ligação com o resultado</strong>: é só um efeito.</p>
+
+                <div className="admin-grade">
+                    <label className={`admin-opcao${config.animaisNaCorrida ? ' marcada' : ''}`}>
+                        <input type="checkbox" checked={config.animaisNaCorrida} onChange={(e) => definir('animaisNaCorrida', e.target.checked)} />
+                        <span><strong>Mostrar os animais durante a corrida</strong><small>desligado por padrão; vale para as próximas partidas</small></span>
+                    </label>
+                </div>
+
+                <div className="admin-numero">
+                    <input
+                        id="animais-a-cada"
+                        type="number"
+                        inputMode="numeric"
+                        min={LIMITES.animaisACadaMin}
+                        max={LIMITES.animaisACadaMax}
+                        step={1}
+                        disabled={!config.animaisNaCorrida}
+                        value={Number.isFinite(config.animaisACada) ? config.animaisACada : ''}
+                        aria-label="Mostrar um animal a cada quantas palavras"
+                        onChange={(e) => definir('animaisACada', e.target.value === '' ? Number.NaN : Number(e.target.value))}
+                    />
+                    <small>A cada quantas palavras pegas o animal aparece (de {LIMITES.animaisACadaMin} a {LIMITES.animaisACadaMax}; o padrão é {LIMITES.animaisACadaPadrao}). Ele não aparece na última palavra da etapa.</small>
+                </div>
+            </section>
+
             <section className="admin-secao" aria-labelledby="secao-textos">
                 <h2 id="secao-textos">Títulos e textos de explicação</h2>
                 <p>Edite o que aparece na tela. Deixe igual ao original para usar o texto padrão. Nas explicações, desmarque “Mostrar” para esconder o texto.</p>

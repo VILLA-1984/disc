@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { criarAnimaisCorrida } from './animais-corrida.js';
 import { criarAvatar3D } from './avatars.js';
 import { continuos } from './audio.js';
 import { criarPainelDesempenho } from './desempenho.js';
@@ -539,6 +540,11 @@ export function criarJogo3D(opcoes) {
     avatar.grupo.position.set(0, 0, 0);
     cena.add(avatar.grupo);
 
+    // Animais da corrida (opcao do painel; `?animais=N` na URL liga para teste, com um animal a cada N palavras).
+    const animaisUrl = typeof location === 'undefined' ? null : new URLSearchParams(location.search).get('animais');
+    const animaisConfig = animaisUrl !== null ? { aCada: Math.max(1, Number(animaisUrl) || 4) } : opcoes.animaisNaCorrida;
+    const animais = animaisConfig ? criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCada: animaisConfig.aCada }) : null;
+
     // Quando um modelo pronto (glTF) entra no lugar do veiculo, a pessoa passa a ir por dentro dele.
     const esconderAvatar = () => {
         for (const parte of avatar.grupo.children) {
@@ -1055,6 +1061,12 @@ export function criarJogo3D(opcoes) {
         pulsoFov = 1;
 
         escolhasNaEtapa++;
+
+        // Palavra pega (no ciclo, "Deixar passar" tem id 0 e nao conta): a cada N, um animal surge ao lado do avatar.
+        if (animais && portao.dados[lado].id !== 0) {
+            animais.pegou(dinamico ? (progressoExterno?.total ?? 0) : (etapas[etapaAtual]?.length ?? 0), lado === 'cima' ? -1 : 1);
+        }
+
         alvoX = lado === 'cima' ? -PISTA_X : PISTA_X;
         saltoRestante = reduzirMovimento ? 0 : 0.34;
         atualizarHud();
@@ -1134,6 +1146,7 @@ export function criarJogo3D(opcoes) {
 
     // ------------------------------------------------------------- etapa e laco
     function iniciarEtapa(i) {
+        animais?.reiniciarEtapa();
         descartarPortao();
         etapaAtual = i;
         indice = 0;
@@ -1393,6 +1406,7 @@ export function criarJogo3D(opcoes) {
         }
 
         atualizarParticulas(dt, dz);
+        animais?.atualizar(dt, avatar.grupo.position.x);
 
         // Faiscas.
         for (let i = faiscas.length - 1; i >= 0; i--) {
@@ -1445,6 +1459,7 @@ export function criarJogo3D(opcoes) {
             renderer.domElement.removeEventListener('webglcontextlost', aoPerderContexto);
             renderer.domElement.removeEventListener('webglcontextrestored', aoRestaurarContexto);
             avisoContexto.remove();
+            animais?.destruir();
             observador.disconnect();
             continuos.motor.parar();
             continuos.clima.parar();

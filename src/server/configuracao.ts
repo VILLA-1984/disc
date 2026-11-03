@@ -63,6 +63,8 @@ export function configuracaoPadrao(): Configuracao {
         mostrarProgresso: true,
         modoPlacas: process.env.RUA_MODO === 'pares' ? 'pares' : 'ciclo',
         palavrasPorEtapa: palavras,
+        animaisNaCorrida: false,
+        animaisACada: LIMITES.animaisACadaPadrao,
         textos: {},
     };
 }
@@ -146,6 +148,13 @@ export function validar(entrada: unknown): Validacao {
         };
     }
 
+    // Sem o campo (configuracao salva antes desta opcao existir), valem os de fabrica.
+    const animaisACada = bruta.animaisACada === undefined ? padrao.animaisACada : bruta.animaisACada;
+
+    if (typeof animaisACada !== 'number' || !Number.isInteger(animaisACada) || animaisACada < LIMITES.animaisACadaMin || animaisACada > LIMITES.animaisACadaMax) {
+        return { ok: false, erro: `Animais na corrida: informe de quantas em quantas palavras (um número inteiro entre ${LIMITES.animaisACadaMin} e ${LIMITES.animaisACadaMax}).` };
+    }
+
     const textos: Configuracao['textos'] = {};
     const brutos = typeof bruta.textos === 'object' && bruta.textos !== null ? (bruta.textos as Record<string, unknown>) : {};
 
@@ -189,6 +198,8 @@ export function validar(entrada: unknown): Validacao {
             mostrarProgresso: booleano(bruta.mostrarProgresso, padrao.mostrarProgresso),
             modoPlacas,
             palavrasPorEtapa: palavras,
+            animaisNaCorrida: booleano(bruta.animaisNaCorrida, padrao.animaisNaCorrida),
+            animaisACada,
             textos,
         },
     };
