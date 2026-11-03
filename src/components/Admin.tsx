@@ -322,7 +322,7 @@ export default function Admin({ configInicial, catalogo, textos, escolhaLogo, ve
                                         aria-label={`Nome de ${avatar.nome} na escolha de avatar`}
                                         onChange={(e) => definirNomeAvatar(avatar.id, e.target.value)}
                                     />
-                                    <small>{[ROTULO_MOBILIDADE[avatar.mobilidade] ?? avatar.mobilidade, bloco].filter(Boolean).join(' · ')}</small>
+                                    <small>{[avatar.rotulo ?? ROTULO_MOBILIDADE[avatar.mobilidade] ?? avatar.mobilidade, bloco].filter(Boolean).join(' · ')}</small>
                                 </span>
                             </div>
                         );

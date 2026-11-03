@@ -11,7 +11,7 @@ import { gravarConfiguracao, lerConfiguracao } from './db';
 const CHAVE = 'jogo';
 
 export type Catalogo = {
-    avatares: { id: string; nome: string; mobilidade: string; grupo: string | null; retrato: string | null }[];
+    avatares: { id: string; nome: string; mobilidade: string; grupo: string | null; retrato: string | null; rotulo: string | null }[];
     cenarios: { chave: string; nome: string; descricao: string; temMeios: boolean; avatares: string[] }[];
     meios: { chave: string; cenario: string; nome: string; descricao: string; avatares: string[] }[];
 };
@@ -27,7 +27,7 @@ const compativeis = (aceita: (mobilidade: string) => boolean) => ID_AVATARES.fil
 /** Tudo o que existe no jogo, para a tela de gerenciamento listar e avisar de combinacoes impossiveis. */
 export function montarCatalogo(): Catalogo {
     return {
-        avatares: AVATARES.map((a) => ({ id: a.id, nome: a.nome, mobilidade: a.mobilidade ?? 'anda', grupo: (a.grupo as string | undefined) ?? null, retrato: (a.retrato as string | undefined) ?? null })),
+        avatares: AVATARES.map((a) => ({ id: a.id, nome: a.nome, mobilidade: a.mobilidade ?? 'anda', grupo: (a.grupo as string | undefined) ?? null, retrato: (a.retrato as string | undefined) ?? null, rotulo: (a.rotulo as string | undefined) ?? null })),
         cenarios: CHAVES_CENARIOS.map((chave) => ({
             chave,
             nome: CENARIOS[chave].nome,

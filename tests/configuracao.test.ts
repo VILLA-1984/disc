@@ -164,7 +164,8 @@ describe('validacao', () => {
         const comum = montarCatalogo().avatares.find((a) => a.id === 'ana');
 
         expect(ana).toMatchObject({ nome: 'Ana', grupo: 'humanos', retrato: '/modelos/avatares/ana.png' });
-        expect(comum).toMatchObject({ grupo: null, retrato: null });
+        expect(comum).toMatchObject({ grupo: null, retrato: null, rotulo: null });
+        expect(montarCatalogo().avatares.find((a) => a.id === 'cartun-mari')).toMatchObject({ mobilidade: 'bengala', rotulo: 'usa muletas' });
     });
 
     it('a forca do turbo comeca em 1,9 e configuracoes antigas a recebem', () => {
