@@ -1052,6 +1052,7 @@ export function criarJogo3D(opcoes) {
         portao.placas[lado].posteMaterial.color.setHex(COR.laranja);
         portao.placas[outro].posteMaterial.color.setHex(0x9aa7b6);
         portao.placas[lado].escala = 1.12;
+        pulsoFov = 1;
 
         escolhasNaEtapa++;
         alvoX = lado === 'cima' ? -PISTA_X : PISTA_X;
@@ -1168,6 +1169,11 @@ export function criarJogo3D(opcoes) {
     // Campo de visao vertical de referencia, feito para 16:9. Em telas mais altas (celular em pe) ele abre
     // um pouco, para as duas placas continuarem inteiras na tela sem distorcer demais.
     let fovBase = cfg.fov;
+    // Ao escolher, o campo de visao abre um instante e volta (1 = pulso inteiro); nao acontece com "reduzir movimento".
+    let pulsoFov = 0;
+    let tempoCamera = 0;
+    // Ruido suave (senoides de periodos diferentes) no lugar de sorteio a cada quadro, que parecia estatica de TV.
+    const ruidoSuave = (t, fase) => (Math.sin(t * 41 + fase) + Math.sin(t * 27 + fase * 1.7) * 0.6) / 1.6;
 
     function ajustarTamanho() {
         const w = parent.clientWidth || 960;
@@ -1189,7 +1195,8 @@ export function criarJogo3D(opcoes) {
         const x = avatar.grupo.position.x;
 
         // Sensacao de velocidade: o campo de visao abre um pouco enquanto acelera.
-        const fovAlvo = fovBase + (acelerando && velocidade > velocidadeBase * 1.1 && !reduzirMovimento ? (modo === '3d' ? 8 : 3) : 0);
+        pulsoFov = Math.max(0, pulsoFov - dt * 2.5);
+        const fovAlvo = fovBase + (acelerando && velocidade > velocidadeBase * 1.1 && !reduzirMovimento ? (modo === '3d' ? 8 : 3) : 0) + (reduzirMovimento ? 0 : pulsoFov * (modo === '3d' ? 4 : 1.5));
 
         if (Math.abs(camera.fov - fovAlvo) > 0.05) {
             camera.fov += (fovAlvo - camera.fov) * Math.min(1, dt * 5);
@@ -1197,16 +1204,17 @@ export function criarJogo3D(opcoes) {
         }
 
         // Tremor leve da camera no turbo (nao acontece com "reduzir movimento").
+        tempoCamera += dt;
         const tremor = acelerando && velocidade > velocidadeBase * 1.15 && !reduzirMovimento ? (avatar.info.rodas ? 0.035 : 0.022) : 0;
 
         if (modo === '3d') {
             const alvo = new THREE.Vector3(x * 0.45, 3.1, 6.0);
             camera.position.lerp(alvo, Math.min(1, dt * 4));
-            camera.position.x += (Math.random() - 0.5) * tremor;
-            camera.position.y += (Math.random() - 0.5) * tremor;
+            camera.position.x += ruidoSuave(tempoCamera, 0) * tremor;
+            camera.position.y += ruidoSuave(tempoCamera, 2.1) * tremor;
             camera.lookAt(x * 0.3, 1.7, -11);
         } else {
-            camera.position.set(17.5 + (Math.random() - 0.5) * tremor, 5.6 + (Math.random() - 0.5) * tremor, 1.2);
+            camera.position.set(17.5 + ruidoSuave(tempoCamera, 0) * tremor, 5.6 + ruidoSuave(tempoCamera, 2.1) * tremor, 1.2);
             camera.lookAt(0, 1.9, -4.4);
         }
     }
