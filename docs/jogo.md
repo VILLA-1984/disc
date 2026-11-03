@@ -25,6 +25,29 @@ O front do jogo fica em `src/jogo/` (JavaScript puro com three.js). Esta página
 - Na passagem para a etapa 2, um clarão (`.rua-transicao`) se dissolve sobre a cena.
 - O mundo curvo, o tremor, o pulso, o clarão, a vibração e o confete **não acontecem** com `prefers-reduced-motion` (ou com o botão "Reduzir efeitos" no relatório).
 
+## Animais na corrida
+
+Opção do painel (`/admin/jogo` → "Animais na corrida", **desligada por padrão**). A cada N palavras **pegas** (padrão 4, de 3 a 8; nunca na última da etapa) um animal surge ao lado do avatar, fica nítido e some em cerca de 3,6 s (0,7 s para surgir, 0,9 s para sumir).
+
+- **O animal é sorteado e não tem ligação com o resultado.** É um baralho embaralhado, então os quatro aparecem antes de qualquer repetir. De propósito: o fator DISC de cada palavra continua só no servidor, e mostrar o perfil no meio da partida entregaria o resultado e enviesaria as escolhas seguintes.
+- Cada animal (lobo, gato, águia, tubarão) é **desenhado no código**, de perfil, com pernas, asas e cauda animadas (`animais-corrida.js`), e aparece como um letreiro (sprite) que acompanha o avatar. Não são as silhuetas do relatório, que são emblemas parados.
+- O movimento depende do cenário e do hábitat de cada animal:
+
+| Cenário | Lobo e gato | Águia | Tubarão |
+|---|---|---|---|
+| Rua | correm ao lado | voa | espírito |
+| Rio | correm na margem | voa | **nada** (dorso e barbatana para fora, marolas) |
+| Céu | espírito | voa | espírito |
+| Neve | correm na neve | voa | espírito |
+| Trilhos | correm ao lado da ferrovia | voa | espírito |
+| Espaço | constelação | constelação | constelação |
+
+*Espírito* é a silhueta translúcida que desliza, para o animal que não tem hábitat naquele cenário. A *constelação* recorta o desenho num campo de estrelas, com brilho aditivo.
+
+- Com "reduzir movimento", o animal só surge e some, parado, sem galope nem balanço.
+- Parâmetros de teste na URL: `?animais=N` liga o recurso (um animal a cada N palavras) e `?animal=lobo` (ou `gato`, `aguia`, `tubarao`) fixa o animal.
+- Configuração salva no banco (`animaisNaCorrida` e `animaisACada`); configurações antigas, sem esses campos, usam o padrão.
+
 ## Som
 
 Tudo é sintetizado com a Web Audio API, sem arquivos de áudio. O botão de som no canto da tela liga e desliga, e a escolha fica salva no navegador.
@@ -42,7 +65,7 @@ O mesmo front existe em `resources/js/word-street/` do projeto Laravel. Ao mudar
 
 | Arquivo | Regra |
 |---|---|
-| `audio.js`, `report.js`, `game3d.js`, `confete.js`, `modelos.js`, `espaco.js`, `cenarios.js`, `avatars.js`, `ciclo.js`, `desempenho.js` | Idênticos: pode copiar o arquivo inteiro. |
+| `audio.js`, `report.js`, `game3d.js`, `confete.js`, `animais-corrida.js`, `modelos.js`, `espaco.js`, `cenarios.js`, `avatars.js`, `ciclo.js`, `desempenho.js` | Idênticos: pode copiar o arquivo inteiro. |
 | `entrada.js`, `animals.js`, `rua.css` | **Divergem** entre os projetos: **não copie**; aplique a mudança à mão nos dois. |
 
 !!! warning

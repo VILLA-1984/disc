@@ -68,6 +68,8 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#movimento-e-camera">Movimento e câmera</a>
     </li>
+    <li class="toctree-l2"><a class="reference internal" href="#animais-na-corrida">Animais na corrida</a>
+    </li>
     <li class="toctree-l2"><a class="reference internal" href="#som">Som</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#feedback-ao-jogador">Feedback ao jogador</a>
@@ -175,6 +177,67 @@
 <li>Na passagem para a etapa 2, um clarão (<code>.rua-transicao</code>) se dissolve sobre a cena.</li>
 <li>O mundo curvo, o tremor, o pulso, o clarão, a vibração e o confete <strong>não acontecem</strong> com <code>prefers-reduced-motion</code> (ou com o botão "Reduzir efeitos" no relatório).</li>
 </ul>
+<h2 id="animais-na-corrida">Animais na corrida<a class="headerlink" href="#animais-na-corrida" title="Permanent link">&para;</a></h2>
+<p>Opção do painel (<code>/admin/jogo</code> → "Animais na corrida", <strong>desligada por padrão</strong>). A cada N palavras <strong>pegas</strong> (padrão 4, de 3 a 8; nunca na última da etapa) um animal surge ao lado do avatar, fica nítido e some em cerca de 3,6 s (0,7 s para surgir, 0,9 s para sumir).</p>
+<ul>
+<li><strong>O animal é sorteado e não tem ligação com o resultado.</strong> É um baralho embaralhado, então os quatro aparecem antes de qualquer repetir. De propósito: o fator DISC de cada palavra continua só no servidor, e mostrar o perfil no meio da partida entregaria o resultado e enviesaria as escolhas seguintes.</li>
+<li>Cada animal (lobo, gato, águia, tubarão) é <strong>desenhado no código</strong>, de perfil, com pernas, asas e cauda animadas (<code>animais-corrida.js</code>), e aparece como um letreiro (sprite) que acompanha o avatar. Não são as silhuetas do relatório, que são emblemas parados.</li>
+<li>O movimento depende do cenário e do hábitat de cada animal:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Cenário</th>
+<th>Lobo e gato</th>
+<th>Águia</th>
+<th>Tubarão</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rua</td>
+<td>correm ao lado</td>
+<td>voa</td>
+<td>espírito</td>
+</tr>
+<tr>
+<td>Rio</td>
+<td>correm na margem</td>
+<td>voa</td>
+<td><strong>nada</strong> (dorso e barbatana para fora, marolas)</td>
+</tr>
+<tr>
+<td>Céu</td>
+<td>espírito</td>
+<td>voa</td>
+<td>espírito</td>
+</tr>
+<tr>
+<td>Neve</td>
+<td>correm na neve</td>
+<td>voa</td>
+<td>espírito</td>
+</tr>
+<tr>
+<td>Trilhos</td>
+<td>correm ao lado da ferrovia</td>
+<td>voa</td>
+<td>espírito</td>
+</tr>
+<tr>
+<td>Espaço</td>
+<td>constelação</td>
+<td>constelação</td>
+<td>constelação</td>
+</tr>
+</tbody>
+</table>
+<p><em>Espírito</em> é a silhueta translúcida que desliza, para o animal que não tem hábitat naquele cenário. A <em>constelação</em> recorta o desenho num campo de estrelas, com brilho aditivo.</p>
+<ul>
+<li>Com "reduzir movimento", o animal só surge e some, parado, sem galope nem balanço.</li>
+<li>Parâmetros de teste na URL: <code>?animais=N</code> liga o recurso (um animal a cada N palavras) e <code>?animal=lobo</code> (ou <code>gato</code>, <code>aguia</code>, <code>tubarao</code>) fixa o animal.</li>
+<li>Configuração salva no banco (<code>animaisNaCorrida</code> e <code>animaisACada</code>); configurações antigas, sem esses campos, usam o padrão.</li>
+</ul>
 <h2 id="som">Som<a class="headerlink" href="#som" title="Permanent link">&para;</a></h2>
 <p>Tudo é sintetizado com a Web Audio API, sem arquivos de áudio. O botão de som no canto da tela liga e desliga, e a escolha fica salva no navegador.</p>
 <p>A música de fundo tem <strong>um clima por cenário</strong> (<code>ESTILOS_MUSICA</code> em <code>audio.js</code>): andamento, timbre, oitava e baixo próprios para rua, rio, céu, neve, trilhos e espaço. A música de abertura é a da rua e troca quando o cenário é escolhido.</p>
@@ -194,7 +257,7 @@
 </thead>
 <tbody>
 <tr>
-<td><code>audio.js</code>, <code>report.js</code>, <code>game3d.js</code>, <code>confete.js</code>, <code>modelos.js</code>, <code>espaco.js</code>, <code>cenarios.js</code>, <code>avatars.js</code>, <code>ciclo.js</code>, <code>desempenho.js</code></td>
+<td><code>audio.js</code>, <code>report.js</code>, <code>game3d.js</code>, <code>confete.js</code>, <code>animais-corrida.js</code>, <code>modelos.js</code>, <code>espaco.js</code>, <code>cenarios.js</code>, <code>avatars.js</code>, <code>ciclo.js</code>, <code>desempenho.js</code></td>
 <td>Idênticos: pode copiar o arquivo inteiro.</td>
 </tr>
 <tr>

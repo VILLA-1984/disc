@@ -26,6 +26,7 @@ Salva no banco e vale para a instalação onde foi feita (feira e Vercel **não*
 - Logo; cenários e meios liberados; avatares liberados (combinações impossíveis são recusadas).
 - Ranking, minimapa, barra de progresso e painel de totais.
 - Palavras por etapa (6 a 36) e modo das placas (ciclo ou pares).
+- Animais na corrida (liga e desliga, desligado por padrão) e de quantas em quantas palavras pegas eles aparecem (3 a 8, padrão 4).
 - Títulos e textos de explicação (15 itens).
 
 A validação é feita no servidor (`src/server/configuracao.ts`). Se o que está salvo ficar inválido, o jogo usa o padrão de fábrica em vez de quebrar. "Voltar ao padrão" apaga o que foi salvo (a logo não é afetada).
