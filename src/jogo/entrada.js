@@ -67,6 +67,12 @@ function temWebGL() {
     }
 }
 
+/** Blocos extras da tela de escolha de avatar (alem dos avatares de formas simples). */
+const GRUPOS_DE_AVATAR = [
+    { chave: 'humanos', titulo: 'Humanos', sub: 'modelos 3D realistas' },
+    { chave: 'cartun', titulo: 'Cartun', sub: 'personagens 3D cartunescos' },
+];
+
 function escapar(texto) {
     return String(texto).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 }
@@ -84,8 +90,8 @@ export function montar(raiz, api) {
     const config = api.config ?? null;
     const avataresLivres = (() => {
         // `?humanos=1` na URL mostra o bloco de humanos mesmo que o evento ainda nao o tenha liberado (para testar).
-        const forcarHumanos = new URLSearchParams(location.search).get('humanos') === '1';
-        const lista = AVATARES.filter((a) => !config?.avatares || config.avatares.includes(a.id) || (forcarHumanos && a.grupo === 'humanos'));
+        const forcar = new URLSearchParams(location.search);
+        const lista = AVATARES.filter((a) => !config?.avatares || config.avatares.includes(a.id) || (a.grupo && forcar.get(a.grupo) === '1'));
 
         return lista.length ? lista : AVATARES;
     })();
@@ -403,8 +409,8 @@ export function montar(raiz, api) {
             corpoHtml: `${paragrafo('avatar_texto')}
                 <p class="rolar-aviso">↓ Role até o fim: depois dos avatares há mais escolhas (cenário, meio e vista) e só então o botão Começar.</p>
                 <div class="avatares" role="radiogroup" aria-label="Avatar">${avataresLivres.filter((a) => !a.grupo).map(opcaoDeAvatar).join('')}</div>
-                ${avataresLivres.some((a) => a.grupo === 'humanos') ? `<h3 class="avatares-grupo">Humanos <small>modelos 3D realistas</small></h3>
-                <div class="avatares" role="radiogroup" aria-label="Avatar humano">${avataresLivres.filter((a) => a.grupo === 'humanos').map(opcaoDeAvatar).join('')}</div>` : ''}
+                ${GRUPOS_DE_AVATAR.filter((g) => avataresLivres.some((a) => a.grupo === g.chave)).map((g) => `<h3 class="avatares-grupo">${g.titulo} <small>${g.sub}</small></h3>
+                <div class="avatares" role="radiogroup" aria-label="Avatares: ${g.titulo}">${avataresLivres.filter((a) => a.grupo === g.chave).map(opcaoDeAvatar).join('')}</div>`).join('')}
                 <div class="opcoes-linha">
                     <div class="cores" role="group" aria-label="Cor da roupa"><span>Cor da roupa</span>
                         <button type="button" class="cor-op" data-cor="" aria-pressed="${corRoupa === null}" aria-label="Cor original" title="Cor original">★</button>

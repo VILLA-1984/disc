@@ -39,6 +39,9 @@ export const AVATARES = [
     // simples, que valem como plano B (sem rede, arquivo ausente, `?modelos=0`) e nos meios em que o modelo nao serve
     // (barco, nado, draisina). `modelo` e o glTF animado ("Walk") e `retrato` o busto pre-renderizado da tela de escolha.
     { id: 'humano-ana', grupo: 'humanos', nome: 'Ana', modelo: '/modelos/avatares/ana.glb', retrato: '/modelos/avatares/ana.png', pele: '#5a3825', cabelo: { estilo: 'curto', cor: '#17100d' }, roupa: '#f08a3c', calca: '#0d2b4e', detalhe: '#ffffff', corpo: 'esguio', altura: 0.98, mobilidade: 'anda' },
+    // Bloco "Cartun": personagens 3D cartunescos prontos (Kenney "Mini Characters", CC0), com esqueleto e animacao "walk".
+    // Os campos de formas simples valem de plano B, como nos humanos.
+    { id: 'cartun-mari', grupo: 'cartun', nome: 'Mari', modelo: '/modelos/cartun/mari.glb', retrato: '/modelos/cartun/mari.png', alturaModelo: 1.5, clip: 'sprint', pele: '#b5683f', cabelo: { estilo: 'coque', cor: '#2b2b2f' }, roupa: '#8e5be0', calca: '#4a63d8', detalhe: '#f08a3c', corpo: 'medio', altura: 1, mobilidade: 'anda' },
 ];
 
 /**
@@ -742,7 +745,7 @@ function criarAvatarProcedural(spec) {
 }
 
 
-/** Altura (em unidades do jogo) de um humano de modelo 3D com `altura` = 1. */
+/** Altura (em unidades do jogo) de um personagem de modelo 3D com `altura` = 1 (`alturaModelo` na especificacao troca o valor). */
 const ALTURA_HUMANO = 1.78;
 
 /** O modelo realista so serve a quem anda a pe e fora do barco, da agua e da draisina. */
@@ -780,7 +783,7 @@ export function criarAvatar3D(spec) {
         pivo.add(humano);
         pivo.updateMatrixWorld(true);
         const caixa = new THREE.Box3().setFromObject(pivo);
-        const escala = (ALTURA_HUMANO * (spec.altura ?? 1)) / (caixa.max.y - caixa.min.y);
+        const escala = ((spec.alturaModelo ?? ALTURA_HUMANO) * (spec.altura ?? 1)) / (caixa.max.y - caixa.min.y);
         pivo.scale.setScalar(escala);
         pivo.position.y = -caixa.min.y * escala;
 
@@ -802,7 +805,7 @@ export function criarAvatar3D(spec) {
         });
 
         mixer = new THREE.AnimationMixer(humano);
-        const clip = gltf.animations.find((a) => /walk/i.test(a.name)) ?? gltf.animations[0];
+        const clip = gltf.animations.find((a) => a.name.toLowerCase() === (spec.clip ?? 'walk')) ?? gltf.animations.find((a) => /walk/i.test(a.name)) ?? gltf.animations[0];
 
         if (clip) {
             mixer.clipAction(clip).play();

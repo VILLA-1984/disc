@@ -34,6 +34,10 @@ Além dos avatares de formas simples, a tela de escolha tem um bloco **Humanos**
 - No jogo (`avatars.js`) o humano nasce com o avatar de formas simples, que continua sendo o **plano B** (sem rede, `?modelos=0`) e vale nos meios em que o modelo não serve (barco, nado, draisina, veículos); o modelo troca o corpo assim que chega. A camiseta e a calça seguem as cores da especificação (a pessoa pode trocar a cor da roupa).
 - O painel lista os humanos como "Nome (humano 3D)". Eventos com a lista de avatares já salva precisam **marcá-los** em `/admin/jogo`; `?humanos=1` na URL mostra o bloco para testar.
 
+### Bloco "Cartun" (personagens 3D prontos)
+
+Segundo bloco extra da tela de escolha, com personagens 3D cartunescos **prontos** do pacote *Mini Characters*, da Kenney (**CC0**, `public/modelos/cartun/`; licença em `LICENCA-kenney.txt`). O arquivo `.glb` do pacote referencia a textura por fora; ele foi regravado com `gltf-transform` para embutir a textura (~110 KB). Entram pelo mesmo mecanismo dos humanos (`modelo`, `retrato`, `clip` e `alturaModelo` na especificação em `avatars.js`); o jogo usa a animação `sprint` e o avatar de formas simples vale de plano B. O primeiro teste é a **Mari**. O pacote traz ainda mais 11 personagens, cadeiras de rodas, bengalas, muleta, óculos e aparelho auditivo, que podem entrar depois. No painel aparece como "Mari (cartun)"; `?cartun=1` na URL mostra o bloco para testar.
+
 Opção do painel (`/admin/jogo` → "Animais na corrida", **desligada por padrão**). A cada N palavras **pegas** (padrão 4, de 3 a 8; nunca na última da etapa) um animal surge ao lado do avatar, fica nítido e some. O **tempo na tela** é configurável no painel (de 2 a 8 s, padrão 3,6 s): um quinto dele é para surgir e um quarto para sumir.
 
 - **O animal é sorteado e não tem ligação com o resultado.** É um baralho embaralhado, então os quatro aparecem antes de qualquer repetir. De propósito: o fator DISC de cada palavra continua só no servidor, e mostrar o perfil no meio da partida entregaria o resultado e enviesaria as escolhas seguintes.
