@@ -398,9 +398,25 @@ export const TIPOS = ['lobo', 'gato', 'aguia', 'tubarao'];
 const DESENHOS = { lobo: desenharLobo, gato: desenharGato, aguia: desenharAguia, tubarao: desenharTubarao };
 
 /** Desenha o animal (de perfil, olhando para a direita) no contexto 2D de LARGURA x ALTURA. `fase` anima o movimento. */
-export function desenhar(ctx, tipo, fase, { agua = false } = {}) {
+export function desenhar(ctx, tipo, fase, { agua = false, constelacao = false } = {}) {
     ctx.clearRect(0, 0, LARGURA, ALTURA);
     ctx.save();
+
+    if (constelacao) {
+        // No espaco o animal e uma constelacao: o desenho vira so estrelas (um campo de pontos recortado pela silhueta),
+        // com um brilho fraco da silhueta por tras.
+        DESENHOS[tipo](ctx, fase, CORES[tipo]);
+        ctx.globalCompositeOperation = 'source-in';
+        ctx.drawImage(campoDeEstrelas(), 0, 0);
+        ctx.globalCompositeOperation = 'destination-over';
+        ctx.globalAlpha = 0.2;
+        ctx.shadowColor = '#9cc8ff';
+        ctx.shadowBlur = 22;
+        DESENHOS[tipo](ctx, fase, '#bcd6ff');
+        ctx.restore();
+
+        return;
+    }
 
     if (agua) {
         // Nadando: so o dorso e a barbatana aparecem; o resto fica como sombra submersa, com marolas na linha da agua.
@@ -437,13 +453,45 @@ export function desenhar(ctx, tipo, fase, { agua = false } = {}) {
     ctx.restore();
 }
 
+let estrelas = null;
+
+/** Campo de pontos brilhantes (criado uma vez) que preenche a silhueta da constelacao. */
+function campoDeEstrelas() {
+    if (!estrelas) {
+        estrelas = document.createElement('canvas');
+        estrelas.width = LARGURA;
+        estrelas.height = ALTURA;
+        const c = estrelas.getContext('2d');
+        // Sequencia fixa (sem Math.random), para as estrelas nao "pularem" de uma execucao para outra.
+        let semente = 7;
+        const sorteio = () => {
+            semente = (semente * 16807) % 2147483647;
+
+            return semente / 2147483647;
+        };
+
+        for (let i = 0; i < 1500; i++) {
+            const raio = sorteio() < 0.12 ? 3.4 + sorteio() * 1.8 : 1.4 + sorteio() * 1.4;
+
+            c.fillStyle = ['#ffffff', '#cfe3ff', '#ffe9b8'][i % 3];
+            c.shadowColor = '#bcd6ff';
+            c.shadowBlur = raio > 3 ? 10 : 4;
+            c.beginPath();
+            c.arc(sorteio() * LARGURA, sorteio() * ALTURA, raio, 0, TAU);
+            c.fill();
+        }
+    }
+
+    return estrelas;
+}
+
 /** Linha da agua no desenho do tubarao (altura no canvas, em pixels). */
 const LINHA_DAGUA = 178;
 
 // ------------------------------------------------------------------ controlador
 
 /** Cenarios ja liberados para os animais (os demais entram um a um). */
-const CENARIOS_LIBERADOS = ['rua', 'rio', 'ar', 'neve', 'trilhos'];
+const CENARIOS_LIBERADOS = ['rua', 'rio', 'ar', 'neve', 'trilhos', 'espaco'];
 
 /**
  * Como cada animal se move em cada cenario: `corre` (no chao), `voa` (no ar) ou `espirito` (silhueta translucida que
@@ -458,6 +506,8 @@ const HABITATS = {
     neve: { lobo: 'corre', gato: 'corre', aguia: 'voa', tubarao: 'espirito' },
     // Nos trilhos os animais correm na brita, ao lado da ferrovia.
     trilhos: { lobo: 'corre', gato: 'corre', aguia: 'voa', tubarao: 'espirito' },
+    // No espaco todos viram constelacoes que cruzam o ceu ao lado do avatar.
+    espaco: { lobo: 'constelacao', gato: 'constelacao', aguia: 'constelacao', tubarao: 'constelacao' },
 };
 
 /** Altura do chao onde o animal pisa (a areia da margem do rio fica um pouco acima da agua). */
@@ -470,6 +520,7 @@ const X_MARGEM = 7.4;
 const MOVIMENTOS = {
     corre: { ritmo: 12, altura: null, opacidade: 1 }, // altura: os pes (a 83% do desenho) pousam no chao
     margem: { ritmo: 12, altura: null, opacidade: 1 },
+    constelacao: { ritmo: 7, altura: 1.6, opacidade: 1 },
     nada: { ritmo: 6, altura: 0.16, opacidade: 1 }, // o centro do desenho fica logo acima da linha da agua
     voa: { ritmo: 9, altura: 2.5, opacidade: 1 },
     espirito: { ritmo: 6, altura: 1.5, opacidade: 0.55 },
@@ -501,6 +552,12 @@ export function criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCa
     const textura = new THREE.CanvasTexture(canvas);
     textura.colorSpace = THREE.SRGBColorSpace;
     const material = new THREE.SpriteMaterial({ map: textura, transparent: true, opacity: 0, depthWrite: false, fog: false });
+
+    // As constelacoes brilham: somam luz ao fundo escuro do espaco.
+    if (cenario === 'espaco') {
+        material.blending = THREE.AdditiveBlending;
+    }
+
     const sprite = new THREE.Sprite(material);
     const largura = modo === '3d' ? 4.4 : 3.6;
     const alturaDoSprite = (largura * ALTURA) / LARGURA;
@@ -578,9 +635,9 @@ export function criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCa
             // Com "reduzir movimento" o animal so surge e some, parado, sem galope nem balanco.
             ativo.fase += reduzirMovimento ? 0 : dt * parametros.ritmo;
             const fase = reduzirMovimento ? 0.6 : ativo.fase;
-            const balanco = reduzirMovimento ? 0 : Math.sin(ativo.t * 4.5) * (movimento === 'espirito' ? 0.18 : 0.05);
+            const balanco = reduzirMovimento ? 0 : Math.sin(ativo.t * 4.5) * (movimento === 'espirito' || movimento === 'constelacao' ? 0.18 : 0.05);
 
-            desenhar(ctx, tipo, fase, { agua: movimento === 'nada' });
+            desenhar(ctx, tipo, fase, { agua: movimento === 'nada', constelacao: movimento === 'constelacao' });
             textura.needsUpdate = true;
             material.opacity = aparece * parametros.opacidade;
             // Na margem (3D) o animal corre mais longe da camera, para caber na tela: fica maior para compensar.
