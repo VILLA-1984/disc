@@ -48,6 +48,19 @@ Opção do painel (`/admin/jogo` → "Animais na corrida", **desligada por padr�
 - Parâmetros de teste na URL: `?animais=N` liga o recurso (um animal a cada N palavras), `?animal=lobo` (ou `gato`, `aguia`, `tubarao`) fixa o animal e `?duracao=7` muda o tempo na tela.
 - Configuração salva no banco (`animaisNaCorrida`, `animaisACada` e `animaisDuracao`); configurações antigas, sem esses campos, usam o padrão.
 
+## Modelos próprios (Blender)
+
+O **gato** é feito por nós no Blender (5.2, instalado pelo winget), **sem abrir a janela**: o script `blender/gato.py` modela o animal com formas simples (o tronco é um volume único feito de "metabolas"), cria o esqueleto, anima o ciclo `Run` (16 quadros, 24 fps, em laço), exporta o GLB e renderiza imagens de pré-visualização (lado, trás e 3/4, em três momentos da corrida).
+
+```powershell
+& 'C:\Program Files\Blender Foundation\Blender 5.2lender.exe' --background --factory-startup --python blender/gato.py -- <pasta_de_previas> --glb <arquivo.glb>
+```
+
+- **Convenções:** o animal olha para **-Y** no Blender (vira +Z no glTF, como o lobo; o jogo gira 180° ao carregar), Z para cima e patas em z = 0.
+- **Depois de exportar**, o arquivo é otimizado com o `gltf-transform` (quantização da malha) e colocado em `public/modelos/animais/`. O gato ficou com ~105 KB e 3,6 mil triângulos.
+- Para entrar no jogo, registre o arquivo em `MODELOS_3D` (`animais-corrida.js`) com o nome do clipe. O animal montado no código (`animais-procedurais.js`) continua como plano B.
+- Os arquivos `.blend` e as imagens de pré-visualização não são versionados.
+
 ## Som
 
 Tudo é sintetizado com a Web Audio API, sem arquivos de áudio. O botão de som no canto da tela liga e desliga, e a escolha fica salva no navegador.

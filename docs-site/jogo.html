@@ -70,6 +70,8 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#animais-na-corrida">Animais na corrida</a>
     </li>
+    <li class="toctree-l2"><a class="reference internal" href="#modelos-proprios-blender">Modelos próprios (Blender)</a>
+    </li>
     <li class="toctree-l2"><a class="reference internal" href="#som">Som</a>
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#feedback-ao-jogador">Feedback ao jogador</a>
@@ -237,6 +239,16 @@
 <li>Com "reduzir movimento", o animal só surge e some, parado, sem galope nem balanço.</li>
 <li>Parâmetros de teste na URL: <code>?animais=N</code> liga o recurso (um animal a cada N palavras), <code>?animal=lobo</code> (ou <code>gato</code>, <code>aguia</code>, <code>tubarao</code>) fixa o animal e <code>?duracao=7</code> muda o tempo na tela.</li>
 <li>Configuração salva no banco (<code>animaisNaCorrida</code>, <code>animaisACada</code> e <code>animaisDuracao</code>); configurações antigas, sem esses campos, usam o padrão.</li>
+</ul>
+<h2 id="modelos-proprios-blender">Modelos próprios (Blender)<a class="headerlink" href="#modelos-proprios-blender" title="Permanent link">&para;</a></h2>
+<p>O <strong>gato</strong> é feito por nós no Blender (5.2, instalado pelo winget), <strong>sem abrir a janela</strong>: o script <code>blender/gato.py</code> modela o animal com formas simples (o tronco é um volume único feito de "metabolas"), cria o esqueleto, anima o ciclo <code>Run</code> (16 quadros, 24 fps, em laço), exporta o GLB e renderiza imagens de pré-visualização (lado, trás e 3/4, em três momentos da corrida).</p>
+<pre><code class="language-powershell">&amp; 'C:\Program Files\Blender Foundation\Blender 5.2lender.exe' --background --factory-startup --python blender/gato.py -- &lt;pasta_de_previas&gt; --glb &lt;arquivo.glb&gt;
+</code></pre>
+<ul>
+<li><strong>Convenções:</strong> o animal olha para <strong>-Y</strong> no Blender (vira +Z no glTF, como o lobo; o jogo gira 180° ao carregar), Z para cima e patas em z = 0.</li>
+<li><strong>Depois de exportar</strong>, o arquivo é otimizado com o <code>gltf-transform</code> (quantização da malha) e colocado em <code>public/modelos/animais/</code>. O gato ficou com ~105 KB e 3,6 mil triângulos.</li>
+<li>Para entrar no jogo, registre o arquivo em <code>MODELOS_3D</code> (<code>animais-corrida.js</code>) com o nome do clipe. O animal montado no código (<code>animais-procedurais.js</code>) continua como plano B.</li>
+<li>Os arquivos <code>.blend</code> e as imagens de pré-visualização não são versionados.</li>
 </ul>
 <h2 id="som">Som<a class="headerlink" href="#som" title="Permanent link">&para;</a></h2>
 <p>Tudo é sintetizado com a Web Audio API, sem arquivos de áudio. O botão de som no canto da tela liga e desliga, e a escolha fica salva no navegador.</p>
