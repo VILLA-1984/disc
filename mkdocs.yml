@@ -1,0 +1,27 @@
+site_name: Teste de Perfil DISC · Documentação técnica
+site_description: Arquitetura, API, dados e operação do Teste de Perfil DISC (Rua das Palavras).
+site_url: https://rua-das-palavras.vercel.app/
+repo_url: https://github.com/VILLA-1984/disc
+repo_name: VILLA-1984/disc
+edit_uri: edit/main/docs/
+docs_dir: docs
+theme:
+  name: readthedocs
+  language: pt-BR
+  navigation_depth: 3
+nav:
+  - Início: index.md
+  - Arquitetura: arquitetura.md
+  - Fluxo da partida: partida.md
+  - Pontuação e ciclo de palavras: pontuacao.md
+  - API: api.md
+  - Dados e privacidade: dados.md
+  - Configuração: configuracao.md
+  - Deploy e operação: deploy.md
+  - Testes: testes.md
+  - Metodologia DISC e referências: disc.md
+markdown_extensions:
+  - tables
+  - admonition
+  - toc:
+      permalink: true
