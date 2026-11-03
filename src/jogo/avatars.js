@@ -53,6 +53,8 @@ export const AVATARES = [
     { id: 'cartun-eder', grupo: 'cartun', nome: 'Eder', modelo: '/modelos/cartun/eder.glb', retrato: '/modelos/cartun/eder.png', alturaModelo: 1.5, clip: 'sprint', pele: '#f0c19b', cabelo: { estilo: 'curto', cor: '#d9703c' }, roupa: '#2b2f36', calca: '#2b2f36', detalhe: '#ffffff', corpo: 'medio', altura: 1, mobilidade: 'anda' },
     { id: 'cartun-gil', grupo: 'cartun', nome: 'Gil', modelo: '/modelos/cartun/gil.glb', retrato: '/modelos/cartun/gil.png', alturaModelo: 1.5, clip: 'sprint', pele: '#f0c19b', cabelo: { estilo: 'curto', cor: '#a8532e' }, roupa: '#ffffff', calca: '#f2b705', detalhe: '#ffffff', corpo: 'medio', altura: 1, mobilidade: 'anda' },
     { id: 'cartun-hugo', grupo: 'cartun', nome: 'Hugo', modelo: '/modelos/cartun/hugo.glb', retrato: '/modelos/cartun/hugo.png', alturaModelo: 1.5, clip: 'sprint', pele: '#e8a37a', cabelo: { estilo: 'curto', cor: '#3a3a40' }, roupa: '#2e9e6b', calca: '#e8a37a', detalhe: '#ffffff', corpo: 'medio', altura: 1, mobilidade: 'anda' },
+    // Com cadeira de rodas: o mesmo modelo, a animacao propria do pacote e a cadeira (mobilidade 'cadeira': velocimetro e som de rodas).
+    { id: 'cartun-fabi-cadeira', grupo: 'cartun', nome: 'Fabi (cadeira)', modelo: '/modelos/cartun/fabi.glb', acessorios: ['/modelos/cartun/cadeira.glb'], retrato: '/modelos/cartun/fabi-cadeira.png', alturaModelo: 1.5, clip: 'wheelchair-move-forward', pele: '#f0c19b', cabelo: { estilo: 'longo', cor: '#d9703c' }, roupa: '#2b2f36', calca: '#4a63d8', detalhe: '#ffffff', corpo: 'medio', altura: 1, mobilidade: 'cadeira' },
 ];
 
 /**
@@ -759,10 +761,10 @@ function criarAvatarProcedural(spec) {
 /** Altura (em unidades do jogo) de um personagem de modelo 3D com `altura` = 1 (`alturaModelo` na especificacao troca o valor). */
 const ALTURA_HUMANO = 1.78;
 
-/** O modelo realista so serve a quem anda a pe e fora do barco, da agua e da draisina. */
+/** O modelo so serve a quem anda a pe ou usa cadeira de rodas na rua (nos outros cenarios e meios vale o avatar de formas simples). */
 function usaModelo(spec) {
-    return Boolean(spec.modelo) && modelosLigados() && (spec.mobilidade ?? 'anda') === 'anda'
-        && !spec.noBarco && !spec.nadando && !spec.bombeando;
+    return Boolean(spec.modelo) && modelosLigados() && ['anda', 'cadeira'].includes(spec.mobilidade ?? 'anda')
+        && !spec.semModelo && !spec.noBarco && !spec.nadando && !spec.bombeando;
 }
 
 /** Baixa o arquivo do modelo antes de precisar (ex.: quando a pessoa escolhe o avatar); o navegador guarda no cache. */
@@ -820,6 +822,11 @@ export function criarAvatar3D(spec) {
 
         if (clip) {
             mixer.clipAction(clip).play();
+        }
+
+        // Acessorios (cadeira de rodas, bengala...): ja vem alinhados com o personagem, entram junto dele.
+        for (const arquivo of spec.acessorios ?? []) {
+            new GLTFLoader().loadAsync(arquivo).then((acessorio) => { humano.add(acessorio.scene); }).catch(() => undefined);
         }
 
         base.grupo.children.forEach((c) => { c.visible = false; });

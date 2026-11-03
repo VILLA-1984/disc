@@ -535,6 +535,7 @@ export function criarJogo3D(opcoes) {
         ...(infoMeio.semApoio ? { mobilidade: 'anda' } : {}),
         ...(infoMeio.nadando ? { nadando: true, noBarco: false } : {}), // deitado de bruços, sem banco
         ...(infoMeio.bombeando ? { bombeando: true } : {}), // bracos na alavanca da draisina
+        semModelo: true, // fora da rua o avatar de formas simples faz o papel (os modelos 3D so andam na rua)
         ...(infoMeio.bracos !== undefined ? { anguloBracos: infoMeio.bracos } : {}),
     };
     const specAvatar = rio
