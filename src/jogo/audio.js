@@ -273,15 +273,37 @@ export const sons = {
 
 const ESCALA = [262, 294, 330, 392, 440, 523, 587];
 
-/** Fundo musical bem leve (arpejo numa escala pentatonica), em loop, ate pararMusica(). */
-export function iniciarMusica() {
-    if (!ctx || musica) {
+// Cada cenario tem o seu clima: andamento (segundos entre notas), timbre, volume, oitava e o baixo que marca o compasso.
+const ESTILOS_MUSICA = {
+    rua: { intervalo: 0.42, tipo: 'sine', vol: 0.035, oitava: 1, baixo: 'triangle', cada: 4 },
+    rio: { intervalo: 0.55, tipo: 'sine', vol: 0.035, oitava: 1, baixo: 'sine', cada: 4 },
+    ar: { intervalo: 0.38, tipo: 'triangle', vol: 0.03, oitava: 2, baixo: 'sine', cada: 8 },
+    neve: { intervalo: 0.7, tipo: 'sine', vol: 0.03, oitava: 2, baixo: 'sine', cada: 4 },
+    trilhos: { intervalo: 0.34, tipo: 'triangle', vol: 0.032, oitava: 1, baixo: 'triangle', cada: 2 },
+    espaco: { intervalo: 0.8, tipo: 'sine', vol: 0.032, oitava: 0.5, baixo: 'sine', cada: 2 },
+};
+let estiloDaMusica = null;
+
+/** Fundo musical bem leve (arpejo numa escala pentatonica), em loop, ate pararMusica(). Muda o clima conforme o cenario. */
+export function iniciarMusica(cenario = 'rua') {
+    if (!ctx) {
         return;
     }
 
+    const nome = ESTILOS_MUSICA[cenario] ? cenario : 'rua';
+
+    if (musica) {
+        if (estiloDaMusica === nome) {
+            return;
+        }
+
+        pararMusica();
+    }
+
+    estiloDaMusica = nome;
+    const estilo = ESTILOS_MUSICA[nome];
     let passo = 0;
     let indice = 2;
-    const intervalo = 0.42;
     let proximo = ctx.currentTime + 0.1;
 
     musica = setInterval(() => {
@@ -289,14 +311,14 @@ export function iniciarMusica() {
             const atraso = proximo - ctx.currentTime;
             // Caminhada suave pela escala: sobe e desce em passos curtos.
             indice = Math.min(ESCALA.length - 1, Math.max(0, indice + [-1, 1, 1, -2, 2, 0][Math.floor(Math.random() * 6)]));
-            tom({ freq: ESCALA[indice], dur: 0.5, tipo: 'sine', vol: 0.035, atraso });
+            tom({ freq: ESCALA[indice] * estilo.oitava, dur: estilo.intervalo + 0.1, tipo: estilo.tipo, vol: estilo.vol, atraso });
 
-            if (passo % 4 === 0) {
-                tom({ freq: ESCALA[0] / 2, dur: 1.4, tipo: 'triangle', vol: 0.05, atraso });
+            if (passo % estilo.cada === 0) {
+                tom({ freq: (ESCALA[0] * estilo.oitava) / 2, dur: 1.4, tipo: estilo.baixo, vol: 0.05, atraso });
             }
 
             passo++;
-            proximo += intervalo;
+            proximo += estilo.intervalo;
         }
     }, 120);
 }
@@ -304,6 +326,7 @@ export function iniciarMusica() {
 export function pararMusica() {
     clearInterval(musica);
     musica = null;
+    estiloDaMusica = null;
 }
 
 // ------------------------------------------------------------------ sons continuos

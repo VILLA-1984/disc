@@ -547,6 +547,8 @@ export function montar(raiz, api) {
     }
 
     function iniciarJogo() {
+        // A musica ganha o clima do cenario escolhido (a de abertura e a da rua).
+        iniciarMusica(cenario);
         const spec = especificacaoEscolhida();
         retratoAtual = gerarRetratos([spec], { largura: 320, altura: 400 }).get(spec.id) ?? '';
         ajustarControles();
