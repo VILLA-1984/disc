@@ -24,7 +24,7 @@ from mathutils import Matrix, Vector
 # (None = careca). roupa: peca de cima e de baixo coloridas de forma lisa (o pacote traz um logo estampado).
 PERSONAGENS = {
     'ana': dict(nome='Ana', genero=0.0, idade=0.45, peso=0.38, altura=0.55, musculo=0.45, raca=(1.0, 0.0, 0.0),
-                pele='young_african_female', cabelo='afro01', cor_cabelo=(0.04, 0.03, 0.025), proxy='female1605',
+                pele='young_african_female', cor_pele=(0.34, 0.20, 0.13), cabelo='afro01', cor_cabelo=(0.04, 0.03, 0.025), proxy='female1605',
                 roupa='female_casualsuit01', cor_roupa=(0.94, 0.54, 0.24), cor_calca=(0.05, 0.17, 0.31)),
 }
 
@@ -193,6 +193,11 @@ def principled(material):
     return None
 
 
+def linear(rgb):
+    """As cores dos personagens estao em sRGB (como no jogo); o Blender quer linear."""
+    return tuple(c ** 2.2 for c in rgb)
+
+
 def cor_lisa(obj, rgb):
     """Troca a textura de cor por uma cor lisa; mantem so o canal de transparencia (cabelo, cilios) se houver."""
     for material in obj.data.materials:
@@ -205,7 +210,7 @@ def cor_lisa(obj, rgb):
         for ligacao in list(entrada.links):
             material.node_tree.links.remove(ligacao)
 
-        entrada.default_value = (*rgb, 1)
+        entrada.default_value = (*linear(rgb), 1)
         no.inputs['Roughness'].default_value = 0.85
 
 
@@ -213,7 +218,7 @@ def novo_material(nome, rgb, rugosidade=0.85):
     m = bpy.data.materials.new(nome)
     m.use_nodes = True
     no = principled(m)
-    no.inputs['Base Color'].default_value = (*rgb, 1)
+    no.inputs['Base Color'].default_value = (*linear(rgb), 1)
     no.inputs['Roughness'].default_value = rugosidade
 
     return m
@@ -284,6 +289,11 @@ for m in list(malha.modifiers):
         malha.modifiers.remove(m)
 
 print('TRIANGULOS', sum(len(p.vertices) - 2 for p in malha.data.polygons), 'MATERIAIS', [m.name for m in malha.data.materials])
+
+# Estilo do jogo: pele de cor lisa (sem a textura realista), para combinar com a cidade de desenho animado.
+for i, m in enumerate(malha.data.materials):
+    if m is not None and m.name == 'Human.body':
+        malha.data.materials[i] = novo_material('pele', P['cor_pele'], 0.65)
 
 # ------------------------------------------------------------------ juntas nitidas (joelho, tornozelo e cotovelo)
 # Os pesos do MPFB passam do osso de cima para o de baixo numa faixa longa e um pouco abaixo da articulacao; com o joelho
@@ -439,6 +449,10 @@ for q in range(QUADROS + 1):
         pb.rotation_euler = tuple(v)
         pb.keyframe_insert('rotation_euler', frame=q + 1)
         girar('lowerarm_' + sufixo, q + 1, 0.35 + max(0.0, -sb) * 0.35, eixos['lowerarm_' + sufixo]['frente'])
+
+    cabeca_osso = esqueleto.pose.bones['head']
+    cabeca_osso.scale = (P.get('cabeca', 1.22),) * 3
+    cabeca_osso.keyframe_insert('scale', frame=q + 1)
 
     # O corpo sobe e desce duas vezes por passada.
     esqueleto.pose.bones['Root'].location = (0, 0, -abs(math.cos(t)) * 0.025)
