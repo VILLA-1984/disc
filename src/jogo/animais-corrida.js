@@ -398,9 +398,38 @@ export const TIPOS = ['lobo', 'gato', 'aguia', 'tubarao'];
 const DESENHOS = { lobo: desenharLobo, gato: desenharGato, aguia: desenharAguia, tubarao: desenharTubarao };
 
 /** Desenha o animal (de perfil, olhando para a direita) no contexto 2D de LARGURA x ALTURA. `fase` anima o movimento. */
-export function desenhar(ctx, tipo, fase) {
+export function desenhar(ctx, tipo, fase, { agua = false } = {}) {
     ctx.clearRect(0, 0, LARGURA, ALTURA);
     ctx.save();
+
+    if (agua) {
+        // Nadando: so o dorso e a barbatana aparecem; o resto fica como sombra submersa, com marolas na linha da agua.
+        ctx.globalAlpha = 0.26;
+        DESENHOS[tipo](ctx, fase, CORES[tipo]);
+        ctx.globalAlpha = 1;
+        ctx.beginPath();
+        ctx.rect(0, 0, LARGURA, LINHA_DAGUA);
+        ctx.clip();
+        DESENHOS[tipo](ctx, fase, CORES[tipo]);
+        ctx.restore();
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+        ctx.lineWidth = 4;
+
+        for (let k = 0; k < 3; k++) {
+            const passo = (fase * 0.35 + k / 3) % 1;
+
+            ctx.globalAlpha = (1 - passo) * 0.8;
+            ctx.beginPath();
+            ctx.ellipse(250, LINHA_DAGUA + 2, 90 + passo * 150, 8 + passo * 14, 0, 0, TAU);
+            ctx.stroke();
+        }
+
+        ctx.restore();
+
+        return;
+    }
+
     // Contorno suave, para o animal destacar do fundo sem virar uma mancha.
     ctx.shadowColor = 'rgba(0,0,0,0.35)';
     ctx.shadowBlur = 10;
@@ -408,10 +437,13 @@ export function desenhar(ctx, tipo, fase) {
     ctx.restore();
 }
 
+/** Linha da agua no desenho do tubarao (altura no canvas, em pixels). */
+const LINHA_DAGUA = 178;
+
 // ------------------------------------------------------------------ controlador
 
 /** Cenarios ja liberados para os animais (os demais entram um a um). */
-const CENARIOS_LIBERADOS = ['rua'];
+const CENARIOS_LIBERADOS = ['rua', 'rio'];
 
 /**
  * Como cada animal se move em cada cenario: `corre` (no chao), `voa` (no ar) ou `espirito` (silhueta translucida que
@@ -419,11 +451,20 @@ const CENARIOS_LIBERADOS = ['rua'];
  */
 const HABITATS = {
     rua: { lobo: 'corre', gato: 'corre', aguia: 'voa', tubarao: 'espirito' },
+    rio: { lobo: 'margem', gato: 'margem', aguia: 'voa', tubarao: 'nada' },
 };
+
+/** Altura do chao onde o animal pisa (a areia da margem do rio fica um pouco acima da agua). */
+const CHAO = { rua: 0, rio: 0.2 };
+
+/** Distancia do centro do rio ate a areia, onde lobo e gato correm. */
+const X_MARGEM = 7.4;
 
 /** Ritmo do movimento (radianos por segundo) e altura do centro do desenho, por tipo de movimento. */
 const MOVIMENTOS = {
     corre: { ritmo: 12, altura: null, opacidade: 1 }, // altura: os pes (a 83% do desenho) pousam no chao
+    margem: { ritmo: 12, altura: null, opacidade: 1 },
+    nada: { ritmo: 6, altura: 0.16, opacidade: 1 }, // o centro do desenho fica logo acima da linha da agua
     voa: { ritmo: 9, altura: 2.5, opacidade: 1 },
     espirito: { ritmo: 6, altura: 1.5, opacidade: 0.55 },
 };
@@ -467,6 +508,13 @@ export function criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCa
     let ativo = null; // { tipo, movimento, t, fase, lado }
 
     function sortear() {
+        // `?animal=lobo` (ou gato, aguia, tubarao) fixa o animal, para testar o desenho de cada um.
+        const fixo = typeof location === 'undefined' ? null : new URLSearchParams(location.search).get('animal');
+
+        if (TIPOS.includes(fixo)) {
+            return fixo;
+        }
+
         if (baralho.length === 0) {
             baralho = [...TIPOS].sort(() => Math.random() - 0.5);
 
@@ -526,14 +574,25 @@ export function criarAnimaisCorrida({ cena, modo, cenario, reduzirMovimento, aCa
             const fase = reduzirMovimento ? 0.6 : ativo.fase;
             const balanco = reduzirMovimento ? 0 : Math.sin(ativo.t * 4.5) * (movimento === 'espirito' ? 0.18 : 0.05);
 
-            desenhar(ctx, tipo, fase);
+            desenhar(ctx, tipo, fase, { agua: movimento === 'nada' });
             textura.needsUpdate = true;
             material.opacity = aparece * parametros.opacidade;
-            sprite.scale.setScalar(1);
-            sprite.scale.set(largura * (0.9 + 0.1 * aparece), ((largura * ALTURA) / LARGURA) * (0.9 + 0.1 * aparece), 1);
+            // Na margem (3D) o animal corre mais longe da camera, para caber na tela: fica maior para compensar.
+            const ampliar = movimento === 'margem' && modo === '3d' ? 1.8 : 1;
 
-            const centro = parametros.altura ?? alturaDoSprite * 0.34;
+            sprite.scale.set(largura * ampliar * (0.9 + 0.1 * aparece), alturaDoSprite * ampliar * (0.9 + 0.1 * aparece), 1);
+
+            const centro = parametros.altura ?? (CHAO[cenario] ?? 0) + alturaDoSprite * ampliar * 0.34;
             const sobe = movimento === 'voa' ? Math.sin(ativo.t * 2.4) * 0.25 : 0;
+
+            if (movimento === 'margem') {
+                // Corre na areia da margem, no lado oposto ao avatar (na vista lateral, na margem de la).
+                const lado = modo === '3d' ? ativo.lado : -1;
+
+                sprite.position.set(lado * X_MARGEM, centro + balanco, modo === '3d' ? -8.5 - ativo.t * 0.3 : -0.4 + Math.sin(ativo.t * 1.4) * 0.5);
+
+                return;
+            }
 
             if (modo === '3d') {
                 // De tras do avatar o desenho de perfil "desliza" ao lado dele: fica no lado livre, um pouco a frente.
