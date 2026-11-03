@@ -277,6 +277,26 @@ bpy.ops.object.mode_set(mode='OBJECT')
 acao = arm.animation_data.action
 acao.name = 'Run'
 
+# ------------------------------------------------------------------ sombreamento do pelo/penas (cor de vertice)
+# Escurece o que olha para baixo e as dobras, clareia o dorso: da volume sem textura. O glTF multiplica pela cor do material.
+def sombrear(obj):
+    dados = obj.data
+    attr = dados.color_attributes.new('Col', 'FLOAT_COLOR', 'POINT')
+    zs = [v.co.z for v in dados.vertices]
+    zmin, zmax = min(zs), max(zs)
+
+    for v in dados.vertices:
+        altura = (v.co.z - zmin) / max(zmax - zmin, 1e-6)
+        luz = 0.5 + 0.5 * v.normal.z
+        k = 0.58 + 0.30 * luz + 0.12 * altura
+        attr.data[v.index].color = (k, k, k, 1.0)
+
+    dados.color_attributes.active_color = attr
+    dados.color_attributes.render_color_index = list(dados.color_attributes).index(attr)
+
+
+sombrear(malha)
+
 # ------------------------------------------------------------------ exportacao
 if glb:
     for o in cena.objects:
@@ -284,7 +304,7 @@ if glb:
 
     bpy.context.view_layer.objects.active = arm
     bpy.ops.export_scene.gltf(filepath=glb, export_format='GLB', use_selection=True, export_animations=True,
-                              export_yup=True, export_apply=False, export_image_format='NONE')
+                              export_yup=True, export_apply=False, export_image_format='NONE', export_vertex_color='ACTIVE')
     print('GLB:', glb, os.path.getsize(glb), 'bytes')
 
 # ------------------------------------------------------------------ pre-visualizacao
