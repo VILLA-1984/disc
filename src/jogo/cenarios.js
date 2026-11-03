@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { carregarModelo, encaixarModelo, modelosLigados } from './modelos.js';
+import { carregarModelo, encaixarModelo, modelosLigados, precarregarModelo } from './modelos.js';
+import { urlDoModeloEspacial } from './espaco.js';
 
 /**
  * Cenarios do jogo. O cenario e so o visual (chao, margens, veiculo): portoes, placas, ciclo de
@@ -83,6 +84,15 @@ const SOBE_NO_BARCO = ['anda', 'bengala', 'andador', 'cadeira', 'cadeira-corrida
  * Meios de locomocao de cada cenario (a pessoa escolhe em "Como voce quer ir?"). `aceita` recebe a
  * `mobilidade` do avatar; `textos` troca as frases do jogo (verbo, botao de comecar, como acelerar).
  */
+/** Comeca a baixar o modelo pronto (glTF) do meio escolhido, se houver, enquanto a pessoa ainda esta na tela de escolha. */
+export function precarregarModeloDoMeio(meio) {
+    const url = MODELOS_RIO[meio] ? `/modelos/rio/${MODELOS_RIO[meio].arquivo}` : (meio === 'locomotiva' ? '/modelos/trilhos/locomotiva.glb' : urlDoModeloEspacial(meio));
+
+    if (url) {
+        precarregarModelo(url);
+    }
+}
+
 export const MEIOS = {
     barco: {
         cenario: 'rio',

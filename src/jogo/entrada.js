@@ -1,6 +1,6 @@
 import { AVATARES, CORES_ROUPA, gerarRetratos } from './avatars.js';
 import { alternarMudo, estaMudo, iniciarAudio, iniciarMusica, pararMusica, sons } from './audio.js';
-import { CENARIOS, MEIOS, avatarCabe, meioPadrao, regraDe, textosDe } from './cenarios.js';
+import { CENARIOS, MEIOS, avatarCabe, meioPadrao, precarregarModeloDoMeio, regraDe, textosDe } from './cenarios.js';
 import { paraHtml, textoDe } from '../lib/configuracao';
 import { criarCiclo } from './ciclo.js';
 import { criarJogo3D } from './game3d.js';
@@ -445,6 +445,7 @@ export function montar(raiz, api) {
 
                 // Cada cenario aceita certos avatares (o criterio e o meio de locomocao de cada um).
                 const aplicarCenario = () => {
+                    precarregarModeloDoMeio(meio);
                     const aviso = corpo.querySelector('.cenario-aviso');
 
                     for (const botao of botoes) {

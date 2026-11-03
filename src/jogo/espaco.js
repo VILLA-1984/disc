@@ -13,6 +13,9 @@ const MODELOS = {
 };
 const PASTA_MODELOS = '/modelos/espaco/';
 
+/** Endereco do modelo pronto do meio espacial (ou null, se ele nao tem um). */
+export const urlDoModeloEspacial = (meio) => (MODELOS[meio] ? PASTA_MODELOS + MODELOS[meio].arquivo : null);
+
 /**
  * Cenario do espaco: estrelas, nebulosas e planetas ao fundo, balizas de luz e asteroides que passam, riscos de
  * estrelas, rochas girando e cometas. Como nos outros cenarios, e so o visual: portoes, placas, ciclo de palavras,

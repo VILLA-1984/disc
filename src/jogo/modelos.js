@@ -11,6 +11,13 @@ const emCache = new Map();
 /** Falso so com `?modelos=0` na URL (para comparar com os veiculos feitos em codigo). */
 export const modelosLigados = () => typeof location === 'undefined' || new URLSearchParams(location.search).get('modelos') !== '0';
 
+/** Baixa um modelo antes de precisar (ex.: quando a pessoa escolhe o meio), para ele entrar na cena sem atraso. */
+export function precarregarModelo(url) {
+    if (modelosLigados()) {
+        carregarModelo(url).catch(() => undefined);
+    }
+}
+
 /** Carrega (uma vez) o glTF e devolve um clone novo da cena a cada chamada. */
 export function carregarModelo(url) {
     if (!emCache.has(url)) {
