@@ -10,7 +10,7 @@ Ficam em `tests/` e cobrem: sorteio e rodada (`gameRound`), ciclo, armazenamento
 
 ## Ponta a ponta (Playwright)
 
-Com o servidor no ar em `RUA_URL` (padrão `http://127.0.0.1:3100`):
+Com o servidor no ar em `RUA_URL` (padrão `http://127.0.0.1:3100`). **Suba o servidor com `npm run teste:servidor`** (depois de `npm run build`): ele usa um banco SQLite temporário e ignora o Turso do `.env`. Os roteiros criam eventos e salvam configurações, e com `npm start` comum eles gravariam no banco de produção.
 
 ```powershell
 node e2e/partida.mjs [pasta] [3d|lateral]

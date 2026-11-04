@@ -121,7 +121,7 @@
 </code></pre>
 <p>Ficam em <code>tests/</code> e cobrem: sorteio e rodada (<code>gameRound</code>), ciclo, armazenamento e migração do banco, configuração, eventos, envios, totais, logo, endereço e mensagem de WhatsApp.</p>
 <h2 id="ponta-a-ponta-playwright">Ponta a ponta (Playwright)<a class="headerlink" href="#ponta-a-ponta-playwright" title="Permanent link">&para;</a></h2>
-<p>Com o servidor no ar em <code>RUA_URL</code> (padrão <code>http://127.0.0.1:3100</code>):</p>
+<p>Com o servidor no ar em <code>RUA_URL</code> (padrão <code>http://127.0.0.1:3100</code>). <strong>Suba o servidor com <code>npm run teste:servidor</code></strong> (depois de <code>npm run build</code>): ele usa um banco SQLite temporário e ignora o Turso do <code>.env</code>. Os roteiros criam eventos e salvam configurações, e com <code>npm start</code> comum eles gravariam no banco de produção.</p>
 <pre><code class="language-powershell">node e2e/partida.mjs [pasta] [3d|lateral]
 </code></pre>
 <p>Há roteiros por área em <code>e2e/</code>: <code>admin</code>, <code>envios</code>, <code>eventos</code>, <code>navegacao</code>, <code>mobile</code>, <code>rio</code>, <code>trilhos</code>, <code>espaco</code>. As capturas vão para <code>e2e/capturas/</code> (fora do git) e devem ser <strong>olhadas</strong>, não só executadas.</p>
