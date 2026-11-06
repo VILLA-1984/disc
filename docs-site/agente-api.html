@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://rua-das-palavras.vercel.app/docs/agente-api.html" />
+      <link rel="shortcut icon" href="img/favicon.ico" />
+    <title>API do agente - Teste de Perfil DISC · Documentação técnica</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "API do agente";
+        var mkdocs_page_input_path = "agente-api.md";
+        var mkdocs_page_url = "/docs/agente-api.html";
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="index.html" class="icon icon-home"> Teste de Perfil DISC · Documentação técnica
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="index.html">Início</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="arquitetura.html">Arquitetura</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="partida.html">Fluxo da partida</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="pontuacao.html">Pontuação e ciclo de palavras</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="api.html">API</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">API do agente</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#servidor-e-credenciais">Servidor e credenciais</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#enviar-post-apiagente">Enviar: POST /api/agente</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#receber-get-apiagente">Receber: GET /api/agente</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#exemplo-nodejs-nextjs-backend">Exemplo Node.js / Next.js (backend)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#exemplo-python-backend-biblioteca-padrao">Exemplo Python (backend, biblioteca padrao)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#erros-e-operacao">Erros e operacao</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="jogo.html">Jogo, efeitos e desempenho</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="dados.html">Dados e privacidade</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="configuracao.html">Configuração</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="deploy.html">Deploy e operação</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="testes.html">Testes</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="disc.html">Metodologia DISC e referências</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Teste de Perfil DISC · Documentação técnica</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html" class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">API do agente</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/VILLA-1984/disc/edit/main/docs/agente-api.md">Edit on VILLA-1984/disc</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="api-compartilhada-do-agente">API compartilhada do agente<a class="headerlink" href="#api-compartilhada-do-agente" title="Permanent link">&para;</a></h1>
+<p>O agente <strong>Gerador de APIs REST</strong> gera texto e codigo. Para executar uma acao em um sistema externo, e necessario adicionar uma ferramenta/conector ao agente e definir as permissoes dessa acao. Esta integracao nao executa o codigo gerado.</p>
+<p>A API pode ser chamada pelo backend de qualquer projeto, em qualquer linguagem, por HTTP. O endereco pode ser o deste servidor ou de uma instalacao separada. Os projetos clientes nao precisam usar Next.js nem receber o segredo da Microsoft. Cada projeto tem sua chave; a sessao de um projeto nao funciona com a chave de outro.</p>
+<h2 id="servidor-e-credenciais">Servidor e credenciais<a class="headerlink" href="#servidor-e-credenciais" title="Permanent link">&para;</a></h2>
+<p>Os valores reais ficam no <code>.env</code>, ignorado pelo Git. <code>.env.example</code> documenta somente os nomes:</p>
+<table>
+<thead>
+<tr>
+<th>Variavel</th>
+<th>Funcao</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>COPILOT_DIRECT_LINE_SECRET</code></td>
+<td>Segredo do canal Direct Line, exclusivo do servidor central.</td>
+</tr>
+<tr>
+<td><code>COPILOT_DIRECT_LINE_URL</code></td>
+<td>Base HTTPS do Direct Line, padrao <code>https://directline.botframework.com/v3/directline</code>.</td>
+</tr>
+<tr>
+<td><code>COPILOT_SESSAO_SEGREDO</code></td>
+<td>Chave aleatoria de 32 bytes em hexadecimal, para AES-256-GCM. Troca invalida sessoes existentes.</td>
+</tr>
+<tr>
+<td><code>AGENTE_CHAVES</code></td>
+<td>Objeto JSON <code>{"projeto":"chave-aleatoria-com-pelo-menos-32-caracteres"}</code>.</td>
+</tr>
+<tr>
+<td><code>AGENTE_LIMITE_MINUTO</code></td>
+<td>Limite de requisicoes por projeto/minuto, contando POST e GET. Padrao 60.</td>
+</tr>
+</tbody>
+</table>
+<p>Para criar a chave de outro projeto, execute <code>node scripts/agente-chave.mjs meu-outro-projeto</code>. Ela sera acrescentada ao <code>.env</code>, sem imprimir o segredo. Copie <strong>apenas a chave desse projeto</strong> para o <code>.env</code> do backend cliente, por exemplo em <code>AGENTE_API_KEY</code>. Use <code>AGENTE_API_URL</code> no cliente para guardar o endereco completo <code>/api/agente</code> do servidor central. Reinicie o servidor depois de mudar as variaveis.</p>
+<p>Em producao, configure as mesmas variaveis no ambiente da hospedagem. No Vercel, o <code>.env</code> local nao e enviado: cadastre as variaveis no projeto e use Turso conforme a configuracao existente, para o limite ser compartilhado. Localmente o contador usa SQLite. O limite e uma janela fixa de um minuto, nao uma cota financeira ou garantia de isolamento de custos. Revogue uma chave removendo seu projeto de <code>AGENTE_CHAVES</code> e reiniciando/republicando o servidor.</p>
+<p>No Copilot Studio, o login individual fica desativado e <strong>Exigir acesso seguro</strong> fica habilitado no canal Web/Direct Line. Esse ajuste pode levar ate duas horas para propagar. Nunca distribua o segredo Direct Line aos projetos clientes. Nao use prefixo <code>NEXT_PUBLIC_</code> nem coloque chaves no JavaScript publico. A API nao libera CORS: aplicativos web a chamam pelo proprio backend, onde a chave permanece protegida. Aplicativos distribuidos tambem devem usar um backend, pois chaves embutidas no executavel podem ser extraidas.</p>
+<h2 id="enviar-post-apiagente">Enviar: POST /api/agente<a class="headerlink" href="#enviar-post-apiagente" title="Permanent link">&para;</a></h2>
+<p>Cabecalhos:</p>
+<pre><code class="language-http">Authorization: Bearer CHAVE_DO_PROJETO
+Content-Type: application/json
+</code></pre>
+<pre><code class="language-json">{ &quot;mensagem&quot;: &quot;Gere uma API REST de produtos em TypeScript&quot; }
+</code></pre>
+<p>Resposta HTTP <strong>202</strong>: o envio foi aceito e a resposta sera recebida por consulta. <code>sessao</code> e um valor opaco, criptografado, que deve ser tratado como credencial temporaria.</p>
+<pre><code class="language-json">{
+  &quot;estado&quot;: &quot;aguardando&quot;,
+  &quot;envioId&quot;: &quot;identificador-do-envio&quot;,
+  &quot;sessao&quot;: &quot;sessao-opaca&quot;,
+  &quot;consultarAposSegundos&quot;: 2
+}
+</code></pre>
+<h2 id="receber-get-apiagente">Receber: GET /api/agente<a class="headerlink" href="#receber-get-apiagente" title="Permanent link">&para;</a></h2>
+<p>Use a mesma chave e envie <code>X-Agente-Sessao: sessao-opaca</code>. Nao coloque a sessao na URL. Consulte a cada dois segundos, substituindo a sessao pelo novo valor recebido <strong>em toda resposta</strong>, inclusive 202.</p>
+<p>HTTP <strong>202</strong> significa que nao ha mensagens novas; HTTP <strong>200</strong> retorna mensagens:</p>
+<pre><code class="language-json">{
+  &quot;estado&quot;: &quot;mensagens_recebidas&quot;,
+  &quot;resposta&quot;: &quot;Codigo e explicacao produzidos pelo agente&quot;,
+  &quot;mensagens&quot;: [{ &quot;id&quot;: &quot;id-da-resposta&quot;, &quot;texto&quot;: &quot;Codigo e explicacao produzidos pelo agente&quot;, &quot;anexos&quot;: [] }],
+  &quot;sessao&quot;: &quot;nova-sessao-opaca&quot;,
+  &quot;consultarAposSegundos&quot;: 2
+}
+</code></pre>
+<p>O agente pode enviar varias mensagens para um unico pedido. <code>200</code> confirma mensagens recebidas, <strong>nao o fim de todas as mensagens do turno</strong>. Continue consultando se precisar de mensagens adicionais. Consuma os IDs para evitar duplicatas ao recuperar uma chamada perdida. Para continuar a conversa, envie novo POST com <code>{ "mensagem": "...", "sessao": "ultimo-valor" }</code>. Use uma sessao por conversa/usuario; nao envie mensagens ou consultas concorrentes para a mesma sessao, para preservar o cursor de recebimento. Sessoes ativas sao renovadas perto do vencimento; depois de expiradas, inicie nova conversa.</p>
+<p>As respostas nao seguem o formato <code>chat/completions</code> da OpenAI. <code>resposta</code> e texto do modelo, sem garantia de ser JSON valido. Se o texto for usado como JSON ou codigo, valide-o antes de processar/executar.</p>
+<h2 id="exemplo-nodejs-nextjs-backend">Exemplo Node.js / Next.js (backend)<a class="headerlink" href="#exemplo-nodejs-nextjs-backend" title="Permanent link">&para;</a></h2>
+<p>O cliente sem dependencias <code>integracoes/cliente-agente.mjs</code> pode ser copiado para outro projeto. Ele espera ate a primeira mensagem, por ate um minuto; se ainda estiver aguardando, retorna a sessao para continuar as consultas.</p>
+<pre><code class="language-js">import { conversar } from './integracoes/cliente-agente.mjs';
+
+const resultado = await conversar({
+  url: process.env.AGENTE_API_URL,
+  chave: process.env.AGENTE_API_KEY,
+  mensagem: 'Gere GET /api/health em TypeScript com Next.js App Router',
+});
+// resultado.resposta, resultado.mensagens, resultado.sessao
+</code></pre>
+<h2 id="exemplo-python-backend-biblioteca-padrao">Exemplo Python (backend, biblioteca padrao)<a class="headerlink" href="#exemplo-python-backend-biblioteca-padrao" title="Permanent link">&para;</a></h2>
+<pre><code class="language-python">import json, os, urllib.request
+
+url = os.environ['AGENTE_API_URL']
+headers = {
+    'Authorization': 'Bearer ' + os.environ['AGENTE_API_KEY'],
+    'Content-Type': 'application/json',
+}
+pedido = urllib.request.Request(url, data=json.dumps({
+    'mensagem': 'Gere uma API REST de produtos em Python'
+}).encode(), headers=headers, method='POST')
+with urllib.request.urlopen(pedido, timeout=45) as resposta:
+    enviada = json.load(resposta)
+
+# Aguarde dois segundos e repita GET enquanto nao houver mensagens.
+headers['X-Agente-Sessao'] = enviada['sessao']
+with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=20) as resposta:
+    recebida = json.load(resposta)
+# Use recebida['sessao'] na consulta seguinte.
+</code></pre>
+<h2 id="erros-e-operacao">Erros e operacao<a class="headerlink" href="#erros-e-operacao" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>400/413/415/422:</strong> sessao ou JSON invalidos, corpo acima de 64 KiB, formato incorreto ou mensagem fora de 1 a 8000 caracteres.</li>
+<li><strong>401:</strong> chave ausente ou incorreta.</li>
+<li><strong>410:</strong> sessao vencida; crie nova conversa.</li>
+<li><strong>429:</strong> limite por projeto. Respeite <code>Retry-After</code>.</li>
+<li><strong>502:</strong> falha no provedor ou resultado incerto. Um POST pode ter sido recebido mesmo se houve timeout. <strong>Nao reenvie POST automaticamente</strong>; com uma sessao existente, consulte as mensagens antes. Em primeira conversa cujo POST falhou, nao ha recuperacao automatica nem garantia de idempotencia.</li>
+<li><strong>503:</strong> configuracao, banco, capacidade ou integracao indisponiveis.</li>
+</ul>
+<p>Nao armazene prompts, sessoes ou respostas em logs publicos. O contador local guarda somente projeto/janela/numero de chamadas; o processamento e o historico do agente continuam sujeitos as configuracoes do Copilot Studio.</p>
+<p>Documentacao Microsoft: <a href="https://learn.microsoft.com/en-us/microsoft-copilot-studio/configure-web-security">seguranca do canal</a> e <a href="https://learn.microsoft.com/en-us/microsoft-copilot-studio/publication-connect-bot-to-custom-application">integracao de aplicativos</a>.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="api.html" class="btn btn-neutral float-left" title="API"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="jogo.html" class="btn btn-neutral float-right" title="Jogo, efeitos e desempenho">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/VILLA-1984/disc" class="fa fa-code-fork" style="color: #fcfcfc"> VILLA-1984/disc</a>
+        </span>
+    
+    
+      <span><a href="api.html" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="jogo.html" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = ".";</script>
+    <script src="js/theme_extra.js"></script>
+    <script src="js/theme.js"></script>
+      <script src="search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

@@ -175,6 +175,24 @@ export function modoDoBanco(): 'turso' | 'sqlite' {
     return urlDoTurso() ? 'turso' : 'sqlite';
 }
 
+/** Limite compartilhado entre instancias. Guarda so o projeto, a janela e um contador. */
+export async function reservarUsoAgente(projeto: string, limite: number, agora = Date.now()): Promise<boolean> {
+    const banco = await abrir();
+    const janela = Math.floor(agora / 60_000);
+    await banco.escrever(`CREATE TABLE IF NOT EXISTS agente_limites (
+        projeto TEXT PRIMARY KEY, janela INTEGER NOT NULL, usos INTEGER NOT NULL
+    )`, []);
+    const { alteradas } = await banco.escrever(
+        `INSERT INTO agente_limites (projeto, janela, usos) VALUES (?, ?, 1)
+         ON CONFLICT(projeto) DO UPDATE SET
+            usos = CASE WHEN agente_limites.janela = excluded.janela THEN agente_limites.usos + 1 ELSE 1 END,
+            janela = excluded.janela
+         WHERE agente_limites.janela <> excluded.janela OR agente_limites.usos < ?`,
+        [projeto, janela, limite],
+    );
+    return alteradas === 1;
+}
+
 export async function criarParticipante(nome: string, whatsapp: string): Promise<number> {
     const agora = new Date().toISOString();
     const { id } = await (await abrir()).escrever(

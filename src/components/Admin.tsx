@@ -360,6 +360,18 @@ export default function Admin({ configInicial, catalogo, textos, escolhaLogo, ve
                 </div>
             </section>
 
+            <section className="admin-secao" aria-labelledby="secao-treino">
+                <h2 id="secao-treino">Treino antes do jogo</h2>
+                <p>Um treino rápido para a pessoa aprender como o jogo funciona: duas etapas de 4 portões (8 no total) com palavras de exemplo. Depois aparece “Agora é pra valer!” e o jogo começa. Nada do treino entra no resultado.</p>
+
+                <div className="admin-grade">
+                    <label className={`admin-opcao${config.demoInicial ? ' marcada' : ''}`}>
+                        <input type="checkbox" checked={config.demoInicial} onChange={(e) => definir('demoInicial', e.target.checked)} />
+                        <span><strong>Treino no início do jogo</strong><small>a pessoa faz 8 portões de exemplo antes de começar de verdade; os textos do treino ficam em “Títulos e textos”</small></span>
+                    </label>
+                </div>
+            </section>
+
             <section className="admin-secao" aria-labelledby="secao-placas">
                 <h2 id="secao-placas">Placas dos portões</h2>
                 <p>Como as palavras aparecem em cada portão. A mudança vale para as próximas partidas.</p>

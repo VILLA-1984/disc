@@ -172,6 +172,29 @@ describe('validacao', () => {
         expect(montarCatalogo().avatares.find((a) => a.id === 'cartun-mari')).toMatchObject({ mobilidade: 'bengala', rotulo: 'usa muletas' });
     });
 
+    it('o treino antes do jogo comeca desligado e configuracoes antigas ficam sem treino', () => {
+        expect(configuracaoPadrao().demoInicial).toBe(false);
+
+        const { demoInicial: _d, ...antiga } = base();
+        const r = validar(antiga);
+
+        expect(r.ok && r.config.demoInicial).toBe(false);
+    });
+
+    it('guarda o treino ligado e ignora valores que nao sao verdadeiro ou falso', () => {
+        const ligado = validar({ ...base(), demoInicial: true });
+        const lixo = validar({ ...base(), demoInicial: 'sim' });
+
+        expect(ligado.ok && ligado.config.demoInicial).toBe(true);
+        expect(lixo.ok && lixo.config.demoInicial).toBe(false);
+    });
+
+    it('os textos do treino existem para os dois modos de placas', () => {
+        const chaves = TEXTOS.map((t) => `${t.chave}:${t.modo ?? 'todos'}`);
+
+        expect(chaves).toEqual(expect.arrayContaining(['demo_texto:ciclo', 'demo_texto_pares:pares', 'demo_pronto_titulo:todos', 'demo_pronto_texto:todos']));
+    });
+
     it('a forca do turbo comeca em 1,9 e configuracoes antigas a recebem', () => {
         expect(configuracaoPadrao().turboForca).toBe(LIMITES.turboPadrao);
 

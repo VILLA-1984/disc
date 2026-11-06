@@ -27,6 +27,14 @@ O front do jogo fica em `src/jogo/` (JavaScript puro com three.js). Esta página
 
 ## Animais na corrida
 
+### Treino antes do jogo (demo)
+
+Opção do painel (`/admin/jogo` → "Treino antes do jogo", **desligada por padrão**). Depois de escolher avatar e cenário, a pessoa faz um treino de **8 portões, 4 em cada etapa**, com palavras de exemplo (Café x Chá, Praia x Montanha...), no mesmo cenário e com os mesmos controles, no mesmo modo de placas do jogo (duas palavras ou palavra + "Deixar passar"). Termina com o cartão "Agora é pra valer!" e o jogo de verdade começa do zero.
+
+- É uma partida à parte (`iniciarTreino` em `entrada.js`, com o seu próprio `criarJogo3D`, descartado ao terminar): **nenhuma escolha do treino vai para `escolhas`, para o ciclo ou para o servidor**. O envio ao fim continua sendo só as escolhas do jogo valendo (testado: 12 de 12 em duas etapas de 6).
+- Sem animais e sem painel de palavras reais; o turbo funciona, para a pessoa aprender a acelerar.
+- Títulos e textos editáveis no painel (`demo_titulo`, `demo_texto`/`demo_texto_pares`, `demo_pronto_titulo`, `demo_pronto_texto`). O DISC (Laravel) ainda não tem o treino.
+
 ### Avatares humanos 3D (bloco "Humanos")
 
 Além dos avatares de formas simples, a tela de escolha tem um bloco **Humanos** com personagens 3D realistas, feitos no Blender por `blender/humano.py` a partir do **MPFB2** (add-on GPL; os recursos usados — malha, pele, cabelos e roupas — são CC0). Cada personagem é uma entrada em `PERSONAGENS` no script (gênero, idade, biotipo, pele, cabelo e cores da roupa); um comando gera o corpo de baixo polígono (~12 mil triângulos), veste, cria o esqueleto (`game_engine`, 53 ossos), faz a animação `Walk`, exporta o `.glb` (~1 MB) em `public/modelos/avatares/` e renderiza o busto usado na tela de escolha.

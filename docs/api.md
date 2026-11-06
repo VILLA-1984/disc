@@ -2,6 +2,8 @@
 
 Todas as rotas ficam em `src/app/api/`.
 
+A API compartilhada de IA fica em `POST /api/agente` e `GET /api/agente`, com chave propria por projeto. Veja [integracao com o agente](agente-api.md) para configurar as credenciais e consumir a API em outros projetos.
+
 ## Públicas
 
 | Método e rota | Função | Respostas notáveis |

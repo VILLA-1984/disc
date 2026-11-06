@@ -59,6 +59,10 @@
                 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a>
                 </li>
               </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="agente-api.html">API do agente</a>
+                </li>
+              </ul>
               <ul class="current">
                 <li class="toctree-l1 current"><a class="reference internal current" href="#">Jogo, efeitos e desempenho</a>
     <ul class="current">
@@ -70,6 +74,8 @@
     </li>
     <li class="toctree-l2"><a class="reference internal" href="#animais-na-corrida">Animais na corrida</a>
         <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#treino-antes-do-jogo-demo">Treino antes do jogo (demo)</a>
+    </li>
     <li class="toctree-l3"><a class="reference internal" href="#avatares-humanos-3d-bloco-humanos">Avatares humanos 3D (bloco "Humanos")</a>
     </li>
     <li class="toctree-l3"><a class="reference internal" href="#bloco-cartun-personagens-3d-prontos">Bloco "Cartun" (personagens 3D prontos)</a>
@@ -186,6 +192,13 @@
 <li>O mundo curvo, o tremor, o pulso, o clarão, a vibração e o confete <strong>não acontecem</strong> com <code>prefers-reduced-motion</code> (ou com o botão "Reduzir efeitos" no relatório).</li>
 </ul>
 <h2 id="animais-na-corrida">Animais na corrida<a class="headerlink" href="#animais-na-corrida" title="Permanent link">&para;</a></h2>
+<h3 id="treino-antes-do-jogo-demo">Treino antes do jogo (demo)<a class="headerlink" href="#treino-antes-do-jogo-demo" title="Permanent link">&para;</a></h3>
+<p>Opção do painel (<code>/admin/jogo</code> → "Treino antes do jogo", <strong>desligada por padrão</strong>). Depois de escolher avatar e cenário, a pessoa faz um treino de <strong>8 portões, 4 em cada etapa</strong>, com palavras de exemplo (Café x Chá, Praia x Montanha...), no mesmo cenário e com os mesmos controles, no mesmo modo de placas do jogo (duas palavras ou palavra + "Deixar passar"). Termina com o cartão "Agora é pra valer!" e o jogo de verdade começa do zero.</p>
+<ul>
+<li>É uma partida à parte (<code>iniciarTreino</code> em <code>entrada.js</code>, com o seu próprio <code>criarJogo3D</code>, descartado ao terminar): <strong>nenhuma escolha do treino vai para <code>escolhas</code>, para o ciclo ou para o servidor</strong>. O envio ao fim continua sendo só as escolhas do jogo valendo (testado: 12 de 12 em duas etapas de 6).</li>
+<li>Sem animais e sem painel de palavras reais; o turbo funciona, para a pessoa aprender a acelerar.</li>
+<li>Títulos e textos editáveis no painel (<code>demo_titulo</code>, <code>demo_texto</code>/<code>demo_texto_pares</code>, <code>demo_pronto_titulo</code>, <code>demo_pronto_texto</code>). O DISC (Laravel) ainda não tem o treino.</li>
+</ul>
 <h3 id="avatares-humanos-3d-bloco-humanos">Avatares humanos 3D (bloco "Humanos")<a class="headerlink" href="#avatares-humanos-3d-bloco-humanos" title="Permanent link">&para;</a></h3>
 <p>Além dos avatares de formas simples, a tela de escolha tem um bloco <strong>Humanos</strong> com personagens 3D realistas, feitos no Blender por <code>blender/humano.py</code> a partir do <strong>MPFB2</strong> (add-on GPL; os recursos usados — malha, pele, cabelos e roupas — são CC0). Cada personagem é uma entrada em <code>PERSONAGENS</code> no script (gênero, idade, biotipo, pele, cabelo e cores da roupa); um comando gera o corpo de baixo polígono (~12 mil triângulos), veste, cria o esqueleto (<code>game_engine</code>, 53 ossos), faz a animação <code>Walk</code>, exporta o <code>.glb</code> (~1 MB) em <code>public/modelos/avatares/</code> e renderiza o busto usado na tela de escolha.</p>
 <ul>
@@ -306,7 +319,7 @@
             </div>
           </div><footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
-        <a href="api.html" class="btn btn-neutral float-left" title="API"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="agente-api.html" class="btn btn-neutral float-left" title="API do agente"><span class="icon icon-circle-arrow-left"></span> Previous</a>
         <a href="dados.html" class="btn btn-neutral float-right" title="Dados e privacidade">Next <span class="icon icon-circle-arrow-right"></span></a>
     </div>
 
@@ -334,7 +347,7 @@
         </span>
     
     
-      <span><a href="api.html" style="color: #fcfcfc">&laquo; Previous</a></span>
+      <span><a href="agente-api.html" style="color: #fcfcfc">&laquo; Previous</a></span>
     
     
       <span><a href="dados.html" style="color: #fcfcfc">Next &raquo;</a></span>

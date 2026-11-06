@@ -24,7 +24,12 @@ export type ChaveTexto =
     | 'regra_texto_pares'
     | 'etapa_concluida_texto_pares'
     | 'fim_titulo'
-    | 'fim_texto';
+    | 'fim_texto'
+    | 'demo_titulo'
+    | 'demo_texto'
+    | 'demo_texto_pares'
+    | 'demo_pronto_titulo'
+    | 'demo_pronto_texto';
 
 /**
  * Como as palavras aparecem nas placas dos portoes:
@@ -96,6 +101,27 @@ export const TEXTOS: TextoDefinicao[] = [
         longo: false,
         variaveis: [{ nome: 'fim', descricao: 'o lugar onde termina, como "da rua" ou "do rio"' }],
     },
+    { chave: 'demo_titulo', rotulo: 'Título do treino', onde: 'Treino antes do jogo (se estiver ligado)', padrao: 'Vamos aprender', podeOcultar: false, longo: false },
+    {
+        modo: 'ciclo', chave: 'demo_texto',
+        rotulo: 'Explicação do treino',
+        onde: 'Treino antes do jogo (se estiver ligado)',
+        padrao: 'Vamos fazer um treino rápido: são {total} portões, {n} em cada etapa, com palavras de exemplo. Em cada portão aparece uma palavra de um lado e "Deixar passar" do outro: vá para o lado da palavra se ela combina com você. Nada do treino conta para o seu resultado.',
+        podeOcultar: true,
+        longo: true,
+        variaveis: [{ nome: 'n', descricao: 'portões por etapa do treino' }, { nome: 'total', descricao: 'portões do treino' }],
+    },
+    {
+        modo: 'pares', chave: 'demo_texto_pares',
+        rotulo: 'Explicação do treino (duas palavras por portão)',
+        onde: 'Treino antes do jogo (se estiver ligado)',
+        padrao: 'Vamos fazer um treino rápido: são {total} portões, {n} em cada etapa, com palavras de exemplo. Em cada portão aparecem duas palavras: vá para o lado da que mais combina com você. Nada do treino conta para o seu resultado.',
+        podeOcultar: true,
+        longo: true,
+        variaveis: [{ nome: 'n', descricao: 'portões por etapa do treino' }, { nome: 'total', descricao: 'portões do treino' }],
+    },
+    { chave: 'demo_pronto_titulo', rotulo: 'Título ao terminar o treino', onde: 'Cartão depois do treino', padrao: 'Agora é pra valer!', podeOcultar: false, longo: false },
+    { chave: 'demo_pronto_texto', rotulo: 'Texto ao terminar o treino', onde: 'Cartão depois do treino', padrao: 'O treino acabou. A partir daqui as suas escolhas contam para o resultado.', podeOcultar: true, longo: true },
     { chave: 'fim_texto', rotulo: 'Texto do fim do jogo', onde: 'Cartão antes de descobrir o animal', padrao: 'Suas escolhas viram um animal. Quer descobrir qual é o seu?', podeOcultar: true, longo: true },
     {
         chave: 'abertura_texto_pares',
@@ -161,6 +187,8 @@ export type Configuracao = {
     animaisACada: number;
     /** Quantos segundos o animal fica na tela, do surgir ao sumir. */
     animaisDuracao: number;
+    /** Treino antes de valer: 2 etapas de 4 portoes com palavras de exemplo, que nao entram no resultado. */
+    demoInicial: boolean;
     textos: Partial<Record<ChaveTexto, TextoPersonalizado>>;
 };
 

@@ -2,46 +2,50 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://rua-das-palavras.vercel.app/docs/index.html</loc>
-         <lastmod>2026-11-04</lastmod>
+         <lastmod>2026-11-06</lastmod>
+    </url>
+    <url>
+         <loc>https://rua-das-palavras.vercel.app/docs/agente-api.html</loc>
+         <lastmod>2026-11-06</lastmod>
     </url>
     <url>
          <loc>https://rua-das-palavras.vercel.app/docs/api.html</loc>
-         <lastmod>2026-11-04</lastmod>
+         <lastmod>2026-11-06</lastmod>
     </url>
     <url>
          <loc>https://rua-das-palavras.vercel.app/docs/arquitetura.html</loc>
-         <lastmod>2026-11-04</lastmod>
+         <lastmod>2026-11-06</lastmod>
     </url>
     <url>
          <loc>https://rua-das-palavras.vercel.app/docs/configuracao.html</loc>
-         <lastmod>2026-11-04</lastmod>
+         <lastmod>2026-11-06</lastmod>
     </url>
     <url>
          <loc>https://rua-das-palavras.vercel.app/docs/dados.html</loc>
-         <lastmod>2026-11-04</lastmod>
+         <lastmod>2026-11-06</lastmod>
     </url>
     <url>
          <loc>https://rua-das-palavras.vercel.app/docs/deploy.html</loc>
-         <lastmod>2026-11-04</lastmod>
+         <lastmod>2026-11-06</lastmod>
     </url>
     <url>
          <loc>https://rua-das-palavras.vercel.app/docs/disc.html</loc>
-         <lastmod>2026-11-04</lastmod>
+         <lastmod>2026-11-06</lastmod>
     </url>
     <url>
          <loc>https://rua-das-palavras.vercel.app/docs/jogo.html</loc>
-         <lastmod>2026-11-04</lastmod>
+         <lastmod>2026-11-06</lastmod>
     </url>
     <url>
          <loc>https://rua-das-palavras.vercel.app/docs/partida.html</loc>
-         <lastmod>2026-11-04</lastmod>
+         <lastmod>2026-11-06</lastmod>
     </url>
     <url>
          <loc>https://rua-das-palavras.vercel.app/docs/pontuacao.html</loc>
-         <lastmod>2026-11-04</lastmod>
+         <lastmod>2026-11-06</lastmod>
     </url>
     <url>
          <loc>https://rua-das-palavras.vercel.app/docs/testes.html</loc>
-         <lastmod>2026-11-04</lastmod>
+         <lastmod>2026-11-06</lastmod>
     </url>
 </urlset>

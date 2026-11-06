@@ -526,7 +526,14 @@ export function montar(raiz, api) {
                 }
 
                 entrarImersivo();
-                iniciarJogo();
+                // Treino antes de valer (painel; `?treino=1` liga e `?treino=0` desliga, para testar).
+                const parametroTreino = new URLSearchParams(location.search).get('treino');
+
+                if (parametroTreino === null ? config?.demoInicial : parametroTreino === '1') {
+                    iniciarTreino();
+                } else {
+                    iniciarJogo();
+                }
             },
         });
     }
@@ -557,6 +564,144 @@ export function montar(raiz, api) {
                 }
 
                 jogo.iniciarEtapa(indice);
+            },
+        });
+    }
+
+    // ------------------------------------------------------------------ treino
+    // Dois mini-percursos de 4 portoes (8 no total) com palavras de exemplo, antes do jogo valer. Usa o mesmo cenario,
+    // avatar e controles, mas NADA daqui vai para `escolhas`, para o ciclo ou para o servidor.
+    const PORTOES_DO_TREINO = 4;
+    const PALAVRAS_DO_TREINO = [
+        [['Café', 'Chá'], ['Praia', 'Montanha'], ['Livro', 'Filme'], ['Manhã', 'Noite']],
+        [['Gato', 'Cachorro'], ['Verão', 'Inverno'], ['Doce', 'Salgado'], ['Cidade', 'Campo']],
+    ];
+
+    function portaoDoTreino(etapa, indice) {
+        const [a, b] = PALAVRAS_DO_TREINO[etapa][indice];
+        const base = 800 + etapa * 10 + indice * 2;
+        const esquerda = indice % 2 === 0; // as palavras alternam de lado, como no jogo
+
+        if (ciclo) {
+            const palavra = { id: base, word: a };
+
+            return esquerda ? { cima: palavra, baixo: PASSAR } : { cima: PASSAR, baixo: palavra };
+        }
+
+        const [x, y] = [{ id: base, word: a }, { id: base + 1, word: b }];
+
+        return esquerda ? { cima: x, baixo: y } : { cima: y, baixo: x };
+    }
+
+    function iniciarTreino() {
+        iniciarMusica(cenario);
+        const spec = especificacaoEscolhida();
+        retratoAtual = spec.retrato ?? gerarRetratos([spec], { largura: 320, altura: 400 }).get(spec.id) ?? '';
+        ajustarControles();
+        let feitas = 0;
+
+        const mostrarProgressoDoTreino = (etapa) => {
+            const percentual = Math.round(((etapa * PORTOES_DO_TREINO + feitas) / (2 * PORTOES_DO_TREINO)) * 100);
+
+            jogo?.definirProgresso({
+                feitas,
+                total: PORTOES_DO_TREINO,
+                percentual,
+                texto: `Treino · portões ${feitas}/${PORTOES_DO_TREINO} · ${percentual}%`,
+            });
+        };
+
+        jogo = criarJogo3D({
+            parent: el('jogo'),
+            etapas: [],
+            proximoPortao: ({ etapa, indice }) => (indice < PORTOES_DO_TREINO ? portaoDoTreino(etapa, indice) : null),
+            avatar: spec,
+            modo,
+            cenario,
+            meio,
+            rotulosEtapas: ['Treino · etapa 1 de 2', 'Treino · etapa 2 de 2'],
+            reduzirMovimento,
+            turboForca: config?.turboForca,
+            animaisNaCorrida: null,
+            aoPasso: () => {
+                const agora = performance.now();
+
+                if (agora - ultimoPasso > 190) {
+                    ultimoPasso = agora;
+                    sons.passo();
+                }
+            },
+            aoTurbo: ({ som }) => sons.turbo({ som }),
+            aoPortao: ({ cima, baixo }) => {
+                sons.portao();
+                botaoCima.querySelector('strong').textContent = cima.word;
+                botaoBaixo.querySelector('strong').textContent = baixo.word;
+                botaoCima.disabled = false;
+                botaoBaixo.disabled = false;
+                const [nomeCima, nomeBaixo] = [CONTROLES[modo].cima.nome, CONTROLES[modo].baixo.nome];
+                const palavraEmCima = cima.id !== 0;
+
+                anuncio.textContent = ciclo
+                    ? `Treino. Palavra: ${palavraEmCima ? cima.word : baixo.word}. Para pegar, vá para a ${palavraEmCima ? nomeCima : nomeBaixo}; para deixar passar, vá para a ${palavraEmCima ? nomeBaixo : nomeCima}.`
+                    : `Treino. Opção da ${nomeCima}: ${cima.word}. Opção da ${nomeBaixo}: ${baixo.word}.`;
+            },
+            aoEscolher: (escolha) => {
+                sons.escolha();
+                vibrar(25);
+                travarBotoes();
+                feitas++;
+                mostrarProgressoDoTreino(escolha.etapa);
+                anuncio.textContent = ciclo && escolha.escolhida.id === 0 ? 'Você deixou a palavra passar.' : `Você escolheu ${escolha.escolhida.word}.`;
+            },
+            aoConcluirEtapa: ({ etapa }) => {
+                travarBotoes();
+                sons.etapa();
+
+                if (etapa === 0) {
+                    mostrarCartao({
+                        sobretitulo: 'Treino · etapa 1 concluída',
+                        titulo: T('etapa_concluida_titulo'),
+                        corpoHtml: `<p>Muito bem! Faltam só mais ${PORTOES_DO_TREINO} portões de treino.</p>`,
+                        botao: 'Continuar o treino',
+                        aoClicar: () => {
+                            fecharCartao();
+                            feitas = 0;
+                            mostrarProgressoDoTreino(1);
+                            jogo.iniciarEtapa(1);
+                        },
+                    });
+
+                    return;
+                }
+
+                sons.fanfarra();
+                vibrar([40, 60, 40, 60, 120]);
+                mostrarCartao({
+                    sobretitulo: 'Treino concluído',
+                    titulo: T('demo_pronto_titulo'),
+                    corpoHtml: paragrafo('demo_pronto_texto'),
+                    botao: 'Começar para valer',
+                    aoClicar: () => {
+                        fecharCartao();
+                        // O treino termina aqui: descarta o jogo de exemplo e monta o de verdade, do zero.
+                        jogo.destruir();
+                        jogo = null;
+                        iniciarJogo();
+                    },
+                });
+            },
+        });
+
+        mostrarCartao({
+            sobretitulo: 'Treino',
+            titulo: T('demo_titulo'),
+            corpoHtml: paragrafo(ciclo ? 'demo_texto' : 'demo_texto_pares', { n: PORTOES_DO_TREINO, total: 2 * PORTOES_DO_TREINO }),
+            botao: 'Começar o treino',
+            aoClicar: () => {
+                fecharCartao();
+                feitas = 0;
+                mostrarProgressoDoTreino(0);
+                jogo.iniciarEtapa(0);
             },
         });
     }
