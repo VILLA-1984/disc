@@ -23,13 +23,18 @@ export const CENARIOS_DO_MUNDO = ['rio', 'ar', 'neve', 'trilhos', 'espaco'];
  * @param {object} cena BABYLON.Scene
  * @param {{cenario: string, meio?: string, avatar: object, avatarNo: object, reduzirMovimento: boolean, sorteio: () => number, pixelRatio: number}} opcoes
  */
-export function criarMundoEspelhado(B, cena, { cenario, meio, avatar: spec, avatarNo, reduzirMovimento, sorteio, pixelRatio }) {
+export function criarMundoEspelhado(B, cena, { modo = '3d', cenario, meio, avatar: spec, avatarNo, reduzirMovimento, sorteio, pixelRatio }) {
     const raiz = new THREE.Group(); // a "cena" do three.js, so na memoria
     const noMundo = new B.TransformNode('mundo', cena);
     const movel = []; // itens que andam com o cenario: { obj, comprimento }
     const arvores = []; // balancam com o vento
     const lados = { esquerdo: new THREE.Group(), direito: new THREE.Group() };
     raiz.add(lados.esquerdo, lados.direito);
+
+    // Lateral: a camera fica do lado de x positivo, e o que estiver desse lado taparia a cena.
+    if (modo === 'lateral') {
+        lados.direito.visible = false;
+    }
 
     function adicionarMovel(obj, comprimento, zInicial, pai = raiz) {
         obj.position.z = zInicial;
@@ -42,7 +47,7 @@ export function criarMundoEspelhado(B, cena, { cenario, meio, avatar: spec, avat
     const aereo = cenario === 'ar' ? construirCeu(parametros) : null;
     const gelo = cenario === 'neve' ? construirNeve(parametros) : null;
     const ferrovia = cenario === 'trilhos' ? construirTrilhos(parametros) : null;
-    const espacial = cenario === 'espaco' ? construirEspaco({ ...parametros, modo: '3d' }) : null;
+    const espacial = cenario === 'espaco' ? construirEspaco({ ...parametros, modo }) : null;
     const mundo3 = rio ?? aereo ?? gelo ?? ferrovia ?? espacial;
     const estrada = rio ? rio.agua : (aereo ? aereo.solo : (gelo ? gelo.solo : (ferrovia ? ferrovia.solo : espacial.solo)));
 
@@ -72,10 +77,10 @@ export function criarMundoEspelhado(B, cena, { cenario, meio, avatar: spec, avat
         }
     };
     const veiculo = rio
-        ? criarBarco(meioEscolhido, '3d', { aoModelo: esconderAvatar })
+        ? criarBarco(meioEscolhido, modo, { aoModelo: esconderAvatar })
         : (aereo
-            ? criarAeronave(meioEscolhido, '3d')
-            : (gelo ? criarVeiculoNeve(meioEscolhido) : (ferrovia ? criarVeiculoTrilho(meioEscolhido, '3d', { aoModelo: esconderAvatar }) : criarVeiculoEspacial(meioEscolhido, '3d'))));
+            ? criarAeronave(meioEscolhido, modo)
+            : (gelo ? criarVeiculoNeve(meioEscolhido) : (ferrovia ? criarVeiculoTrilho(meioEscolhido, modo, { aoModelo: esconderAvatar }) : criarVeiculoEspacial(meioEscolhido, modo))));
 
     veiculo.grupo.scale.setScalar(1 / avatar.grupo.scale.x);
     avatar.grupo.add(veiculo.grupo);
@@ -93,7 +98,7 @@ export function criarMundoEspelhado(B, cena, { cenario, meio, avatar: spec, avat
     const peixes = rio && !reduzirMovimento ? criarPeixes({ cena: raiz, sorteio }) : null;
     const passaros = aereo && !reduzirMovimento ? criarPassaros({ cena: raiz, sorteio }) : null;
     const nevasca = gelo && !reduzirMovimento ? criarNevasca({ cena: raiz, sorteio }) : null;
-    const espacoVivo = espacial && !reduzirMovimento ? criarEspacoVivo({ cena: raiz, sorteio, planetas: espacial.planetas, modo: '3d' }) : null;
+    const espacoVivo = espacial && !reduzirMovimento ? criarEspacoVivo({ cena: raiz, sorteio, planetas: espacial.planetas, modo }) : null;
 
     const semMotor = ['veleiro', 'caiaque', 'boia-pato', 'nado', 'asa-delta', 'parapente', 'esqui', 'sit-ski', 'treno', 'astronauta'].includes(meioEscolhido);
     const somDoMeio = meioEscolhido === 'draisina' ? 'rodas' : (semMotor ? 'passos' : 'motor');

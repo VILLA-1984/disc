@@ -575,7 +575,7 @@ export function montar(raiz, api) {
     }
 
     /**
-     * Babylon.js na rua (vista 3D) com avatar de modelo 3D; three.js no resto. `?motor=three` na URL forca o three.js e,
+     * Babylon.js em todos os cenarios e nas duas vistas (3D e lateral). `?motor=three` na URL forca o three.js e,
      * se o Babylon nao carregar (rede, CDN), o jogo segue sozinho com o three.js.
      */
     function criarJogoDoMotor(opcoes) {

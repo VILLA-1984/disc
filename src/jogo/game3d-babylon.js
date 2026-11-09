@@ -1,10 +1,11 @@
 /**
- * Motor do jogo em Babylon.js: e o padrao na rua (vista 3D) com avatar de modelo 3D. `?motor=three` na URL volta ao
- * three.js (game3d.js), que tambem assume sozinho se o Babylon nao carregar.
+ * Motor do jogo em Babylon.js: e o padrao em todos os cenarios e nas duas vistas (3D e lateral). `?motor=three` na URL
+ * volta ao three.js (game3d.js), que tambem assume sozinho se o Babylon nao carregar.
  *
  * Cobre a rua na vista 3D com todos os avatares (modelos 3D em glTF e os de formas simples, espelhados do three.js): portoes, escolha, turbo, clima, reacoes do avatar
  * (salto, giro, confete, vibracao), animais da corrida (lobo, gato, aguia e tubarao), HUD, minimapa, som e o mesmo fluxo da entrada.js (treino, etapas, ciclo, gravacao).
- * Rio, ar, neve, trilhos e espaco: o mundo e o veiculo vem do three.js, espelhados (mundo-babylon.js). Fora disso (vista lateral) a entrada.js continua usando o motor three.js (game3d.js): ver `babylonElegivel`.
+ * Rio, ar, neve, trilhos e espaco: o mundo e o veiculo vem do three.js, espelhados (mundo-babylon.js). Vista lateral: camera ao lado,
+ * pistas "cima" e "baixo" (ver CFG_POR_VISTA); sem curvas da rua.
  *
  * Mesma interface de criarJogo3D, com um detalhe: o Babylon vem do CDN (jsdelivr) sob demanda, entao o objeto devolvido
  * e usavel na hora e guarda as chamadas ate a cena ficar pronta.
@@ -31,8 +32,12 @@ const PERIODO = 175; // comprimento do ciclo de reciclagem do cenario
 const Z_TRAS = 20; // ate onde a rua continua atras da camera
 const PORTAO_Z_INICIAL = 74;
 const PORTAO_Z_FIM = -9;
-const CFG = { legivel: 34, parada: 8.5, placaL: 4.5, placaA: 2.25, altura: 3.0, postes: 2.0, fov: 52 };
-const NEVOA_BASE = { perto: 36, longe: 125 };
+// Ajustes de cada vista (iguais aos do game3d.js, com o z do Babylon: legivel e parada sao positivos).
+const CFG_POR_VISTA = {
+    '3d': { legivel: 34, parada: 8.5, placaL: 4.5, placaA: 2.25, alturaCima: 3.0, alturaBaixo: 3.0, postes: 2.0, fov: 52 },
+    lateral: { legivel: 14, parada: 6.5, placaL: 3.9, placaA: 1.95, alturaCima: 3.9, alturaBaixo: 2.15, postes: 1.65, fov: 34 },
+};
+const NEVOA_POR_VISTA = { '3d': { perto: 36, longe: 125 }, lateral: { perto: 40, longe: 160 } };
 const VELOCIDADE = { normal: 11, reduzida: 6.5 };
 const PORTOES_POR_CLIMA = 4;
 const ALTURA_HUMANO = 1.78;
@@ -101,7 +106,7 @@ export function babylonPedido() {
 
 /** O que este motor sabe desenhar; o resto fica com o three.js. */
 export function babylonElegivel(opcoes) {
-    return opcoes.modo !== 'lateral' && ['rua', ...CENARIOS_DO_MUNDO].includes(opcoes.cenario ?? 'rua');
+    return ['rua', ...CENARIOS_DO_MUNDO].includes(opcoes.cenario ?? 'rua');
 }
 
 // ------------------------------------------------------------------ desenho 2D
@@ -153,9 +158,16 @@ function desenharPlaca(canvas, palavra, estado, dica) {
     }
 }
 
-const TECLA_DE_LADO = {
-    cima: { texto: '← ESQUERDA', cor: '#1f6fb8', direita: false },
-    baixo: { texto: 'DIREITA →', cor: '#c85f0f', direita: true },
+// Mesmas cores e textos dos botoes embaixo do jogo (rua.css: --lado-esq e --lado-dir).
+const TECLA_DE_LADO_POR_VISTA = {
+    '3d': {
+        cima: { texto: '← ESQUERDA', cor: '#1f6fb8', direita: false },
+        baixo: { texto: 'DIREITA →', cor: '#c85f0f', direita: true },
+    },
+    lateral: {
+        cima: { texto: '↑ CIMA', cor: '#1f6fb8', direita: false },
+        baixo: { texto: '↓ BAIXO', cor: '#c85f0f', direita: true },
+    },
 };
 
 
@@ -190,7 +202,7 @@ const suave = (x) => {
  * A cada N palavras pegas um animal (sorteado, sem ligacao com o resultado) surge ao lado do avatar, fica nitido e
  * some. Na rua: lobo e gato correm, a aguia voa e o tubarao desliza como espirito. Os modelos entram em segundo plano.
  */
-function criarAnimaisBabylon(B, cena, { cenario = 'rua', aCada = 4, duracao = 3.6, reduzirMovimento = false, somAnimal = null }) {
+function criarAnimaisBabylon(B, cena, { cenario = 'rua', lateral = false, aCada = 4, duracao = 3.6, reduzirMovimento = false, somAnimal = null }) {
     const tempoTotal = Number.isFinite(duracao) ? Math.min(8, Math.max(1, duracao)) : 3.6;
     const tempoEntrada = tempoTotal * 0.2;
     const tempoSaida = tempoTotal * 0.25;
@@ -325,7 +337,7 @@ function criarAnimaisBabylon(B, cena, { cenario = 'rua', aCada = 4, duracao = 3.
             const { movimento, tipo } = ativo;
             const m = prontos[tipo];
             const aparece = suave(ativo.t / tempoEntrada) * (1 - suave((ativo.t - (tempoTotal - tempoSaida)) / tempoSaida));
-            const ampliar = movimento === 'margem' ? 1.8 : 1; // na margem o animal corre longe da camera: fica maior para caber
+            const ampliar = movimento === 'margem' && !lateral ? 1.8 : 1; // na margem o animal corre longe da camera: fica maior para caber
             const escala = m.escala * ampliar * (0.92 + 0.08 * aparece);
             const opacidade = aparece * (movimento === 'espirito' ? 0.55 : 1);
 
@@ -346,7 +358,11 @@ function criarAnimaisBabylon(B, cena, { cenario = 'rua', aCada = 4, duracao = 3.
                 y = (CHAO_ANIMAL[cenario] ?? 0) - m.pesY * escala; // os pes pousam no chao
             }
 
-            if (movimento === 'margem') {
+            if (lateral) {
+                // Na lateral o animal corre atras do avatar (do lado oposto a camera) e emparelha com ele; na margem, a de la.
+                const vai = 0.4 - Math.sin(ativo.t * 1.4) * 0.5;
+                m.no.position.set(movimento === 'margem' ? -X_MARGEM : avatarX - 2.6, y, vai);
+            } else if (movimento === 'margem') {
                 m.no.position.set(ativo.lado * X_MARGEM, y, 8.5 + ativo.t * 0.3); // na areia da margem, do lado oposto ao avatar
             } else {
                 m.no.position.set(avatarX + ativo.lado * 3.2, y, 0.6 + ativo.t * 0.2);
@@ -431,6 +447,11 @@ async function construir(B, opcoes) {
     const dinamico = typeof opcoes.proximoPortao === 'function';
     const cenario = CENARIOS_DO_MUNDO.includes(opcoes.cenario) ? opcoes.cenario : 'rua';
     const rua = cenario === 'rua';
+    const lateral = opcoes.modo === 'lateral'; // camera ao lado: o avatar corre para a direita e as pistas sao "cima" e "baixo"
+    const modo = lateral ? 'lateral' : '3d';
+    const cfg = CFG_POR_VISTA[modo];
+    const nevoaBase = NEVOA_POR_VISTA[modo];
+    const teclaDeLado = TECLA_DE_LADO_POR_VISTA[modo];
 
     // ------------------------------------------------------------ motor e cena
     const canvas = document.createElement('canvas');
@@ -454,14 +475,19 @@ async function construir(B, opcoes) {
     const camera = new B.FreeCamera('camera', new B.Vector3(0, 3.1, -6), cena);
     camera.minZ = 0.1;
     camera.maxZ = 320;
-    camera.fov = (CFG.fov * Math.PI) / 180;
+    camera.fov = (cfg.fov * Math.PI) / 180;
     camera.setTarget(new B.Vector3(0, 1.7, 11));
+
+    if (lateral) {
+        camera.position.set(17.5, 5.6, -1.2); // do lado de x positivo, olhando para a rua
+        camera.setTarget(new B.Vector3(0, 1.9, 4.4));
+    }
 
     // ------------------------------------------------------------ curvas
     // A rua faz curvas suaves: no vertex shader, tudo que esta longe sai um pouco para o lado em proporcao ao quadrado
     // da distancia (a tecnica do "mundo curvo", a mesma do game3d.js). So o desenho muda; portoes, placas e logica ficam
     // retos. Ceu, sol, nuvens, estrelas e sprites nao curvam (marcados com metadata.semCurva). Desligado com "reduzir movimento".
-    const curvasAtivas = !reduzirMovimento && params.get('curvas') !== '0' && Boolean(B.MaterialPluginBase); // ?curvas=0 desliga
+    const curvasAtivas = !lateral && !reduzirMovimento && params.get('curvas') !== '0' && Boolean(B.MaterialPluginBase); // ?curvas=0 desliga
     const curva = { valor: 0 };
 
     if (curvasAtivas) {
@@ -562,7 +588,8 @@ worldPos.x += uCurva.x * dzCurva * dzCurva;
     ceuMaterial.metadata = { semCurva: true };
     const ceu = B.MeshBuilder.CreatePlane('ceu', { width: 700, height: 220 }, cena);
     ceu.material = ceuMaterial;
-    ceu.position.set(0, 60, 230);
+    ceu.position.set(lateral ? -230 : 0, 60, lateral ? 0 : 230);
+    ceu.rotation.y = lateral ? Math.PI / 2 : 0;
     ceu.isPickable = false;
 
     function desenharCeu(topo, base) {
@@ -602,6 +629,7 @@ worldPos.x += uCurva.x * dzCurva * dzCurva;
         c.fillRect(0, 0, 128, 128);
     }, { alfa: true });
     const solCeu = elementoCeu(46, 46, solTextura, 26, 30, 195);
+    solCeu.plano.setEnabled(!lateral); // na lateral o sol e as nuvens ficariam fora da tela (como no three.js)
 
     const nuvemTextura = texturaDeCanvas(256, 96, (c) => {
         c.fillStyle = 'rgba(255,255,255,0.92)';
@@ -704,7 +732,7 @@ worldPos.x += uCurva.x * dzCurva * dzCurva;
             return copa;
         });
 
-        for (const lado of [-1, 1]) {
+        for (const lado of lateral ? [-1] : [-1, 1]) {
             const brutos = Array.from({ length: 14 }, () => 0.7 + sorteio() * 0.7);
             const soma = brutos.reduce((a, b) => a + b, 0);
             let percorrido = 0;
@@ -765,7 +793,7 @@ worldPos.x += uCurva.x * dzCurva * dzCurva;
     // (e com `?modelos=0`) vale o avatar de formas simples, montado pelo three.js e espelhado aqui (espelho-babylon.js).
     const avatarNo = new B.TransformNode('avatar', cena);
     // Fora da rua o avatar vai num veiculo (barco, aviao, treno, locomotiva, nave...) e o mundo vem do three.js, espelhado.
-    const mundo = rua ? null : criarMundoEspelhado(B, cena, { cenario, meio: opcoes.meio, avatar: spec, avatarNo, reduzirMovimento, sorteio, pixelRatio: ratioAtual });
+    const mundo = rua ? null : criarMundoEspelhado(B, cena, { modo, cenario, meio: opcoes.meio, avatar: spec, avatarNo, reduzirMovimento, sorteio, pixelRatio: ratioAtual });
     const info = mundo ? mundo.info : infoMobilidade(spec);
     const semModelos = params.get('modelos') === '0';
     const usaModelo = rua && Boolean(spec.modelo) && !semModelos && ['anda', 'cadeira', 'bengala'].includes(spec.mobilidade ?? 'anda');
@@ -836,12 +864,16 @@ worldPos.x += uCurva.x * dzCurva * dzCurva;
         ? { aCada: Math.max(1, Number(animaisUrl) || 4), duracao: Number(params.get('duracao')) || undefined }
         : opcoes.animaisNaCorrida;
     const animais = animaisConfig
-        ? criarAnimaisBabylon(B, cena, { cenario, aCada: animaisConfig.aCada, duracao: animaisConfig.duracao, reduzirMovimento, somAnimal: (tipo) => sons[tipo]?.() })
+        ? criarAnimaisBabylon(B, cena, { cenario, lateral, aCada: animaisConfig.aCada, duracao: animaisConfig.duracao, reduzirMovimento, somAnimal: (tipo) => sons[tipo]?.() })
         : null;
 
     // ------------------------------------------------------------ clima
     // Fora da rua (cenarios espelhados do three.js) mais luz ambiente e menos sol: o three.js ilumina por cima com bem mais brilho.
-    const luzBase = mundo ? { hemi: 0.72, sol: 0.55 } : { hemi: 0.55, sol: 0.75 };
+    const luzBase = mundo ? { hemi: 0.72, sol: 0.55 } : (lateral ? { hemi: 0.8, sol: 0.6 } : { hemi: 0.55, sol: 0.75 });
+
+    if (lateral) {
+        luzSol.direction = new B.Vector3(-0.4, -1, -0.45); // a camera esta do lado de x positivo: o sol ilumina as paredes que ela ve
+    }
     const climaInicial = CLIMAS[cenario === 'espaco' ? 'espaco' : 'sol'];
     const climaAlvo = { ...climaInicial };
     const climaAtual = {
@@ -945,15 +977,15 @@ worldPos.x += uCurva.x * dzCurva * dzCurva;
 
         cena.clearColor = new B.Color4(climaAtual.ceuBase.r, climaAtual.ceuBase.g, climaAtual.ceuBase.b, 1);
         cena.fogColor = climaAtual.nevoa;
-        cena.fogStart = NEVOA_BASE.perto * climaAtual.alcance;
-        cena.fogEnd = NEVOA_BASE.longe * climaAtual.alcance;
+        cena.fogStart = nevoaBase.perto * climaAtual.alcance;
+        cena.fogEnd = nevoaBase.longe * climaAtual.alcance;
         luzCeu.intensity = luzBase.hemi * (climaAtual.luz / 1.5);
         luzCeu.groundColor = new B.Color3(0.55, 0.62, 0.72);
         luzSol.intensity = luzBase.sol * (climaAtual.direta / 1.35);
         asfalto.diffuseColor = climaAtual.asfalto;
         mundo?.aplicarClima(climaAtual);
         solCeu.m.emissiveColor = new B.Color3(climaAtual.sol, climaAtual.sol, climaAtual.sol);
-        solCeu.plano.isVisible = climaAtual.sol > 0.02;
+        solCeu.plano.isVisible = !lateral && climaAtual.sol > 0.02;
 
         for (const nuvem of nuvens) {
             nuvem.m.emissiveColor = climaAtual.nuvemCor.scale(climaAtual.nuvem);
@@ -991,7 +1023,7 @@ worldPos.x += uCurva.x * dzCurva * dzCurva;
     escolherClima(nomeClima);
 
     const linhas = document.createElement('div');
-    linhas.className = 'rua-linhas rua-linhas--3d';
+    linhas.className = `rua-linhas rua-linhas--${modo}`;
     linhas.setAttribute('aria-hidden', 'true');
     parent.appendChild(linhas);
 
@@ -1118,13 +1150,16 @@ worldPos.x += uCurva.x * dzCurva * dzCurva;
             const tela = document.createElement('canvas');
             tela.width = 512;
             tela.height = 256;
-            desenharPlaca(tela, dados[lado].word, 'normal', TECLA_DE_LADO[lado]);
+            desenharPlaca(tela, dados[lado].word, 'normal', teclaDeLado[lado]);
             const textura = new B.DynamicTexture('placa', { width: 512, height: 256 }, cena, true);
             textura.getContext().drawImage(tela, 0, 0);
             textura.hasAlpha = true;
             textura.update();
 
-            const painel = B.MeshBuilder.CreatePlane(`placa-${lado}`, { width: CFG.placaL, height: CFG.placaA }, cena);
+            const altura = lado === 'cima' ? cfg.alturaCima : cfg.alturaBaixo;
+            // Na lateral a placa gira para ficar de frente para a camera (que esta do lado de x positivo).
+            const giroDaPlaca = lateral ? -Math.PI / 2 : 0;
+            const painel = B.MeshBuilder.CreatePlane(`placa-${lado}`, { width: cfg.placaL, height: cfg.placaA }, cena);
             const mp = new B.StandardMaterial('placa', cena);
             mp.diffuseTexture = textura;
             mp.useAlphaFromDiffuseTexture = true;
@@ -1134,17 +1169,18 @@ worldPos.x += uCurva.x * dzCurva * dzCurva;
             mp.backFaceCulling = false;
             painel.material = mp;
             painel.parent = grupo;
-            painel.position.set(x, CFG.altura, 0);
+            painel.position.set(x, altura, 0);
+            painel.rotation.y = giroDaPlaca;
             painel.metadata = { lado };
 
             // Moldura so nas bordas (quatro barras): o brilho do GlowLayer nao pode cobrir a palavra.
             const moldura = new B.TransformNode('moldura', cena);
             const molduraMaterial = material('#f08a3c', { emissiveColor: cor3('#f08a3c') });
             const barras = [
-                [CFG.placaL * 1.04, 0.12, 0, CFG.placaA / 2 + 0.03],
-                [CFG.placaL * 1.04, 0.12, 0, -CFG.placaA / 2 - 0.03],
-                [0.12, CFG.placaA * 1.06, CFG.placaL / 2 + 0.03, 0],
-                [0.12, CFG.placaA * 1.06, -CFG.placaL / 2 - 0.03, 0],
+                [cfg.placaL * 1.04, 0.12, 0, cfg.placaA / 2 + 0.03],
+                [cfg.placaL * 1.04, 0.12, 0, -cfg.placaA / 2 - 0.03],
+                [0.12, cfg.placaA * 1.06, cfg.placaL / 2 + 0.03, 0],
+                [0.12, cfg.placaA * 1.06, -cfg.placaL / 2 - 0.03, 0],
             ].map(([largura, altura, dx, dy]) => {
                 const barra = B.MeshBuilder.CreateBox('barra', { width: largura, height: altura, depth: 0.1 }, cena);
                 barra.material = molduraMaterial;
@@ -1155,15 +1191,16 @@ worldPos.x += uCurva.x * dzCurva * dzCurva;
                 return barra;
             });
             moldura.parent = grupo;
-            moldura.position.set(x, CFG.altura, 0.06);
+            moldura.position.set(lateral ? x - 0.06 : x, altura, lateral ? 0 : 0.06);
+            moldura.rotation.y = giroDaPlaca;
             barras.forEach((b) => { b.isVisible = false; });
 
             const posteMaterial = material(COR.azul);
-            const postes = [-CFG.postes, CFG.postes].map((dx) => {
-                const poste = B.MeshBuilder.CreateCylinder('poste', { diameter: 0.14, height: CFG.altura, tessellation: 8 }, cena);
+            const postes = [-cfg.postes, cfg.postes].map((dx) => {
+                const poste = B.MeshBuilder.CreateCylinder('poste', { diameter: 0.14, height: altura, tessellation: 8 }, cena);
                 poste.material = posteMaterial;
                 poste.parent = grupo;
-                poste.position.set(x + dx, CFG.altura / 2, 0.06);
+                poste.position.set(lateral ? x - 0.06 : x + dx, altura / 2, lateral ? dx : 0.06);
                 poste.isPickable = false;
 
                 return poste;
@@ -1297,7 +1334,7 @@ worldPos.x += uCurva.x * dzCurva * dzCurva;
         const tempoMs = Math.round(performance.now() - portao.inicioMs);
         const atualizarPlaca = (l, st) => {
             const p = portao.placas[l];
-            desenharPlaca(p.tela, p.palavra, st, TECLA_DE_LADO[l]);
+            desenharPlaca(p.tela, p.palavra, st, teclaDeLado[l]);
             const c = p.textura.getContext();
             c.clearRect(0, 0, 512, 256);
             c.drawImage(p.tela, 0, 0);
@@ -1341,8 +1378,11 @@ worldPos.x += uCurva.x * dzCurva * dzCurva;
     }
 
     // Teclado e toque (vista 3D: ← → escolhem, ↑ acelera).
-    const teclas = { ArrowLeft: 'cima', a: 'cima', A: 'cima', ArrowRight: 'baixo', d: 'baixo', D: 'baixo' };
-    const teclasDeAceleracao = ['ArrowUp', 'w', 'W'];
+    const teclas = lateral
+        ? { ArrowUp: 'cima', w: 'cima', W: 'cima', ArrowDown: 'baixo', s: 'baixo', S: 'baixo' }
+        : { ArrowLeft: 'cima', a: 'cima', A: 'cima', ArrowRight: 'baixo', d: 'baixo', D: 'baixo' };
+    // Acelerar: segurar ↑ (ou W) na vista 3D; → (ou D) na lateral, onde ↑ e ↓ escolhem a pista.
+    const teclasDeAceleracao = lateral ? ['ArrowRight', 'd', 'D'] : ['ArrowUp', 'w', 'W'];
 
     const aoTecla = (e) => {
         if (teclasDeAceleracao.includes(e.key)) {
@@ -1426,7 +1466,7 @@ worldPos.x += uCurva.x * dzCurva * dzCurva;
         motor.resize();
         const aspecto = motor.getAspectRatio(camera) || 16 / 9;
         const compensacao = Math.max(1, (16 / 9) / aspecto) ** 0.6;
-        const fovGraus = Math.min(78, (2 * Math.atan(Math.tan((CFG.fov * Math.PI) / 360) * compensacao) * 180) / Math.PI);
+        const fovGraus = Math.min(78, (2 * Math.atan(Math.tan((cfg.fov * Math.PI) / 360) * compensacao) * 180) / Math.PI);
         fovBase = (fovGraus * Math.PI) / 180;
         camera.fov = fovBase;
     }
@@ -1439,7 +1479,7 @@ worldPos.x += uCurva.x * dzCurva * dzCurva;
         const x = avatarNo.position.x;
         pulsoFov = Math.max(0, pulsoFov - dt * 2.5);
         const rad = Math.PI / 180;
-        const fovAlvo = fovBase + (acelerando && velocidade > velocidadeBase * 1.1 && !reduzirMovimento ? 8 * rad : 0) + (reduzirMovimento ? 0 : pulsoFov * 4 * rad);
+        const fovAlvo = fovBase + (acelerando && velocidade > velocidadeBase * 1.1 && !reduzirMovimento ? (lateral ? 3 : 8) * rad : 0) + (reduzirMovimento ? 0 : pulsoFov * (lateral ? 1.5 : 4) * rad);
 
         if (Math.abs(camera.fov - fovAlvo) > 0.001) {
             camera.fov += (fovAlvo - camera.fov) * Math.min(1, dt * 5);
@@ -1447,6 +1487,13 @@ worldPos.x += uCurva.x * dzCurva * dzCurva;
 
         tempoCamera += dt;
         const tremor = acelerando && velocidade > velocidadeBase * 1.15 && !reduzirMovimento ? 0.022 : 0;
+        if (lateral) {
+            camera.position.set(17.5 + ruidoSuave(tempoCamera, 0) * tremor, 5.6 + ruidoSuave(tempoCamera, 2.1) * tremor, -1.2);
+            camera.setTarget(new B.Vector3(0, 1.9, 4.4));
+
+            return;
+        }
+
         const k = Math.min(1, dt * 4);
         camera.position.x += (x * 0.45 - camera.position.x) * k + ruidoSuave(tempoCamera, 0) * tremor;
         camera.position.y += (3.1 - camera.position.y) * k + ruidoSuave(tempoCamera, 2.1) * tremor;
@@ -1463,7 +1510,7 @@ worldPos.x += uCurva.x * dzCurva * dzCurva;
         if (estado === 'correndo' && portao) {
             alvo = portao.escolhido
                 ? velocidadeBase * turbo
-                : velocidadeBase * turbo * Math.min(1, Math.max(0, (portao.grupo.position.z - CFG.parada) / 18));
+                : velocidadeBase * turbo * Math.min(1, Math.max(0, (portao.grupo.position.z - cfg.parada) / 18));
         }
 
         velocidade += (alvo - velocidade) * Math.min(1, dt * 4.5);
@@ -1592,7 +1639,7 @@ worldPos.x += uCurva.x * dzCurva * dzCurva;
         if (portao) {
             portao.grupo.position.z -= dz;
 
-            if (!portao.escolhivel && portao.grupo.position.z <= CFG.legivel) {
+            if (!portao.escolhivel && portao.grupo.position.z <= cfg.legivel) {
                 liberarPortao();
             }
 
