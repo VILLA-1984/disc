@@ -95,6 +95,10 @@ A música de fundo tem **um clima por cenário** (`ESTILOS_MUSICA` em `audio.js`
 - Com "reduzir movimento" ligado no aparelho, nada disso (pulo, giro, faíscas, confete) acontece.
 - **Confete** (`confete.js`) na revelação do animal, nas cores dele. É um canvas que se apaga sozinho depois de cerca de 2,8 s.
 
+## Protótipo em Babylon.js
+
+Página separada, fora do jogo: `/prototipos/babylon/index.html` (`public/prototipos/babylon/`). Um portão com duas palavras, o avatar Bia do Cartun (mesmo GLB do jogo, animação `sprint`), salto com giro e esticada, confete e poeira em sistemas de partículas, brilho na placa escolhida, vibração. O Babylon.js 9.35 vem do CDN (jsdelivr) com a versão fixa; nada é gravado. Serve para comparar com o three.js: o pacote completo do Babylon baixa cerca de 1,9 MB compactado, contra cerca de 170 KB do código do jogo atual. Com `?teste=1` o relógio é controlado (`window.__proto.passo(n)`), usado nas capturas de tela.
+
 ## O que é compartilhado com o Laravel
 
 O mesmo front existe em `resources/js/word-street/` do projeto Laravel. Ao mudar o jogo, a mudança vai para os dois.

@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:,">
+<title>Protótipo Babylon.js</title>
+<style>
+    :root { color-scheme: light dark; --fundo: #f4f7fb; --texto: #0d2b4e; --azul: #1f6fb8; --laranja: #f08a3c; }
+    @media (prefers-color-scheme: dark) { :root { --fundo: #0b1626; --texto: #e8eef7; } }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--fundo); color: var(--texto); font-family: system-ui, sans-serif; }
+    main { max-width: 1000px; margin: 0 auto; padding: 16px; }
+    h1 { font-size: 1.25rem; margin: 0 0 4px; }
+    p { margin: 0 0 12px; line-height: 1.45; }
+    #palco { position: relative; border-radius: 16px; overflow: hidden; background: #123; aspect-ratio: 16 / 10; }
+    canvas { width: 100%; height: 100%; display: block; outline: none; touch-action: none; }
+    #hud { position: absolute; left: 12px; right: 12px; top: 10px; display: flex; justify-content: space-between; gap: 8px; font-weight: 700; color: #fff; text-shadow: 0 1px 4px #000a; font-size: .9rem; pointer-events: none; }
+    #botoes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+    button { font: inherit; font-weight: 700; padding: 14px; border-radius: 12px; border: 2px solid; background: transparent; color: inherit; cursor: pointer; min-height: 56px; }
+    #esq { border-color: var(--azul); } #dir { border-color: var(--laranja); }
+    button:focus-visible { outline: 3px solid var(--laranja); outline-offset: 2px; }
+    #ficha { margin-top: 14px; font-size: .9rem; opacity: .9; }
+    #ficha code { background: #8883; padding: 1px 5px; border-radius: 4px; }
+    #carregando { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-weight: 700; background: #123; }
+    @media (max-width: 600px) { main { padding: 10px; } }
+</style>
+</head>
+<body>
+<main>
+    <h1>Protótipo Babylon.js · Rua das Palavras</h1>
+    <p>Um portão com duas palavras. Escolha com as setas ← → (ou A e D), toque nas placas ou use os botões. Ao escolher, o avatar pula e gira, cai confete e o celular vibra. Não é o jogo de verdade: nada aqui grava resultado.</p>
+
+    <div id="palco">
+        <canvas id="tela" tabindex="0" aria-label="Cena 3D do protótipo"></canvas>
+        <div id="hud"><span id="etapa">Protótipo · Babylon.js</span><span id="pontos">Escolhas 0</span></div>
+        <div id="carregando">Carregando o Babylon.js…</div>
+    </div>
+
+    <div id="botoes">
+        <button id="esq" type="button">← <span id="txt-esq">Esquerda</span></button>
+        <button id="dir" type="button"><span id="txt-dir">Direita</span> →</button>
+    </div>
+
+    <p id="ficha" aria-live="polite">Medidas: carregando…</p>
+    <p id="anuncio" class="sr" aria-live="polite" style="position:absolute;left:-9999px"></p>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/babylonjs@9.35.0/babylon.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/babylonjs-loaders@9.35.0/babylonjs.loaders.min.js"></script>
+<script>
+(async () => {
+    const B = BABYLON;
+    const params = new URLSearchParams(location.search);
+    const modoTeste = params.get('teste') === '1'; // relogio controlado, para capturas exatas
+    const reduzirMovimento = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const tela = document.getElementById('tela');
+    const t0 = performance.now();
+
+    const motor = new B.Engine(tela, true, { preserveDrawingBuffer: modoTeste, stencil: true });
+    const cena = new B.Scene(motor);
+    cena.clearColor = new B.Color4(0.55, 0.78, 0.95, 1);
+    cena.fogMode = B.Scene.FOGMODE_LINEAR; cena.fogColor = new B.Color3(0.72, 0.86, 0.97); cena.fogStart = 28; cena.fogEnd = 70;
+    if (modoTeste) { cena.useConstantAnimationDeltaTime = true; cena.constantAnimationDeltaTime = 16; }
+
+    // Camera atras do avatar, olhando para a frente (+z).
+    const camera = new B.FreeCamera('cam', new B.Vector3(0, 3.1, -6.5), cena);
+    camera.setTarget(new B.Vector3(0, 1.3, 6));
+    camera.fov = 0.95;
+
+    const sol = new B.DirectionalLight('sol', new B.Vector3(-0.4, -1, 0.5), cena); sol.intensity = 0.75; sol.position = new B.Vector3(10, 20, -10);
+    new B.HemisphericLight('ambiente', new B.Vector3(0, 1, 0), cena).intensity = 0.55;
+    const sombras = new B.ShadowGenerator(1024, sol); sombras.useBlurExponentialShadowMap = true; sombras.blurKernel = 16;
+    const brilho = new B.GlowLayer('brilho', cena, { blurKernelSize: 24 }); brilho.intensity = 0.9;
+    const semBrilho = B.MeshBuilder.CreateBox('semBrilho', { size: 0.01 }, cena); semBrilho.isVisible = false; brilho.addIncludedOnlyMesh(semBrilho); // o brilho so vale para a placa escolhida
+
+    // ----- rua e predios que passam
+    const material = (cor, extra = {}) => { const m = new B.StandardMaterial('m', cena); m.diffuseColor = B.Color3.FromHexString(cor); m.specularColor = new B.Color3(0.05, 0.05, 0.05); Object.assign(m, extra); return m; };
+    const chao = B.MeshBuilder.CreateGround('chao', { width: 12, height: 120 }, cena); chao.position.z = 30; chao.material = material('#38414d'); chao.receiveShadows = true;
+    const calcada = (x) => { const c = B.MeshBuilder.CreateBox('calcada', { width: 4, height: 0.25, depth: 120 }, cena); c.position.set(x, 0.12, 30); c.material = material('#8a929c'); };
+    calcada(-8); calcada(8);
+    const faixas = [];
+    for (let i = 0; i < 14; i++) { const f = B.MeshBuilder.CreateBox('faixa', { width: 0.25, height: 0.02, depth: 2 }, cena); f.position.set(0, 0.02, i * 6); f.material = material('#e8dfc7'); faixas.push(f); }
+    const cores = ['#a8693c', '#2b5d96', '#7d8aa0', '#c27a3f', '#1d4372'];
+    const predios = [];
+    for (let i = 0; i < 16; i++) {
+        const lado = i % 2 ? 1 : -1, h = 6 + (i * 37 % 9);
+        const p = B.MeshBuilder.CreateBox('predio', { width: 5, height: h, depth: 7 }, cena);
+        p.position.set(lado * 12.5, h / 2, Math.floor(i / 2) * 9); p.material = material(cores[i % cores.length]); predios.push(p);
+    }
+
+    // ----- avatar (o mesmo modelo Cartun do jogo)
+    const heroi = new B.TransformNode('heroi', cena);
+    const dentro = await B.SceneLoader.ImportMeshAsync('', '/modelos/cartun/', 'bia.glb', cena);
+    const raiz = dentro.meshes[0]; raiz.parent = heroi;
+    const caixa = raiz.getHierarchyBoundingVectors(true);
+    const escala = 1.6 / (caixa.max.y - caixa.min.y);
+    raiz.scaling.scaleInPlace(escala); raiz.position.y = -caixa.min.y * escala;
+    dentro.meshes.forEach((m) => { m.receiveShadows = true; sombras.addShadowCaster(m); });
+    const corrida = dentro.animationGroups.find((g) => g.name.toLowerCase().includes('sprint')) ?? dentro.animationGroups[0];
+    dentro.animationGroups.forEach((g) => g.stop());
+    corrida?.start(true, 1.1);
+    const faceParaFrente = params.get('costas') === '1' ? 0 : Math.PI; raiz.rotationQuaternion = null; raiz.rotation.y = faceParaFrente;
+
+    // ----- texturas de texto e portao
+    function texturaDePlaca(texto, lado, escolhida) {
+        const t = new B.DynamicTexture('placa', { width: 512, height: 256 }, cena, true);
+        const c = t.getContext();
+        c.fillStyle = escolhida ? '#fff1e3' : '#e8edf5'; c.fillRect(0, 0, 512, 256);
+        c.fillStyle = lado === 'esq' ? '#1f6fb8' : '#f08a3c'; c.fillRect(0, 0, 512, 54);
+        c.fillStyle = '#fff'; c.font = 'bold 34px system-ui, sans-serif'; c.textAlign = lado === 'esq' ? 'left' : 'right';
+        c.fillText(lado === 'esq' ? '← ESQUERDA' : 'DIREITA →', lado === 'esq' ? 18 : 494, 40);
+        c.fillStyle = escolhida ? '#0d2b4e' : '#55657a'; c.font = 'bold 66px system-ui, sans-serif'; c.textAlign = 'center';
+        c.fillText(texto, 256, 168, 480);
+        t.update(); return t;
+    }
+    const PARES = [['Café', 'Chá'], ['Praia', 'Montanha'], ['Livro', 'Filme'], ['Gato', 'Cachorro'], ['Doce', 'Salgado'], ['Manhã', 'Noite']];
+    const PISTA = 2.3; let rodada = 0; let portao = null; let escolhas = 0; let alvoX = 0;
+
+    function novoPortao() {
+        const [a, b] = PARES[rodada++ % PARES.length];
+        const grupo = new B.TransformNode('portao', cena); grupo.position.z = 42;
+        const placas = {};
+        [['esq', a, -PISTA], ['dir', b, PISTA]].forEach(([lado, texto, x]) => {
+            const plano = B.MeshBuilder.CreatePlane('placa-' + lado, { width: 3.4, height: 1.7 }, cena);
+            const mat = new B.StandardMaterial('mp', cena); mat.diffuseTexture = texturaDePlaca(texto, lado, false); mat.emissiveColor = new B.Color3(0.25, 0.25, 0.25); mat.backFaceCulling = false;
+            plano.material = mat; plano.parent = grupo; plano.position.set(x, 2.9, 0);
+            const moldura = B.MeshBuilder.CreateBox('moldura', { width: 3.6, height: 1.9, depth: 0.12 }, cena);
+            const mm = material(lado === 'esq' ? '#1f6fb8' : '#f08a3c'); moldura.material = mm; moldura.parent = grupo; moldura.position.set(x, 2.9, 0.1);
+            [-1.6, 1.6].forEach((dx) => { const poste = B.MeshBuilder.CreateCylinder('poste', { diameter: 0.14, height: 2.9 }, cena); poste.material = mm; poste.parent = grupo; poste.position.set(x + dx, 1.45, 0.1); });
+            plano.metadata = { lado, texto }; placas[lado] = { plano, moldura, texto, mat };
+        });
+        portao = { grupo, placas, escolhido: false, passou: false };
+        document.getElementById('txt-esq').textContent = a; document.getElementById('txt-dir').textContent = b;
+        document.getElementById('anuncio').textContent = `Opção da esquerda: ${a}. Opção da direita: ${b}.`;
+    }
+    function apagarPortao() { portao.grupo.getChildMeshes().forEach((m) => { m.material?.diffuseTexture?.dispose(); m.dispose(); }); portao.grupo.dispose(); portao = null; }
+
+    // ----- particulas: confete (burst) e poeira
+    const quadrado = new B.DynamicTexture('quad', 64, cena, true); { const c = quadrado.getContext(); c.fillStyle = '#fff'; c.fillRect(8, 8, 48, 48); quadrado.update(); }
+    function criarConfete() {
+        const ps = new B.ParticleSystem('confete', 220, cena);
+        ps.particleTexture = quadrado; ps.emitter = new B.Vector3(0, 3, 0);
+        ps.minEmitBox = new B.Vector3(-1.4, 0, -0.2); ps.maxEmitBox = new B.Vector3(1.4, 0.6, 0.2);
+        ps.color1 = new B.Color4(0.94, 0.54, 0.24, 1); ps.color2 = new B.Color4(0.43, 0.66, 0.88, 1); ps.colorDead = new B.Color4(1, 0.84, 0.29, 0);
+        ps.addColorGradient(0, new B.Color4(1, 0.42, 0.62, 1)); ps.addColorGradient(0.35, new B.Color4(0.43, 0.9, 0.63, 1)); ps.addColorGradient(0.7, new B.Color4(1, 0.84, 0.29, 1)); ps.addColorGradient(1, new B.Color4(0.43, 0.66, 0.88, 0));
+        ps.minSize = 0.14; ps.maxSize = 0.28; ps.minLifeTime = 1.0; ps.maxLifeTime = 1.7;
+        ps.emitRate = 0; ps.gravity = new B.Vector3(0, -7, 0);
+        ps.direction1 = new B.Vector3(-2.5, 1.5, -1.5); ps.direction2 = new B.Vector3(2.5, 4.5, 1.5);
+        ps.minAngularSpeed = -6; ps.maxAngularSpeed = 6; ps.minEmitPower = 0.8; ps.maxEmitPower = 2;
+        ps.blendMode = B.ParticleSystem.BLENDMODE_STANDARD; ps.start(); return ps;
+    }
+    const confete = criarConfete();
+    const poeira = new B.ParticleSystem('poeira', 60, cena);
+    { const t = new B.DynamicTexture('bola', 64, cena, true); const c = t.getContext(); const g = c.createRadialGradient(32, 32, 2, 32, 32, 30); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = g; c.fillRect(0, 0, 64, 64); t.update(); t.hasAlpha = true; poeira.particleTexture = t; }
+    poeira.emitter = new B.Vector3(0, 0.15, -0.3); poeira.minEmitBox = new B.Vector3(-0.3, 0, 0); poeira.maxEmitBox = new B.Vector3(0.3, 0, 0);
+    poeira.color1 = new B.Color4(0.9, 0.87, 0.8, 0.22); poeira.color2 = new B.Color4(0.8, 0.8, 0.8, 0.15); poeira.colorDead = new B.Color4(1, 1, 1, 0);
+    poeira.minSize = 0.12; poeira.maxSize = 0.28; poeira.minLifeTime = 0.4; poeira.maxLifeTime = 0.8; poeira.emitRate = reduzirMovimento ? 0 : 22;
+    poeira.direction1 = new B.Vector3(-0.4, 0.4, -1.6); poeira.direction2 = new B.Vector3(0.4, 0.9, -2.4); poeira.start();
+
+    // ----- reacao do avatar (animacoes do Babylon: salto, giro e esticada)
+    const facil = new B.SineEase(); facil.setEasingMode(B.EasingFunction.EASINGMODE_EASEINOUT);
+    function animar(alvo, propriedade, tipo, chaves, fps = 30) {
+        const a = new B.Animation('a-' + propriedade, propriedade, fps, tipo, B.Animation.ANIMATIONLOOPMODE_CONSTANT);
+        a.setKeys(chaves); a.setEasingFunction(facil); return a;
+    }
+    function comemorar() {
+        if (reduzirMovimento) return;
+        const V = B.Animation.ANIMATIONTYPE_FLOAT, V3 = B.Animation.ANIMATIONTYPE_VECTOR3;
+        heroi.rotation.y = 0; heroi.scaling.set(1, 1, 1);
+        const salto = animar(heroi, 'position.y', V, [{ frame: 0, value: 0 }, { frame: 10, value: 1.1 }, { frame: 21, value: 0 }]);
+        const giro = animar(heroi, 'rotation.y', V, [{ frame: 0, value: 0 }, { frame: 21, value: Math.PI * 2 }]);
+        const esticada = animar(heroi, 'scaling', V3, [
+            { frame: 0, value: new B.Vector3(1, 1, 1) }, { frame: 3, value: new B.Vector3(1.07, 0.88, 1.07) },
+            { frame: 10, value: new B.Vector3(0.96, 1.08, 0.96) }, { frame: 21, value: new B.Vector3(1, 1, 1) }]);
+        cena.beginDirectAnimation(heroi, [salto, giro, esticada], 0, 21, false);
+    }
+
+    // ----- escolha
+    let tremor = 0;
+    function escolher(lado) {
+        if (!portao || portao.escolhido) return;
+        portao.escolhido = true; escolhas++;
+        document.getElementById('pontos').textContent = 'Escolhas ' + escolhas;
+        const outro = lado === 'esq' ? 'dir' : 'esq';
+        portao.placas[lado].mat.diffuseTexture = texturaDePlaca(portao.placas[lado].texto, lado, true);
+        portao.placas[lado].mat.emissiveColor = new B.Color3(0.9, 0.55, 0.2);
+        brilho.addIncludedOnlyMesh(portao.placas[lado].moldura);
+        portao.placas[outro].mat.diffuseTexture = texturaDePlaca(portao.placas[outro].texto, outro, false);
+        alvoX = lado === 'esq' ? -PISTA : PISTA;
+        tremor = reduzirMovimento ? 0 : 0.35;
+        comemorar();
+        navigator.vibrate?.(25);
+        document.getElementById('anuncio').textContent = 'Você escolheu ' + portao.placas[lado].texto + '.';
+    }
+    document.getElementById('esq').addEventListener('click', () => escolher('esq'));
+    document.getElementById('dir').addEventListener('click', () => escolher('dir'));
+    addEventListener('keydown', (e) => { if (['ArrowLeft', 'a', 'A'].includes(e.key)) escolher('esq'); if (['ArrowRight', 'd', 'D'].includes(e.key)) escolher('dir'); });
+    cena.onPointerDown = (_e, pick) => { if (pick?.hit && pick.pickedMesh?.metadata?.lado) escolher(pick.pickedMesh.metadata.lado); };
+
+    // ----- laco
+    const VEL = 9; let fase = 0;
+    function passo(dt) {
+        fase += dt;
+        faixas.forEach((f) => { f.position.z -= VEL * dt; if (f.position.z < -6) f.position.z += 84; });
+        predios.forEach((p) => { p.position.z -= VEL * dt; if (p.position.z < -14) p.position.z += 72; });
+        if (!portao) novoPortao();
+        portao.grupo.position.z -= VEL * dt;
+        heroi.position.x += (alvoX - heroi.position.x) * Math.min(1, dt * 8);
+        poeira.emitter.x = heroi.position.x;
+        if (portao.escolhido && !portao.passou && portao.grupo.position.z < 4) {   // o avatar atravessa o portao escolhido
+            portao.passou = true;
+            if (!reduzirMovimento) { confete.emitter = new B.Vector3(heroi.position.x, 3.1, portao.grupo.position.z - 0.5); confete.manualEmitCount = 120; }
+            navigator.vibrate?.([30, 40, 70]);
+        }
+        if (portao.grupo.position.z < -9) { brilho.removeIncludedOnlyMesh(portao.placas.esq.moldura); brilho.removeIncludedOnlyMesh(portao.placas.dir.moldura); apagarPortao(); alvoX = 0; }
+        if (!portao?.escolhido) alvoX = 0;
+        tremor = Math.max(0, tremor - dt);
+        camera.fov = 0.95 + (tremor > 0 ? Math.sin(tremor * 30) * 0.015 * (tremor / 0.35) : 0);
+        camera.position.x = heroi.position.x * 0.35;
+    }
+    window.__proto = { passo: (n = 1) => { for (let i = 0; i < n; i++) { passo(0.016); cena.render(); } }, escolher, estado: () => ({ escolhas, portaoZ: portao?.grupo.position.z, escolhido: portao?.escolhido, y: heroi.position.y, giro: heroi.rotation.y, quadroCorrida: corrida?.animatables?.[0]?.getAnimations()[0]?.currentFrame}) };
+
+    if (!modoTeste) {
+        let ultimo = performance.now();
+        motor.runRenderLoop(() => { const agora = performance.now(); passo(Math.min(0.05, (agora - ultimo) / 1000)); ultimo = agora; cena.render(); });
+        addEventListener('resize', () => motor.resize());
+    } else { cena.render(); }
+
+    document.getElementById('carregando').remove();
+    tela.focus({ preventScroll: true });
+    const ms = Math.round(performance.now() - t0);
+    const medir = () => {
+        const recursos = performance.getEntriesByType('resource').filter((r) => /babylon/.test(r.name)).reduce((s, r) => s + (r.encodedBodySize || 0), 0);
+        document.getElementById('ficha').innerHTML = `Medidas: Babylon.js <code>${B.Engine.Version}</code> · carregamento do protótipo <code>${ms} ms</code> · bibliotecas baixadas <code>${(recursos / 1048576).toFixed(1)} MB</code> (compactadas) · quadros <code>${Math.round(motor.getFps())} fps</code>. O jogo atual (three.js 0.187) é empacotado só com o que usa.`;
+    };
+    medir(); if (!modoTeste) setInterval(medir, 1500);
+})().catch((e) => { document.getElementById('carregando')?.replaceChildren('Erro ao carregar: ' + e.message); console.error(e); });
+</script>
+</body>
+</html>
