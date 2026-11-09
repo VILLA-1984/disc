@@ -4,7 +4,7 @@ import { CENARIOS, MEIOS, avatarCabe, meioPadrao, precarregarModeloDoMeio, regra
 import { paraHtml, textoDe } from '../lib/configuracao';
 import { criarCiclo } from './ciclo.js';
 import { criarJogo3D } from './game3d.js';
-import { babylonElegivel, babylonPedido, criarJogoBabylon } from './game3d-babylon.js';
+import { babylonElegivel, babylonPedido, carregarBabylon, criarJogoBabylon } from './game3d-babylon.js';
 import { mostrarRelatorio } from './report.js';
 
 /**
@@ -397,6 +397,11 @@ export function montar(raiz, api) {
     }
 
     function escolherAvatar() {
+        // O Babylon (1,9 MB) comeca a baixar enquanto a pessoa escolhe o avatar, para nao atrasar a largada.
+        if (babylonPedido() && avataresLivres.some((a) => a.modelo)) {
+            carregarBabylon().catch(() => undefined);
+        }
+
         const retratos = gerarRetratos(avataresLivres, { largura: 220, altura: 280 });
         const opcaoDeAvatar = (a) => `
                     <button type="button" class="avatar-op" role="radio" aria-checked="${a.id === avatarId}" data-id="${a.id}" ${avatarCabe(a, cenario, meio) ? '' : 'disabled'}>
@@ -569,10 +574,13 @@ export function montar(raiz, api) {
         });
     }
 
-    /** three.js (padrao) ou, com `?motor=babylon` e quando o Babylon sabe desenhar o cenario e o avatar, o motor em Babylon.js. */
+    /**
+     * Babylon.js na rua (vista 3D) com avatar de modelo 3D; three.js no resto. `?motor=three` na URL forca o three.js e,
+     * se o Babylon nao carregar (rede, CDN), o jogo segue sozinho com o three.js.
+     */
     function criarJogoDoMotor(opcoes) {
         if (babylonPedido() && babylonElegivel(opcoes)) {
-            return criarJogoBabylon(opcoes);
+            return criarJogoBabylon({ ...opcoes, alternativo: criarJogo3D });
         }
 
         return criarJogo3D(opcoes);

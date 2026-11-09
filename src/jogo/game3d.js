@@ -10,7 +10,7 @@ import { MEIOS, construirCeu, construirNeve, construirRio, construirTrilhos, cri
  * Velocimetro em SVG para avatares sobre rodas. A escala vai de 0 a kmhMax; o ponteiro acompanha a
  * velocidade relativa do jogo (1 = normal, turbo ~1,9) multiplicada pelo kmhBase do veiculo.
  */
-function criarVelocimetro(parent, info) {
+export function criarVelocimetro(parent, info) {
     const raiz = document.createElement('div');
     raiz.className = 'rua-velo';
     raiz.setAttribute('aria-hidden', 'true');

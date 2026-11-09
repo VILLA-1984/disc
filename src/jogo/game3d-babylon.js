@@ -1,9 +1,10 @@
 /**
- * Motor alternativo do jogo em Babylon.js, para comparar com o three.js. Liga com `?motor=babylon` na URL.
+ * Motor do jogo em Babylon.js: e o padrao na rua (vista 3D) com avatar de modelo 3D. `?motor=three` na URL volta ao
+ * three.js (game3d.js), que tambem assume sozinho se o Babylon nao carregar.
  *
- * Cobre a rua na vista 3D com avatar de modelo 3D (Cartun, a pe): portoes, escolha, turbo, clima, reacoes do avatar
+ * Cobre a rua na vista 3D com todos os avatares (modelos 3D em glTF e os de formas simples, espelhados do three.js): portoes, escolha, turbo, clima, reacoes do avatar
  * (salto, giro, confete, vibracao), animais da corrida (lobo, gato, aguia e tubarao), HUD, minimapa, som e o mesmo fluxo da entrada.js (treino, etapas, ciclo, gravacao).
- * Fora disso (rio, ar, neve, trilhos, espaco, vista lateral, avatar de formas simples, cadeira de rodas) a entrada.js continua usando o motor three.js (game3d.js): ver `babylonElegivel`.
+ * Fora disso (rio, ar, neve, trilhos, espaco e vista lateral) a entrada.js continua usando o motor three.js (game3d.js): ver `babylonElegivel`.
  *
  * Mesma interface de criarJogo3D, com um detalhe: o Babylon vem do CDN (jsdelivr) sob demanda, entao o objeto devolvido
  * e usavel na hora e guarda as chamadas ate a cena ficar pronta.
@@ -12,6 +13,9 @@
  * andam para -z. Direita da tela = +x.
  */
 import { continuos, sons } from './audio.js';
+import { criarAvatar3D, infoMobilidade } from './avatars.js';
+import { espelharObjeto3D } from './espelho-babylon.js';
+import { criarVelocimetro } from './game3d.js';
 
 const BABYLON_URL = 'https://cdn.jsdelivr.net/npm/babylonjs@9.35.0/babylon.js';
 const LOADERS_URL = 'https://cdn.jsdelivr.net/npm/babylonjs-loaders@9.35.0/babylonjs.loaders.min.js';
@@ -51,10 +55,18 @@ let promessaBabylon = null;
 function carregarScript(src) {
     return new Promise((resolve, reject) => {
         const el = document.createElement('script');
+        const limite = setTimeout(() => reject(new Error(`Tempo esgotado ao carregar ${src}`)), 12000);
         el.src = src;
         el.async = false;
-        el.onload = () => resolve();
-        el.onerror = () => reject(new Error(`Falha ao carregar ${src}`));
+        el.onload = () => {
+            clearTimeout(limite);
+            resolve();
+        };
+        el.onerror = () => {
+            clearTimeout(limite);
+            el.remove();
+            reject(new Error(`Falha ao carregar ${src}`));
+        };
         document.head.appendChild(el);
     });
 }
@@ -71,21 +83,14 @@ export function carregarBabylon() {
     return promessaBabylon;
 }
 
-/** A pessoa pediu o motor Babylon (`?motor=babylon`). */
+/** O Babylon e o padrao; `?motor=three` na URL o desliga (para comparar ou se algo der errado). */
 export function babylonPedido() {
-    return typeof location !== 'undefined' && new URLSearchParams(location.search).get('motor') === 'babylon';
+    return typeof location === 'undefined' || new URLSearchParams(location.search).get('motor') !== 'three';
 }
 
 /** O que este motor sabe desenhar; o resto fica com o three.js. */
 export function babylonElegivel(opcoes) {
-    const avatar = opcoes.avatar;
-    const semModelos = typeof location !== 'undefined' && new URLSearchParams(location.search).get('modelos') === '0';
-    return opcoes.modo !== 'lateral'
-        && (opcoes.cenario ?? 'rua') === 'rua'
-        && !semModelos
-        && Boolean(avatar?.modelo)
-        && ['anda', 'bengala'].includes(avatar.mobilidade ?? 'anda')
-        && !(avatar.acessorios?.length);
+    return opcoes.modo !== 'lateral' && (opcoes.cenario ?? 'rua') === 'rua';
 }
 
 // ------------------------------------------------------------------ desenho 2D
@@ -327,6 +332,7 @@ export function criarJogoBabylon(opcoes) {
     let destruido = false;
     const fila = [];
     const agora = (fn) => (real ? fn(real) : fila.push(fn));
+    const jaExistiam = new Set(opcoes.parent.children);
 
     carregarBabylon()
         .then((B) => construir(B, opcoes))
@@ -341,12 +347,21 @@ export function criarJogoBabylon(opcoes) {
             fila.splice(0).forEach((fn) => fn(jogo));
         })
         .catch((erro) => {
-            console.error('Babylon.js indisponivel', erro);
-            const aviso = document.createElement('p');
-            aviso.setAttribute('role', 'alert');
-            aviso.style.cssText = 'position:absolute;inset:0;z-index:35;display:flex;align-items:center;justify-content:center;margin:0;padding:24px;text-align:center;font-weight:600;color:#fff;background:rgba(13,43,78,.9)';
-            aviso.textContent = 'Não foi possível carregar o Babylon.js (precisa de internet). Abra o jogo sem ?motor=babylon.';
-            opcoes.parent.appendChild(aviso);
+            // Sem Babylon (rede bloqueada, CDN fora do ar, modelo ausente): limpa o que ficou na tela e segue com o three.js.
+            console.warn('Babylon.js indisponivel; seguindo com o three.js', erro);
+
+            for (const filho of [...opcoes.parent.children]) {
+                if (!jaExistiam.has(filho)) {
+                    filho.remove();
+                }
+            }
+
+            if (destruido || !opcoes.alternativo) {
+                return;
+            }
+
+            real = opcoes.alternativo(opcoes);
+            fila.splice(0).forEach((fn) => fn(real));
         });
 
     return {
@@ -355,7 +370,7 @@ export function criarJogoBabylon(opcoes) {
         definirProgresso: (p) => agora((j) => j.definirProgresso(p)),
         acelerar: (ativo) => agora((j) => j.acelerar(ativo)),
         obterEstado: () => (real ? real.obterEstado() : { estado: 'carregando', motor: 'babylon' }),
-        passo: (dt) => real?.passo(dt),
+        passo: (dt) => real?.passo?.(dt),
         destruir() {
             destruido = true;
             real?.destruir();
@@ -630,39 +645,73 @@ async function construir(B, opcoes) {
     });
     sombraAvatar.material.diffuseColor = new B.Color3(0, 0, 0);
 
-    // ------------------------------------------------------------ avatar (modelo Cartun)
+    // ------------------------------------------------------------ avatar
+    // Pessoa com modelo 3D (glTF com esqueleto) quando ha `modelo` e o jogo a pe ou de cadeira o aceita; nos demais casos
+    // (e com `?modelos=0`) vale o avatar de formas simples, montado pelo three.js e espelhado aqui (espelho-babylon.js).
     const avatarNo = new B.TransformNode('avatar', cena);
-    const info = { rodas: false };
+    const info = infoMobilidade(spec);
+    const semModelos = params.get('modelos') === '0';
+    const usaModelo = Boolean(spec.modelo) && !semModelos && ['anda', 'cadeira', 'bengala'].includes(spec.mobilidade ?? 'anda');
+    const dirDe = (url) => [url.slice(0, url.lastIndexOf('/') + 1), url.slice(url.lastIndexOf('/') + 1)];
     let clipe = null;
-    const url = spec.modelo;
-    const dentro = await B.SceneLoader.ImportMeshAsync('', url.slice(0, url.lastIndexOf('/') + 1), url.slice(url.lastIndexOf('/') + 1), cena);
-    const raiz = dentro.meshes[0];
-    raiz.parent = avatarNo;
-    const caixa = raiz.getHierarchyBoundingVectors(true);
-    const escalaModelo = ((spec.alturaModelo ?? ALTURA_HUMANO) * (spec.altura ?? 1)) / (caixa.max.y - caixa.min.y);
-    raiz.scaling.scaleInPlace(escalaModelo);
-    raiz.position.y = -caixa.min.y * escalaModelo;
-    raiz.rotationQuaternion = null;
-    raiz.rotation.y = Math.PI; // o jogo anda para longe da camera: o avatar mostra as costas
+    let avatar3d = null;
+    let espelho = null;
 
-    for (const m of dentro.meshes) {
-        m.alwaysSelectAsActiveMesh = true; // a malha esqueletica muda de forma: a caixa da pose inicial nao vale
-        m.isPickable = false;
+    if (usaModelo) {
+        const dentro = await B.SceneLoader.ImportMeshAsync('', ...dirDe(spec.modelo), cena);
+        const raiz = dentro.meshes[0];
+        raiz.parent = avatarNo;
+        const caixa = raiz.getHierarchyBoundingVectors(true);
+        const escalaModelo = ((spec.alturaModelo ?? ALTURA_HUMANO) * (spec.altura ?? 1)) / (caixa.max.y - caixa.min.y);
+        raiz.scaling.scaleInPlace(escalaModelo);
+        raiz.position.y = -caixa.min.y * escalaModelo;
+        raiz.rotationQuaternion = null;
+        raiz.rotation.y = Math.PI; // o jogo anda para longe da camera: o avatar mostra as costas
 
-        for (const mat of [m.material].filter(Boolean)) {
-            const cor = mat.name === 'camiseta' ? spec.roupa : (mat.name === 'calca' ? spec.calca : null);
+        for (const m of dentro.meshes) {
+            m.alwaysSelectAsActiveMesh = true; // a malha esqueletica muda de forma: a caixa da pose inicial nao vale
+            m.isPickable = false;
 
-            if (cor && mat.albedoColor) {
-                mat.albedoColor = cor3(cor).toLinearSpace();
+            for (const mat of [m.material].filter(Boolean)) {
+                const cor = mat.name === 'camiseta' ? spec.roupa : (mat.name === 'calca' ? spec.calca : null);
+
+                if (cor && mat.albedoColor) {
+                    mat.albedoColor = cor3(cor).toLinearSpace();
+                }
             }
         }
+
+        dentro.animationGroups.forEach((g) => g.stop());
+        clipe = dentro.animationGroups.find((g) => g.name.toLowerCase() === (spec.clip ?? 'walk'))
+            ?? dentro.animationGroups.find((g) => /walk/i.test(g.name))
+            ?? dentro.animationGroups[0] ?? null;
+        clipe?.start(true, 1);
+
+        // Acessorios (cadeira de rodas...): ja vem alinhados com o personagem; ganham a mesma posicao, escala e giro dele.
+        for (const item of spec.acessorios ?? []) {
+            const arquivo = typeof item === 'string' ? item : item.arquivo;
+
+            try {
+                const extra = await B.SceneLoader.ImportMeshAsync('', ...dirDe(arquivo), cena);
+                const peca = extra.meshes[0];
+                peca.parent = avatarNo;
+                peca.rotationQuaternion = null;
+                peca.scaling.copyFrom(raiz.scaling);
+                peca.position.copyFrom(raiz.position);
+                peca.rotation.copyFrom(raiz.rotation);
+                extra.meshes.forEach((m) => { m.isPickable = false; });
+            } catch (erro) {
+                console.warn(`acessorio ${arquivo} indisponivel`, erro);
+            }
+        }
+    } else {
+        avatar3d = criarAvatar3D({ ...spec, semModelo: true });
+        espelho = espelharObjeto3D(B, cena, avatar3d.grupo, avatarNo);
     }
 
-    dentro.animationGroups.forEach((g) => g.stop());
-    clipe = dentro.animationGroups.find((g) => g.name.toLowerCase() === (spec.clip ?? 'walk'))
-        ?? dentro.animationGroups.find((g) => /walk/i.test(g.name))
-        ?? dentro.animationGroups[0] ?? null;
-    clipe?.start(true, 1);
+    // Som e visual do meio: motor (moto, taxi) solta fumaca escura pelo escape; os demais, poeira clara nos pes.
+    const somDoMeio = info.som ?? 'passos';
+    const fumaca = somDoMeio === 'motor';
 
     // Animais da corrida (opcao do painel; `?animais=N` na URL liga para teste, com um animal a cada N palavras).
     const animaisUrl = params.get('animais');
@@ -818,6 +867,9 @@ async function construir(B, opcoes) {
     linhas.className = 'rua-linhas rua-linhas--3d';
     linhas.setAttribute('aria-hidden', 'true');
     parent.appendChild(linhas);
+
+    // Velocimetro: so para quem se desloca sobre rodas (moto, taxi, cadeiras).
+    const velocimetro = info.rodas ? criarVelocimetro(parent, info) : null;
 
     // Selo discreto, para quem testa saber qual motor esta desenhando.
     const selo = document.createElement('div');
@@ -1091,8 +1143,8 @@ async function construir(B, opcoes) {
     poeira.emitter = new B.Vector3(0, 0.15, -0.3);
     poeira.minEmitBox = new B.Vector3(-0.3, 0, 0);
     poeira.maxEmitBox = new B.Vector3(0.3, 0, 0);
-    poeira.color1 = new B.Color4(0.91, 0.87, 0.8, 0.3);
-    poeira.color2 = new B.Color4(0.8, 0.8, 0.8, 0.2);
+    poeira.color1 = fumaca ? new B.Color4(0.35, 0.38, 0.42, 0.45) : new B.Color4(0.91, 0.87, 0.8, 0.3);
+    poeira.color2 = fumaca ? new B.Color4(0.25, 0.27, 0.3, 0.35) : new B.Color4(0.8, 0.8, 0.8, 0.2);
     poeira.colorDead = new B.Color4(1, 1, 1, 0);
     poeira.minSize = 0.14;
     poeira.maxSize = 0.34;
@@ -1233,7 +1285,7 @@ async function construir(B, opcoes) {
             acelerando,
             clima: nomeClima,
             curva: 0,
-            kmh: null,
+            kmh: velocimetro?.valor() ?? null,
             avatarX: Math.round(avatarNo.position.x * 100) / 100,
         };
     }
@@ -1319,13 +1371,14 @@ async function construir(B, opcoes) {
         linhas.classList.toggle('ativa', turboAtivo && !reduzirMovimento);
 
         if (turboAtivo && !turboAnterior) {
-            opcoes.aoTurbo?.({ som: 'passos' });
+            opcoes.aoTurbo?.({ som: somDoMeio });
         }
 
         turboAnterior = turboAtivo;
-        continuos.motor.atualizar({ tipo: 'passos', ritmo, turbo: turboAtivo });
+        continuos.motor.atualizar({ tipo: somDoMeio, ritmo, turbo: turboAtivo });
+        velocimetro?.atualizar(ritmo);
         poeira.emitRate = turboAtivo && !reduzirMovimento ? 28 : 0;
-        poeira.emitter = new B.Vector3(avatarNo.position.x, 0.15, -0.3);
+        poeira.emitter = fumaca ? new B.Vector3(avatarNo.position.x + 0.2, 0.4, -1.9) : new B.Vector3(avatarNo.position.x, 0.15, -0.3);
         // A rua anda para tras: as particulas soltas no ar acompanham (a velocidade do mundo entra na direcao).
         poeira.direction1 = new B.Vector3(-0.4, 0.4, -velocidade - 1.6);
         poeira.direction2 = new B.Vector3(0.4, 0.9, -velocidade - 2.4);
@@ -1335,6 +1388,11 @@ async function construir(B, opcoes) {
 
         if (clipe) {
             clipe.speedRatio = Math.min(Math.max(ritmo, 0), 2.2);
+        }
+
+        if (avatar3d) {
+            avatar3d.animar(fase, ritmo);
+            espelho.atualizar();
         }
 
         if (velocidade / velocidadeBase > 0.3 && Math.floor(fase / Math.PI) !== faseDoUltimoPasso) {
@@ -1356,7 +1414,7 @@ async function construir(B, opcoes) {
 
         if (!reduzirMovimento) {
             giroY = desvio * 0.1;
-            giroZ = -desvio * 0.07;
+            giroZ = -desvio * (info.rodas ? 0.14 : 0.07);
         }
 
         let alturaY = 0;
@@ -1371,7 +1429,10 @@ async function construir(B, opcoes) {
             // O corpo se abaixa, estica no ar e gira uma volta inteira.
             escalaY = p < 0.15 ? 1 - 0.12 * Math.sin((p / 0.15) * Math.PI) : 1 + 0.07 * Math.sin(((p - 0.15) / 0.85) * Math.PI);
             escalaXZ = 1 / Math.sqrt(escalaY);
-            giroY += p * p * (3 - 2 * p) * Math.PI * 2;
+
+            if (!info.rodas) {
+                giroY += p * p * (3 - 2 * p) * Math.PI * 2; // sobre rodas o veiculo nao gira
+            }
         } else if (saltoRestante > 0) {
             saltoRestante = Math.max(0, saltoRestante - dt);
             alturaY = Math.sin((1 - saltoRestante / 0.34) * Math.PI) * 0.55;
@@ -1505,6 +1566,8 @@ async function construir(B, opcoes) {
             document.removeEventListener('visibilitychange', aoVoltarParaAba);
             observador.disconnect();
             animais?.destruir();
+            velocimetro?.remover();
+            espelho?.destruir();
             continuos.motor.parar();
             continuos.clima.parar();
             motor.stopRenderLoop();
