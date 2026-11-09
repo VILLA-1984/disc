@@ -116,3 +116,9 @@ O mesmo front existe em `resources/js/word-street/` do projeto Laravel. Ao mudar
 - Mapeamento de tons (*tone mapping*) para melhorar o contraste dos cenários.
 - Controle de volume (hoje só existe o mudo).
 - Compressão dos modelos glTF (Draco ou meshopt). Hoje somam cerca de 600 KB, então não é urgente.
+
+### Motor Babylon.js no jogo de verdade (`?motor=babylon`)
+
+Com `?motor=babylon` na URL, o jogo real (treino, etapas, ciclo, gravação do resultado) é desenhado pelo Babylon.js em vez do three.js: `src/jogo/game3d-babylon.js`, com a mesma interface do `game3d.js`. O Babylon 9.35 vem do CDN sob demanda; se não carregar, aparece um aviso e basta abrir o jogo sem o parâmetro. O padrão continua sendo o three.js.
+
+Cobre a **rua na vista 3D** com **avatar de modelo 3D a pé** (Cartun, exceto a Fabi de cadeira; use `?cartun=1` para listar): portões, escolha, turbo, clima (sol, nublado, chuva, ventania), reações (salto, giro, confete, vibração), animais da corrida (lobo, gato, águia, tubarão), HUD, minimapa e som. O resto (rio, ar, neve, trilhos, espaço, vista lateral, avatares de formas simples, cadeira de rodas) segue no three.js, sem aviso: o selo "Babylon.js" no canto da tela mostra qual motor está desenhando. Ainda não tem a rua que serpenteia (curvas) nem o velocímetro. `?teste=1` deixa o relógio por conta de `jogo.passo(dt)`.

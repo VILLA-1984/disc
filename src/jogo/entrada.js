@@ -4,6 +4,7 @@ import { CENARIOS, MEIOS, avatarCabe, meioPadrao, precarregarModeloDoMeio, regra
 import { paraHtml, textoDe } from '../lib/configuracao';
 import { criarCiclo } from './ciclo.js';
 import { criarJogo3D } from './game3d.js';
+import { babylonElegivel, babylonPedido, criarJogoBabylon } from './game3d-babylon.js';
 import { mostrarRelatorio } from './report.js';
 
 /**
@@ -568,6 +569,15 @@ export function montar(raiz, api) {
         });
     }
 
+    /** three.js (padrao) ou, com `?motor=babylon` e quando o Babylon sabe desenhar o cenario e o avatar, o motor em Babylon.js. */
+    function criarJogoDoMotor(opcoes) {
+        if (babylonPedido() && babylonElegivel(opcoes)) {
+            return criarJogoBabylon(opcoes);
+        }
+
+        return criarJogo3D(opcoes);
+    }
+
     // ------------------------------------------------------------------ treino
     // Dois mini-percursos de 4 portoes (8 no total) com palavras de exemplo, antes do jogo valer. Usa o mesmo cenario,
     // avatar e controles, mas NADA daqui vai para `escolhas`, para o ciclo ou para o servidor.
@@ -611,7 +621,7 @@ export function montar(raiz, api) {
             });
         };
 
-        jogo = criarJogo3D({
+        jogo = criarJogoDoMotor({
             parent: el('jogo'),
             etapas: [],
             proximoPortao: ({ etapa, indice }) => (indice < PORTOES_DO_TREINO ? portaoDoTreino(etapa, indice) : null),
@@ -715,7 +725,7 @@ export function montar(raiz, api) {
         retratoAtual = spec.retrato ?? gerarRetratos([spec], { largura: 320, altura: 400 }).get(spec.id) ?? '';
         ajustarControles();
 
-        jogo = criarJogo3D({
+        jogo = criarJogoDoMotor({
             parent: el('jogo'),
             etapas,
             proximoPortao: ciclo ? proximoPortao : undefined,
