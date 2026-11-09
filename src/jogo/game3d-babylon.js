@@ -457,6 +457,64 @@ async function construir(B, opcoes) {
     camera.fov = (CFG.fov * Math.PI) / 180;
     camera.setTarget(new B.Vector3(0, 1.7, 11));
 
+    // ------------------------------------------------------------ curvas
+    // A rua faz curvas suaves: no vertex shader, tudo que esta longe sai um pouco para o lado em proporcao ao quadrado
+    // da distancia (a tecnica do "mundo curvo", a mesma do game3d.js). So o desenho muda; portoes, placas e logica ficam
+    // retos. Ceu, sol, nuvens, estrelas e sprites nao curvam (marcados com metadata.semCurva). Desligado com "reduzir movimento".
+    const curvasAtivas = !reduzirMovimento && params.get('curvas') !== '0' && Boolean(B.MaterialPluginBase); // ?curvas=0 desliga
+    const curva = { valor: 0 };
+
+    if (curvasAtivas) {
+        class PluginCurva extends B.MaterialPluginBase {
+            constructor(material) {
+                super(material, 'Curva', 250, { CURVA: false }, true, true);
+            }
+
+            getClassName() {
+                return 'PluginCurva';
+            }
+
+            prepareDefines(defines) {
+                defines.CURVA = !this._material.metadata?.semCurva && !this._material.pointsCloud;
+            }
+
+            getUniforms() {
+                return {
+                    ubo: [{ name: 'uCurva', size: 2, type: 'vec2' }],
+                    vertex: `#ifdef CURVA
+uniform vec2 uCurva;
+#endif`,
+                };
+            }
+
+            bindForSubMesh(uniformBuffer) {
+                uniformBuffer.updateFloat2('uCurva', curva.valor, cena.activeCamera ? cena.activeCamera.globalPosition.z : -6);
+            }
+
+            getCustomCode(tipo) {
+                if (tipo !== 'vertex') {
+                    return null;
+                }
+
+                return {
+                    CUSTOM_VERTEX_UPDATE_WORLDPOS: `#ifdef CURVA
+float dzCurva = worldPos.z - uCurva.y;
+worldPos.x += uCurva.x * dzCurva * dzCurva;
+#endif`,
+                };
+            }
+        }
+
+        const curvar = (m) => {
+            if (!m.__curva && (m instanceof B.StandardMaterial || (B.PBRBaseMaterial && m instanceof B.PBRBaseMaterial))) {
+                m.__curva = new PluginCurva(m);
+            }
+        };
+
+        cena.materials.forEach(curvar);
+        cena.onNewMaterialAddedObservable.add(curvar);
+    }
+
     const luzCeu = new B.HemisphericLight('ceu', new B.Vector3(0, 1, 0), cena);
     const luzSol = new B.DirectionalLight('sol', new B.Vector3(0.4, -1, -0.45), cena);
     const brilho = new B.GlowLayer('brilho', cena, { blurKernelSize: 24 });
@@ -501,6 +559,7 @@ async function construir(B, opcoes) {
     ceuMaterial.specularColor = new B.Color3(0, 0, 0);
     ceuMaterial.fogEnabled = false;
     ceuMaterial.backFaceCulling = false;
+    ceuMaterial.metadata = { semCurva: true };
     const ceu = B.MeshBuilder.CreatePlane('ceu', { width: 700, height: 220 }, cena);
     ceu.material = ceuMaterial;
     ceu.position.set(0, 60, 230);
@@ -526,6 +585,7 @@ async function construir(B, opcoes) {
         m.useAlphaFromDiffuseTexture = true;
         m.fogEnabled = false;
         m.backFaceCulling = false;
+        m.metadata = { semCurva: true };
         plano.material = m;
         plano.position.set(x, y, z);
         plano.isPickable = false;
@@ -573,20 +633,27 @@ async function construir(B, opcoes) {
     }
 
     if (rua) {
-        const chao = B.MeshBuilder.CreateBox('rua', { width: LARGURA_ESTRADA, height: 0.1, depth: 420 }, cena);
-        chao.position.set(0, -0.05, 170);
-        chao.material = asfalto;
-        chao.isPickable = false;
+        // Chao, calcadas e meios-fios em pedacos de 15 m (instancias de uma caixa so): as curvas deslocam os vertices, e uma
+        // caixa de 420 m so tem os das pontas (o three.js usa 140 segmentos na mesma caixa).
+        const PEDACO = 15;
+        const PEDACOS = 28; // 28 x 15 m = 420 m, de z = -40 a z = 380
+        const faixaLonga = (nome, largura, altura, x, y, mat) => {
+            const modelo = B.MeshBuilder.CreateBox(nome, { width: largura, height: altura, depth: PEDACO }, cena);
+            modelo.material = mat;
+            modelo.isVisible = false;
+
+            for (let i = 0; i < PEDACOS; i++) {
+                const parte = modelo.createInstance(`${nome}${i}`);
+                parte.position.set(x, y, -40 + PEDACO / 2 + i * PEDACO);
+                parte.isPickable = false;
+            }
+        };
+
+        faixaLonga('rua', LARGURA_ESTRADA, 0.1, 0, -0.05, asfalto);
 
         for (const lado of [-1, 1]) {
-            const calcada = B.MeshBuilder.CreateBox('calcada', { width: 4.2, height: 0.2, depth: 420 }, cena);
-            calcada.position.set(lado * (LARGURA_ESTRADA / 2 + 2.1), 0, 170);
-            calcada.material = material('#97a3b2');
-            calcada.isPickable = false;
-            const meioFio = B.MeshBuilder.CreateBox('meio-fio', { width: 0.25, height: 0.22, depth: 420 }, cena);
-            meioFio.position.set(lado * (LARGURA_ESTRADA / 2 + 0.1), 0.01, 170);
-            meioFio.material = material('#7d8999');
-            meioFio.isPickable = false;
+            faixaLonga('calcada', 4.2, 0.2, lado * (LARGURA_ESTRADA / 2 + 2.1), 0, material('#97a3b2'));
+            faixaLonga('meio-fio', 0.25, 0.22, lado * (LARGURA_ESTRADA / 2 + 0.1), 0.01, material('#7d8999'));
         }
 
         const tracoBase = B.MeshBuilder.CreateBox('traco', { width: 0.18, height: 0.03, depth: 1.8 }, cena);
@@ -976,6 +1043,7 @@ async function construir(B, opcoes) {
     let fase = 0;
     let turboAnterior = false;
     let agoraSeg = 0;
+    let distancia = 0;
     let pulsoFov = 0;
     let tempoCamera = 0;
     let rodando = true;
@@ -1405,6 +1473,12 @@ async function construir(B, opcoes) {
         }
 
         const dz = velocidade * dt;
+        distancia += dz;
+
+        // Enquanto a pessoa le o portao a rua fica reta, para as placas ficarem exatamente onde se espera.
+        const lendo = Boolean(portao?.escolhivel && !portao?.escolhido);
+        const curvaAlvo = lendo ? 0 : Math.sin(distancia / 85) * 0.0021;
+        curva.valor += (curvaAlvo - curva.valor) * Math.min(1, dt * 2.2);
 
         for (const item of movel) {
             item.obj.position.z -= dz;

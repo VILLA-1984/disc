@@ -108,6 +108,10 @@ export function espelharObjeto3D(B, cena, raiz, pai, { pixelRatio = 1 } = {}) {
             m.pointSize = Math.max(1, (o.sizeAttenuation === false ? o.size : o.size * 30) * pixelRatio);
         }
 
+        if (o.isSpriteMaterial || o.isPointsMaterial) {
+            m.metadata = { semCurva: true }; // fundo distante (nuvens, estrelas): no three.js tambem nao curva
+        }
+
         materiais.set(o.uuid, { o, m, aceso, hex: o.color ? o.color.getHex() : 0, opacidade: o.opacity });
 
         return m;
