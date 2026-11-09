@@ -18,8 +18,12 @@ import { espelharObjeto3D } from './espelho-babylon.js';
 import { criarVelocimetro } from './game3d.js';
 import { CENARIOS_DO_MUNDO, criarMundoEspelhado } from './mundo-babylon.js';
 
-const BABYLON_URL = 'https://cdn.jsdelivr.net/npm/babylonjs@9.35.0/babylon.js';
-const LOADERS_URL = 'https://cdn.jsdelivr.net/npm/babylonjs-loaders@9.35.0/babylonjs.loaders.min.js';
+// De onde vem o Babylon: primeiro do proprio site (copiado de node_modules por scripts/copiar-babylon.mjs, funciona em
+// redes que bloqueiam CDN) e, se faltar, do CDN. Se nenhum carregar, o jogo segue no three.js.
+const FONTES_BABYLON = [
+    ['/vendor/babylon/babylon.js?v=9.35.0', '/vendor/babylon/babylonjs.loaders.min.js?v=9.35.0'],
+    ['https://cdn.jsdelivr.net/npm/babylonjs@9.35.0/babylon.js', 'https://cdn.jsdelivr.net/npm/babylonjs-loaders@9.35.0/babylonjs.loaders.min.js'],
+];
 
 const PISTA_X = 2.3;
 const LARGURA_ESTRADA = 9;
@@ -80,7 +84,10 @@ export function carregarBabylon() {
     if (!promessaBabylon) {
         promessaBabylon = window.BABYLON?.SceneLoader
             ? Promise.resolve(window.BABYLON)
-            : carregarScript(BABYLON_URL).then(() => carregarScript(LOADERS_URL)).then(() => window.BABYLON);
+            : FONTES_BABYLON.reduce(
+                (anterior, [motor, leitores]) => anterior.catch(() => carregarScript(motor).then(() => carregarScript(leitores))),
+                Promise.reject(new Error('sem fonte')),
+            ).then(() => window.BABYLON);
         promessaBabylon.catch(() => { promessaBabylon = null; });
     }
 

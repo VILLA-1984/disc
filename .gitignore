@@ -15,3 +15,9 @@ data/.segredo
 .vercel/
 e2e/capturas/
 e2e/capturas-mobile*/
+
+# Observacoes locais do navegador podem conter credenciais e dados da sessao.
+.playwright-mcp/
+
+# Babylon.js copiado de node_modules por scripts/copiar-babylon.mjs
+/public/vendor/babylon/

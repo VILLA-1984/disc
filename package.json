@@ -3,17 +3,20 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "node scripts/copiar-babylon.mjs && next dev",
+    "build": "node scripts/copiar-babylon.mjs && next build",
+    "postinstall": "node scripts/copiar-babylon.mjs",
     "start": "next start",
     "teste:servidor": "node scripts/servidor-teste.mjs",
-    "feira": "next build && next start -H 0.0.0.0 -p 3000",
+    "feira": "node scripts/copiar-babylon.mjs && next build && next start -H 0.0.0.0 -p 3000",
     "test": "vitest run",
     "exportar": "node scripts/exportar.mjs",
     "docs": "node scripts/gerar-docs.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",
+    "babylonjs": "9.35.0",
+    "babylonjs-loaders": "9.35.0",
     "next": "^16.4.3",
     "qrcode": "^1.5.4",
     "react": "^19.3.1",
