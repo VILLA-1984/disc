@@ -89,6 +89,9 @@ A música de fundo tem **um clima por cenário** (`ESTILOS_MUSICA` em `audio.js`
 ## Feedback ao jogador
 
 - **Vibração** (`navigator.vibrate`) de 25 ms ao escolher e um padrão curto ao concluir, só onde o aparelho tem suporte.
+- **Comemoração ao pegar uma palavra** (`game3d.js`): o avatar se abaixa, salta alto, estica o corpo e dá uma volta inteira. Em cadeira de rodas e veículos terrestres só salta e estica; no barco e no ar só salta mais alto. Em "Deixar passar" fica só o pulinho de antes.
+- **Chuva de confete no portão**: quando o avatar atravessa o portão escolhido (`aoPassarPortao`) cai confete colorido na frente da placa e o celular vibra (30-40-70 ms). A vibração de 25 ms ao escolher continua.
+- Com "reduzir movimento" ligado no aparelho, nada disso (pulo, giro, faíscas, confete) acontece.
 - **Confete** (`confete.js`) na revelação do animal, nas cores dele. É um canvas que se apaga sozinho depois de cerca de 2,8 s.
 
 ## O que é compartilhado com o Laravel

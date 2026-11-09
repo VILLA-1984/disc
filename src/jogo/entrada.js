@@ -632,6 +632,7 @@ export function montar(raiz, api) {
                 }
             },
             aoTurbo: ({ som }) => sons.turbo({ som }),
+            aoPassarPortao: () => vibrar([30, 40, 70]),
             aoPortao: ({ cima, baixo }) => {
                 sons.portao();
                 botaoCima.querySelector('strong').textContent = cima.word;
@@ -734,6 +735,7 @@ export function montar(raiz, api) {
                 }
             },
             aoTurbo: ({ som }) => sons.turbo({ som }),
+            aoPassarPortao: () => vibrar([30, 40, 70]),
             aoPortao: ({ indice, total, cima, baixo }) => {
                 sons.portao();
                 botaoCima.querySelector('strong').textContent = cima.word;

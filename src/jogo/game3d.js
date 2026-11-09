@@ -289,6 +289,7 @@ function desenharPlaca(canvas, palavra, estado, dica) {
  * @param {Function} [opcoes.proximoPortao] modo ciclo: ({etapa, indice}) => {cima, baixo} | null (null encerra a etapa)
  * @param {Function} [opcoes.aoPortao] portao legivel: {etapa, indice, total, cima, baixo}
  * @param {Function} [opcoes.aoEscolher] {etapa, indice, lado, escolhida, outra, combinacao, tempoMs}
+ * @param {Function} [opcoes.aoPassarPortao] o avatar atravessa o portao escolhido (confete): {etapa, indice}
  * @param {Function} [opcoes.aoConcluirEtapa] {etapa, escolhas}
  * @param {Function} [opcoes.aoPasso] a cada passada do avatar (para o som)
  */
@@ -805,6 +806,14 @@ export function criarJogo3D(opcoes) {
     let alvoX = 0;
     let saltoRestante = 0;
     const faiscas = [];
+
+    // Comemoracao ao pegar uma palavra: salto alto com giro e "esticada" do corpo. Confete quando o portao passa.
+    const COMEMORAR_DURACAO = 0.7;
+    let comemoracao = 0;
+    const escalaBaseAvatar = avatar.grupo.scale.x;
+    const confetes = [];
+    const confeteGeo = new THREE.BoxGeometry(0.17, 0.17, 0.02);
+    const confeteMateriais = [COR.laranja, COR.azulClaro, 0xffd54a, 0x6ee7a0, 0xff6b9d].map((cor) => new THREE.MeshBasicMaterial({ color: cor, side: THREE.DoubleSide }));
     let ultimoQuadro = performance.now();
     let rodando = true;
     // Voltar para a aba depois de um tempo nao pode virar um salto: recomeca a contar o tempo daqui.
@@ -1004,6 +1013,51 @@ export function criarJogo3D(opcoes) {
     }
 
     // ------------------------------------------------------------------ escolha
+    /** Chuva de confete na frente da placa, quando o avatar esta prestes a atravessar o portao escolhido. */
+    function soltarConfete() {
+        if (reduzirMovimento) {
+            return;
+        }
+
+        for (let i = 0; i < 34; i++) {
+            const m = new THREE.Mesh(confeteGeo, confeteMateriais[i % confeteMateriais.length]);
+            m.position.set(avatar.grupo.position.x + (Math.random() - 0.5) * 1.2, 2.3 + Math.random() * 0.6, portao.grupo.position.z + 0.5);
+            m.rotation.set(Math.random() * 6, Math.random() * 6, Math.random() * 6);
+            const angulo = Math.random() * Math.PI * 2;
+            const forca = 1.2 + Math.random() * 2.6;
+            confetes.push({
+                m,
+                vx: Math.cos(angulo) * forca * 0.9,
+                vy: 0.8 + Math.random() * 2.2,
+                vz: Math.abs(Math.sin(angulo)) * forca * 0.5,
+                giro: (Math.random() - 0.5) * 12,
+                vida: 1.2 + Math.random() * 0.4,
+                total: 1.4,
+            });
+            cena.add(m);
+        }
+    }
+
+    function atualizarConfetes(dt, dz) {
+        for (let i = confetes.length - 1; i >= 0; i--) {
+            const c = confetes[i];
+            c.vida -= dt;
+            c.vy -= 7 * dt;
+            c.vx *= 1 - Math.min(1, dt * 1.2);
+            c.m.position.x += c.vx * dt;
+            c.m.position.y = Math.max(0.05, c.m.position.y + c.vy * dt);
+            c.m.position.z += c.vz * dt + dz; // fica para tras junto com a rua
+            c.m.rotation.x += c.giro * dt;
+            c.m.rotation.z += c.giro * 0.7 * dt;
+            c.m.scale.setScalar(Math.max(0.01, Math.min(1, c.vida / 0.4)));
+
+            if (c.vida <= 0) {
+                cena.remove(c.m);
+                confetes.splice(i, 1);
+            }
+        }
+    }
+
     function soltarFaiscas() {
         if (reduzirMovimento) {
             return;
@@ -1076,6 +1130,7 @@ export function criarJogo3D(opcoes) {
 
         alvoX = lado === 'cima' ? -PISTA_X : PISTA_X;
         saltoRestante = reduzirMovimento ? 0 : 0.34;
+        comemoracao = !reduzirMovimento && portao.dados[lado].id !== 0 ? COMEMORAR_DURACAO : 0;
         atualizarHud();
         soltarFaiscas();
 
@@ -1376,11 +1431,31 @@ export function criarJogo3D(opcoes) {
         // No rio o barco flutua e no ar a aeronave sobe e desce de leve (mais devagar e mais amplo).
         const alturaBase = mundo ? ALTURA_CONVES + (reduzirMovimento ? 0 : Math.sin(agoraSeg * (aereo || espacial ? 1.4 : 2.1)) * (aereo || espacial ? 0.07 : ((gelo || ferrovia) ? 0.008 : 0.035))) : 0;
 
-        if (saltoRestante > 0) {
+        if (comemoracao > 0) {
+            comemoracao = Math.max(0, comemoracao - dt);
+            const p = 1 - comemoracao / COMEMORAR_DURACAO;
+            avatar.grupo.position.y = alturaBase + Math.sin(p * Math.PI) * (mundo ? 0.45 : 0.95);
+            saltoRestante = 0;
+
+            // A pe (ou de cadeira/veiculo em terra) o corpo se abaixa, estica no ar e gira uma volta inteira.
+            if (!mundo) {
+                const alonga = p < 0.15 ? 1 - 0.12 * Math.sin((p / 0.15) * Math.PI) : 1 + 0.07 * Math.sin(((p - 0.15) / 0.85) * Math.PI);
+                const largura = 1 / Math.sqrt(alonga);
+                avatar.grupo.scale.set(escalaBaseAvatar * largura, escalaBaseAvatar * alonga, escalaBaseAvatar * largura);
+
+                if (!avatar.info.rodas) {
+                    avatar.grupo.rotation.y += p * p * (3 - 2 * p) * Math.PI * 2;
+                }
+            }
+        } else if (saltoRestante > 0) {
             saltoRestante = Math.max(0, saltoRestante - dt);
             avatar.grupo.position.y = alturaBase + Math.sin((1 - saltoRestante / 0.34) * Math.PI) * 0.55;
         } else {
             avatar.grupo.position.y = alturaBase;
+        }
+
+        if (comemoracao === 0 && avatar.grupo.scale.x !== escalaBaseAvatar && !mundo) {
+            avatar.grupo.scale.setScalar(escalaBaseAvatar);
         }
 
         // Portao.
@@ -1394,6 +1469,13 @@ export function criarJogo3D(opcoes) {
             for (const p of Object.values(portao.placas)) {
                 const escala = p.painel.scale.x + (p.escala - p.painel.scale.x) * Math.min(1, dt * 10);
                 p.painel.scale.setScalar(escala);
+            }
+
+            // O avatar esta atravessando o portao escolhido: chuva de confete e aviso (o celular vibra).
+            if (portao.escolhido && !portao.passou && portao.grupo.position.z > -2.5) {
+                portao.passou = true;
+                soltarConfete();
+                opcoes.aoPassarPortao?.({ etapa: etapaAtual, indice });
             }
 
             if (portao.grupo.position.z > PORTAO_Z_FIM) {
@@ -1413,6 +1495,7 @@ export function criarJogo3D(opcoes) {
         }
 
         atualizarParticulas(dt, dz);
+        atualizarConfetes(dt, dz);
         animais?.atualizar(dt, avatar.grupo.position.x);
 
         // Faiscas.
@@ -1473,6 +1556,8 @@ export function criarJogo3D(opcoes) {
             particulas.forEach((p) => p.m.material.dispose());
             reservaParticulas.forEach((m) => m.material.dispose());
             particulaGeo.dispose();
+            confeteGeo.dispose();
+            confeteMateriais.forEach((m) => m.dispose());
             chuvaGeo.dispose();
             folhasGeo.dispose();
             renderer.dispose();
