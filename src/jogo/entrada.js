@@ -398,7 +398,7 @@ export function montar(raiz, api) {
 
     function escolherAvatar() {
         // O Babylon (1,9 MB) comeca a baixar enquanto a pessoa escolhe o avatar, para nao atrasar a largada.
-        if (babylonPedido() && avataresLivres.some((a) => a.modelo)) {
+        if (babylonPedido()) {
             carregarBabylon().catch(() => undefined);
         }
 

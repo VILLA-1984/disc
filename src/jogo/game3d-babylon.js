@@ -4,7 +4,7 @@
  *
  * Cobre a rua na vista 3D com todos os avatares (modelos 3D em glTF e os de formas simples, espelhados do three.js): portoes, escolha, turbo, clima, reacoes do avatar
  * (salto, giro, confete, vibracao), animais da corrida (lobo, gato, aguia e tubarao), HUD, minimapa, som e o mesmo fluxo da entrada.js (treino, etapas, ciclo, gravacao).
- * Fora disso (rio, ar, neve, trilhos, espaco e vista lateral) a entrada.js continua usando o motor three.js (game3d.js): ver `babylonElegivel`.
+ * Rio, ar, neve, trilhos e espaco: o mundo e o veiculo vem do three.js, espelhados (mundo-babylon.js). Fora disso (vista lateral) a entrada.js continua usando o motor three.js (game3d.js): ver `babylonElegivel`.
  *
  * Mesma interface de criarJogo3D, com um detalhe: o Babylon vem do CDN (jsdelivr) sob demanda, entao o objeto devolvido
  * e usavel na hora e guarda as chamadas ate a cena ficar pronta.
@@ -16,6 +16,7 @@ import { continuos, sons } from './audio.js';
 import { criarAvatar3D, infoMobilidade } from './avatars.js';
 import { espelharObjeto3D } from './espelho-babylon.js';
 import { criarVelocimetro } from './game3d.js';
+import { CENARIOS_DO_MUNDO, criarMundoEspelhado } from './mundo-babylon.js';
 
 const BABYLON_URL = 'https://cdn.jsdelivr.net/npm/babylonjs@9.35.0/babylon.js';
 const LOADERS_URL = 'https://cdn.jsdelivr.net/npm/babylonjs-loaders@9.35.0/babylonjs.loaders.min.js';
@@ -36,13 +37,16 @@ const COR = { azul: '#1f6fb8', laranja: '#f08a3c' };
 const PREDIOS = ['#1f6fb8', '#0d2b4e', '#f08a3c', '#6fa8e0', '#2f5f94', '#c9d8ea', '#e9b27a'];
 
 const CLIMAS = {
-    sol: { nome: 'Ensolarado', ceuTopo: '#9cc8f0', ceuBase: '#f4f9ff', nevoa: '#dcebf9', alcance: 1, luz: 1.5, direta: 1.35, sol: 1, nuvem: 0.85, nuvemCor: '#ffffff', chuva: 0, vento: 0, asfalto: '#3b4a5c', nuvemVelocidade: 0.6 },
-    nublado: { nome: 'Nublado', ceuTopo: '#8f9cab', ceuBase: '#d8dde4', nevoa: '#c9d0d8', alcance: 0.85, luz: 1.25, direta: 0.4, sol: 0, nuvem: 1, nuvemCor: '#b4bcc7', chuva: 0, vento: 0, asfalto: '#36424f', nuvemVelocidade: 0.9 },
-    chuva: { nome: 'Chuvoso', ceuTopo: '#566476', ceuBase: '#a7b2be', nevoa: '#97a3b0', alcance: 0.62, luz: 0.98, direta: 0.18, sol: 0, nuvem: 1, nuvemCor: '#7d8896', chuva: 1, vento: 0.15, asfalto: '#27313d', nuvemVelocidade: 1.2 },
-    vento: { nome: 'Ventania', ceuTopo: '#86bde8', ceuBase: '#e6f0fa', nevoa: '#d3e5f4', alcance: 1, luz: 1.45, direta: 1.15, sol: 0.85, nuvem: 0.9, nuvemCor: '#f2f6fb', chuva: 0, vento: 1, asfalto: '#3b4a5c', nuvemVelocidade: 7 },
+    sol: { nome: 'Ensolarado', ceuTopo: '#9cc8f0', ceuBase: '#f4f9ff', nevoa: '#dcebf9', alcance: 1, luz: 1.5, direta: 1.35, sol: 1, nuvem: 0.85, nuvemCor: '#ffffff', chuva: 0, vento: 0, asfalto: '#3b4a5c', agua: '#2f86b8', solo: '#5aa25c', neve: '#f4f8fc', nuvemVelocidade: 0.6 },
+    nublado: { nome: 'Nublado', ceuTopo: '#8f9cab', ceuBase: '#d8dde4', nevoa: '#c9d0d8', alcance: 0.85, luz: 1.25, direta: 0.4, sol: 0, nuvem: 1, nuvemCor: '#b4bcc7', chuva: 0, vento: 0, asfalto: '#36424f', agua: '#4f7288', solo: '#4f8a58', neve: '#dfe6ee', nuvemVelocidade: 0.9 },
+    chuva: { nome: 'Chuvoso', ceuTopo: '#566476', ceuBase: '#a7b2be', nevoa: '#97a3b0', alcance: 0.62, luz: 0.98, direta: 0.18, sol: 0, nuvem: 1, nuvemCor: '#7d8896', chuva: 1, vento: 0.15, asfalto: '#27313d', agua: '#3d5a6e', solo: '#3f6e4c', neve: '#cfd8e2', nuvemVelocidade: 1.2 },
+    // Espaco: nao ha tempo (sol, chuva, vento): o ceu e preto e o clima nunca muda.
+    espaco: { nome: 'Espaço', ceuTopo: '#01020a', ceuBase: '#0a1233', nevoa: '#050a22', alcance: 2.6, luz: 1.05, direta: 1.25, sol: 0, nuvem: 0, nuvemCor: '#000000', chuva: 0, vento: 0, asfalto: '#01020a', agua: '#01020a', solo: '#01020a', neve: '#01020a', nuvemVelocidade: 0 },
+    vento: { nome: 'Ventania', ceuTopo: '#86bde8', ceuBase: '#e6f0fa', nevoa: '#d3e5f4', alcance: 1, luz: 1.45, direta: 1.15, sol: 0.85, nuvem: 0.9, nuvemCor: '#f2f6fb', chuva: 0, vento: 1, asfalto: '#3b4a5c', agua: '#3a8bbd', solo: '#5aa25c', neve: '#eef3f9', nuvemVelocidade: 7 },
 };
 
 const ICONES_CLIMA = {
+    espaco: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 17v4M17 19h4"/></svg>',
     sol: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
     nublado: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 1 1 .6-7.95A5.5 5.5 0 0 1 18 11a3.5 3.5 0 0 1-.5 7z"/></svg>',
     chuva: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 15a4 4 0 1 1 .6-7.95A5.5 5.5 0 0 1 18 8a3.5 3.5 0 0 1-.5 7"/><path d="M8 18l-1 3M12 18l-1 3M16 18l-1 3"/></svg>',
@@ -90,7 +94,7 @@ export function babylonPedido() {
 
 /** O que este motor sabe desenhar; o resto fica com o three.js. */
 export function babylonElegivel(opcoes) {
-    return opcoes.modo !== 'lateral' && (opcoes.cenario ?? 'rua') === 'rua';
+    return opcoes.modo !== 'lateral' && ['rua', ...CENARIOS_DO_MUNDO].includes(opcoes.cenario ?? 'rua');
 }
 
 // ------------------------------------------------------------------ desenho 2D
@@ -151,12 +155,23 @@ const TECLA_DE_LADO = {
 // ------------------------------------------------------------------ animais da corrida
 const TIPOS_ANIMAL = ['lobo', 'gato', 'aguia', 'tubarao'];
 const MODELOS_ANIMAL = {
-    lobo: { arquivo: '/modelos/animais/lobo.glb', comprimento: 2.6, clip: /gallop/i, movimento: 'corre' },
-    gato: { arquivo: '/modelos/animais/gato.glb', comprimento: 2.0, clip: /run/i, movimento: 'corre' },
-    aguia: { arquivo: '/modelos/animais/aguia.glb', comprimento: 3.0, clip: /fly/i, movimento: 'voa' },
-    // Na rua o tubarao nao tem habitat: desliza como um espirito translucido.
-    tubarao: { arquivo: '/modelos/animais/tubarao.glb', comprimento: 3.4, clip: /swim/i, movimento: 'espirito' },
+    lobo: { arquivo: '/modelos/animais/lobo.glb', comprimento: 2.6, clip: /gallop/i },
+    gato: { arquivo: '/modelos/animais/gato.glb', comprimento: 2.0, clip: /run/i },
+    aguia: { arquivo: '/modelos/animais/aguia.glb', comprimento: 3.0, clip: /fly/i },
+    tubarao: { arquivo: '/modelos/animais/tubarao.glb', comprimento: 3.4, clip: /swim/i },
 };
+// Como cada animal se move em cada cenario (igual ao animais-corrida.js): corre no chao, margem do rio, nada, voa,
+// espirito (silhueta translucida, para quem nao tem habitat ali) ou constelacao (linhas de luz no espaco).
+const HABITATS = {
+    rua: { lobo: 'corre', gato: 'corre', aguia: 'voa', tubarao: 'espirito' },
+    rio: { lobo: 'margem', gato: 'margem', aguia: 'voa', tubarao: 'nada' },
+    ar: { lobo: 'espirito', gato: 'espirito', aguia: 'voa', tubarao: 'espirito' },
+    neve: { lobo: 'corre', gato: 'corre', aguia: 'voa', tubarao: 'espirito' },
+    trilhos: { lobo: 'corre', gato: 'corre', aguia: 'voa', tubarao: 'espirito' },
+    espaco: { lobo: 'constelacao', gato: 'constelacao', aguia: 'constelacao', tubarao: 'constelacao' },
+};
+const CHAO_ANIMAL = { rua: 0, rio: 0.2, neve: 0, trilhos: 0.05 }; // altura do chao onde o animal pisa
+const X_MARGEM = 7.4; // distancia do centro do rio ate a areia, onde lobo e gato correm
 const INTERVALO_SOM = { lobo: 3.2, gato: 2.2, aguia: 1.4, tubarao: 2.0 };
 const suave = (x) => {
     const t = Math.min(1, Math.max(0, x));
@@ -168,7 +183,7 @@ const suave = (x) => {
  * A cada N palavras pegas um animal (sorteado, sem ligacao com o resultado) surge ao lado do avatar, fica nitido e
  * some. Na rua: lobo e gato correm, a aguia voa e o tubarao desliza como espirito. Os modelos entram em segundo plano.
  */
-function criarAnimaisBabylon(B, cena, { aCada = 4, duracao = 3.6, reduzirMovimento = false, somAnimal = null }) {
+function criarAnimaisBabylon(B, cena, { cenario = 'rua', aCada = 4, duracao = 3.6, reduzirMovimento = false, somAnimal = null }) {
     const tempoTotal = Number.isFinite(duracao) ? Math.min(8, Math.max(1, duracao)) : 3.6;
     const tempoEntrada = tempoTotal * 0.2;
     const tempoSaida = tempoTotal * 0.25;
@@ -192,6 +207,19 @@ function criarAnimaisBabylon(B, cena, { aCada = 4, duracao = 3.6, reduzirMovimen
             for (const m of r.meshes) {
                 m.alwaysSelectAsActiveMesh = true;
                 m.isPickable = false;
+
+                // Constelacao (espaco): o corpo vira uma malha de linhas luminosas, que soma luz ao fundo escuro.
+                if (HABITATS[cenario]?.[tipo] === 'constelacao' && m.material) {
+                    m.material.wireframe = true;
+                    m.material.alphaMode = B.Engine.ALPHA_ADD;
+                    m.material.disableDepthWrite = true;
+                    m.material.fogEnabled = false;
+
+                    if ('albedoColor' in m.material) {
+                        m.material.albedoColor = new B.Color3(0.74, 0.84, 1).toLinearSpace();
+                        m.material.emissiveColor = new B.Color3(0.42, 0.61, 1);
+                    }
+                }
             }
 
             no.setEnabled(false);
@@ -244,7 +272,7 @@ function criarAnimaisBabylon(B, cena, { aCada = 4, duracao = 3.6, reduzirMovimen
             return; // o modelo ainda nao chegou: nesta vez o animal nao aparece
         }
 
-        ativo = { tipo, movimento: MODELOS_ANIMAL[tipo].movimento, t: 0, lado: ladoDoAvatar > 0 ? -1 : 1, proximoSom: 0 };
+        ativo = { tipo, movimento: HABITATS[cenario]?.[tipo] ?? 'espirito', t: 0, lado: ladoDoAvatar > 0 ? -1 : 1, proximoSom: 0 };
         m.no.setEnabled(true);
 
         if (m.clipe) {
@@ -290,7 +318,8 @@ function criarAnimaisBabylon(B, cena, { aCada = 4, duracao = 3.6, reduzirMovimen
             const { movimento, tipo } = ativo;
             const m = prontos[tipo];
             const aparece = suave(ativo.t / tempoEntrada) * (1 - suave((ativo.t - (tempoTotal - tempoSaida)) / tempoSaida));
-            const escala = m.escala * (0.92 + 0.08 * aparece);
+            const ampliar = movimento === 'margem' ? 1.8 : 1; // na margem o animal corre longe da camera: fica maior para caber
+            const escala = m.escala * ampliar * (0.92 + 0.08 * aparece);
             const opacidade = aparece * (movimento === 'espirito' ? 0.55 : 1);
 
             for (const malha of m.malhas) {
@@ -300,15 +329,21 @@ function criarAnimaisBabylon(B, cena, { aCada = 4, duracao = 3.6, reduzirMovimen
             m.no.scaling.setAll(escala);
             let y;
 
-            if (movimento === 'espirito') {
-                y = 1.5 + (reduzirMovimento ? 0 : Math.sin(ativo.t * 4.5) * 0.18) - m.centroY * escala;
+            if (movimento === 'nada') {
+                y = 0.14 - m.centroY * escala; // o centro fica um pouco acima da linha da agua: dorso e barbatana de fora
+            } else if (movimento === 'espirito' || movimento === 'constelacao') {
+                y = (movimento === 'constelacao' ? 1.6 : 1.5) + (reduzirMovimento ? 0 : Math.sin(ativo.t * 4.5) * 0.18) - m.centroY * escala;
             } else if (movimento === 'voa') {
                 y = 1.3 + (reduzirMovimento ? 0 : Math.sin(ativo.t * 2.4) * 0.2) - m.centroY * escala;
             } else {
-                y = -m.pesY * escala; // os pes pousam no chao
+                y = (CHAO_ANIMAL[cenario] ?? 0) - m.pesY * escala; // os pes pousam no chao
             }
 
-            m.no.position.set(avatarX + ativo.lado * 3.2, y, 0.6 + ativo.t * 0.2);
+            if (movimento === 'margem') {
+                m.no.position.set(ativo.lado * X_MARGEM, y, 8.5 + ativo.t * 0.3); // na areia da margem, do lado oposto ao avatar
+            } else {
+                m.no.position.set(avatarX + ativo.lado * 3.2, y, 0.6 + ativo.t * 0.2);
+            }
         },
         destruir() {
             esconder();
@@ -387,6 +422,8 @@ async function construir(B, opcoes) {
     const reacoes = opcoes.reacoes !== false && !reduzirMovimento;
     const spec = opcoes.avatar;
     const dinamico = typeof opcoes.proximoPortao === 'function';
+    const cenario = CENARIOS_DO_MUNDO.includes(opcoes.cenario) ? opcoes.cenario : 'rua';
+    const rua = cenario === 'rua';
 
     // ------------------------------------------------------------ motor e cena
     const canvas = document.createElement('canvas');
@@ -517,23 +554,8 @@ async function construir(B, opcoes) {
     });
 
     // ------------------------------------------------------------ rua
+    // Rio, ceu, neve, trilhos e espaco montam o proprio mundo (mundo-babylon.js); a rua so existe no cenario 'rua'.
     const asfalto = material('#3b4a5c');
-    const chao = B.MeshBuilder.CreateBox('rua', { width: LARGURA_ESTRADA, height: 0.1, depth: 420 }, cena);
-    chao.position.set(0, -0.05, 170);
-    chao.material = asfalto;
-    chao.isPickable = false;
-
-    for (const lado of [-1, 1]) {
-        const calcada = B.MeshBuilder.CreateBox('calcada', { width: 4.2, height: 0.2, depth: 420 }, cena);
-        calcada.position.set(lado * (LARGURA_ESTRADA / 2 + 2.1), 0, 170);
-        calcada.material = material('#97a3b2');
-        calcada.isPickable = false;
-        const meioFio = B.MeshBuilder.CreateBox('meio-fio', { width: 0.25, height: 0.22, depth: 420 }, cena);
-        meioFio.position.set(lado * (LARGURA_ESTRADA / 2 + 0.1), 0.01, 170);
-        meioFio.material = material('#7d8999');
-        meioFio.isPickable = false;
-    }
-
     // Itens que andam com a rua (z logico cresce para tras, como no three.js; aqui o mundo anda para -z).
     const movel = [];
     const arvores = [];
@@ -543,93 +565,112 @@ async function construir(B, opcoes) {
         movel.push({ obj, comprimento });
     }
 
-    const tracoBase = B.MeshBuilder.CreateBox('traco', { width: 0.18, height: 0.03, depth: 1.8 }, cena);
-    tracoBase.material = material('#f6f1e0');
-    tracoBase.isVisible = false;
+    if (rua) {
+        const chao = B.MeshBuilder.CreateBox('rua', { width: LARGURA_ESTRADA, height: 0.1, depth: 420 }, cena);
+        chao.position.set(0, -0.05, 170);
+        chao.material = asfalto;
+        chao.isPickable = false;
 
-    for (let i = 0; i < PERIODO / 5; i++) {
-        const traco = tracoBase.createInstance(`traco${i}`);
-        traco.position.y = 0.06;
-        adicionarMovel(traco, 0, Z_TRAS - i * 5 - 2.5);
-    }
-
-    const texturasPredio = PREDIOS.map((cor) => texturaDeCanvas(128, 256, (c) => {
-        c.fillStyle = cor;
-        c.fillRect(0, 0, 128, 256);
-        c.fillStyle = 'rgba(0,0,0,0.12)';
-        c.fillRect(0, 0, 128, 10);
-
-        for (let linha = 0; linha < 8; linha++) {
-            for (let coluna = 0; coluna < 4; coluna++) {
-                c.fillStyle = sorteio() < 0.68 ? '#ffe9b8' : '#203a5a';
-                c.fillRect(10 + coluna * 29, 22 + linha * 29, 17, 19);
-            }
+        for (const lado of [-1, 1]) {
+            const calcada = B.MeshBuilder.CreateBox('calcada', { width: 4.2, height: 0.2, depth: 420 }, cena);
+            calcada.position.set(lado * (LARGURA_ESTRADA / 2 + 2.1), 0, 170);
+            calcada.material = material('#97a3b2');
+            calcada.isPickable = false;
+            const meioFio = B.MeshBuilder.CreateBox('meio-fio', { width: 0.25, height: 0.22, depth: 420 }, cena);
+            meioFio.position.set(lado * (LARGURA_ESTRADA / 2 + 0.1), 0.01, 170);
+            meioFio.material = material('#7d8999');
+            meioFio.isPickable = false;
         }
-    }));
-    const materiaisPredio = texturasPredio.map((t) => {
-        const m = new B.StandardMaterial('predio', cena);
-        m.diffuseTexture = t;
-        m.specularColor = new B.Color3(0, 0, 0);
 
-        return m;
-    });
+        const tracoBase = B.MeshBuilder.CreateBox('traco', { width: 0.18, height: 0.03, depth: 1.8 }, cena);
+        tracoBase.material = material('#f6f1e0');
+        tracoBase.isVisible = false;
 
-    const posteBase = B.MeshBuilder.CreateCylinder('poste', { diameterTop: 0.14, diameterBottom: 0.18, height: 4.4, tessellation: 8 }, cena);
-    posteBase.material = material('#4a5668');
-    posteBase.isVisible = false;
-    const lampadaBase = B.MeshBuilder.CreateSphere('lampada', { diameter: 0.44, segments: 8 }, cena);
-    lampadaBase.material = material('#ffe9b8', { emissiveColor: cor3('#ffe9b8'), disableLighting: true });
-    lampadaBase.isVisible = false;
-    const troncoBase = B.MeshBuilder.CreateCylinder('tronco', { diameterTop: 0.24, diameterBottom: 0.32, height: 1.5, tessellation: 8 }, cena);
-    troncoBase.material = material('#6b4a2e');
-    troncoBase.isVisible = false;
-    const copaBase = [0, 1].map((k) => {
-        const copa = B.MeshBuilder.CreateSphere('copa', { diameter: 2.2, segments: 10 }, cena);
-        copa.material = material(k ? '#3f9b5f' : '#2e8350');
-        copa.isVisible = false;
+        for (let i = 0; i < PERIODO / 5; i++) {
+            const traco = tracoBase.createInstance(`traco${i}`);
+            traco.position.y = 0.06;
+            adicionarMovel(traco, 0, Z_TRAS - i * 5 - 2.5);
+        }
 
-        return copa;
-    });
+        const texturasPredio = PREDIOS.map((cor) => texturaDeCanvas(128, 256, (c) => {
+            c.fillStyle = cor;
+            c.fillRect(0, 0, 128, 256);
+            c.fillStyle = 'rgba(0,0,0,0.12)';
+            c.fillRect(0, 0, 128, 10);
 
-    for (const lado of [-1, 1]) {
-        const brutos = Array.from({ length: 14 }, () => 0.7 + sorteio() * 0.7);
-        const soma = brutos.reduce((a, b) => a + b, 0);
-        let percorrido = 0;
+            for (let linha = 0; linha < 8; linha++) {
+                for (let coluna = 0; coluna < 4; coluna++) {
+                    c.fillStyle = sorteio() < 0.68 ? '#ffe9b8' : '#203a5a';
+                    c.fillRect(10 + coluna * 29, 22 + linha * 29, 17, 19);
+                }
+            }
+        }));
+        const materiaisPredio = texturasPredio.map((t) => {
+            const m = new B.StandardMaterial('predio', cena);
+            m.diffuseTexture = t;
+            m.specularColor = new B.Color3(0, 0, 0);
 
-        brutos.forEach((bruto, i) => {
-            const comprimento = (bruto / soma) * PERIODO;
-            const altura = 9 + sorteio() * 15;
-            const largura = 5 + sorteio() * 3;
-            const predio = B.MeshBuilder.CreateBox('predio', { width: largura, height: altura, depth: comprimento - 1 }, cena);
-            predio.material = materiaisPredio[(i + (lado > 0 ? 3 : 0)) % materiaisPredio.length];
-            predio.position.x = lado * (LARGURA_ESTRADA / 2 + 4.4 + largura / 2);
-            predio.position.y = altura / 2;
-            predio.isPickable = false;
-            adicionarMovel(predio, comprimento, Z_TRAS - percorrido - comprimento / 2);
-            percorrido += comprimento;
+            return m;
         });
 
-        for (let i = 0; i < PERIODO / 17.5; i++) {
-            const poste = posteBase.createInstance(`poste${lado}-${i}`);
-            poste.position.set(lado * (LARGURA_ESTRADA / 2 + 0.9), 2.2, 0);
-            adicionarMovel(poste, 0, Z_TRAS - i * 17.5 - 4);
-            const lampada = lampadaBase.createInstance(`lampada${lado}-${i}`);
-            lampada.position.set(lado * (LARGURA_ESTRADA / 2 + 0.9) - lado * 0.35, 4.5, 0);
-            adicionarMovel(lampada, 0, Z_TRAS - i * 17.5 - 4);
+        const posteBase = B.MeshBuilder.CreateCylinder('poste', { diameterTop: 0.14, diameterBottom: 0.18, height: 4.4, tessellation: 8 }, cena);
+        posteBase.material = material('#4a5668');
+        posteBase.isVisible = false;
+        const lampadaBase = B.MeshBuilder.CreateSphere('lampada', { diameter: 0.44, segments: 8 }, cena);
+        lampadaBase.material = material('#ffe9b8', { emissiveColor: cor3('#ffe9b8'), disableLighting: true });
+        lampadaBase.isVisible = false;
+        const troncoBase = B.MeshBuilder.CreateCylinder('tronco', { diameterTop: 0.24, diameterBottom: 0.32, height: 1.5, tessellation: 8 }, cena);
+        troncoBase.material = material('#6b4a2e');
+        troncoBase.isVisible = false;
+        const copaBase = [0, 1].map((k) => {
+            const copa = B.MeshBuilder.CreateSphere('copa', { diameter: 2.2, segments: 10 }, cena);
+            copa.material = material(k ? '#3f9b5f' : '#2e8350');
+            copa.isVisible = false;
 
-            const tronco = troncoBase.createInstance(`tronco${lado}-${i}`);
-            tronco.position.set(lado * (LARGURA_ESTRADA / 2 + 3.2), 0.75, 0);
-            adicionarMovel(tronco, 0, Z_TRAS - i * 17.5 - 13);
-            const copa = copaBase[i % 2].createInstance(`copa${lado}-${i}`);
-            copa.position.set(lado * (LARGURA_ESTRADA / 2 + 3.2), 2.2, 0);
-            adicionarMovel(copa, 0, Z_TRAS - i * 17.5 - 13);
-            arvores.push(copa);
+            return copa;
+        });
+
+        for (const lado of [-1, 1]) {
+            const brutos = Array.from({ length: 14 }, () => 0.7 + sorteio() * 0.7);
+            const soma = brutos.reduce((a, b) => a + b, 0);
+            let percorrido = 0;
+
+            brutos.forEach((bruto, i) => {
+                const comprimento = (bruto / soma) * PERIODO;
+                const altura = 9 + sorteio() * 15;
+                const largura = 5 + sorteio() * 3;
+                const predio = B.MeshBuilder.CreateBox('predio', { width: largura, height: altura, depth: comprimento - 1 }, cena);
+                predio.material = materiaisPredio[(i + (lado > 0 ? 3 : 0)) % materiaisPredio.length];
+                predio.position.x = lado * (LARGURA_ESTRADA / 2 + 4.4 + largura / 2);
+                predio.position.y = altura / 2;
+                predio.isPickable = false;
+                adicionarMovel(predio, comprimento, Z_TRAS - percorrido - comprimento / 2);
+                percorrido += comprimento;
+            });
+
+            for (let i = 0; i < PERIODO / 17.5; i++) {
+                const poste = posteBase.createInstance(`poste${lado}-${i}`);
+                poste.position.set(lado * (LARGURA_ESTRADA / 2 + 0.9), 2.2, 0);
+                adicionarMovel(poste, 0, Z_TRAS - i * 17.5 - 4);
+                const lampada = lampadaBase.createInstance(`lampada${lado}-${i}`);
+                lampada.position.set(lado * (LARGURA_ESTRADA / 2 + 0.9) - lado * 0.35, 4.5, 0);
+                adicionarMovel(lampada, 0, Z_TRAS - i * 17.5 - 4);
+
+                const tronco = troncoBase.createInstance(`tronco${lado}-${i}`);
+                tronco.position.set(lado * (LARGURA_ESTRADA / 2 + 3.2), 0.75, 0);
+                adicionarMovel(tronco, 0, Z_TRAS - i * 17.5 - 13);
+                const copa = copaBase[i % 2].createInstance(`copa${lado}-${i}`);
+                copa.position.set(lado * (LARGURA_ESTRADA / 2 + 3.2), 2.2, 0);
+                adicionarMovel(copa, 0, Z_TRAS - i * 17.5 - 13);
+                arvores.push(copa);
+            }
         }
     }
 
     // Sombra "de mancha" sob o avatar (mais barata que sombras em tempo real).
     const sombraAvatar = B.MeshBuilder.CreateGround('sombra', { width: 1.5, height: 1.5 }, cena);
     sombraAvatar.position.y = 0.04;
+    sombraAvatar.setEnabled(rua);
     sombraAvatar.isPickable = false;
     sombraAvatar.material = material('#000000', {
         diffuseTexture: texturaDeCanvas(64, 64, (c) => {
@@ -649,9 +690,11 @@ async function construir(B, opcoes) {
     // Pessoa com modelo 3D (glTF com esqueleto) quando ha `modelo` e o jogo a pe ou de cadeira o aceita; nos demais casos
     // (e com `?modelos=0`) vale o avatar de formas simples, montado pelo three.js e espelhado aqui (espelho-babylon.js).
     const avatarNo = new B.TransformNode('avatar', cena);
-    const info = infoMobilidade(spec);
+    // Fora da rua o avatar vai num veiculo (barco, aviao, treno, locomotiva, nave...) e o mundo vem do three.js, espelhado.
+    const mundo = rua ? null : criarMundoEspelhado(B, cena, { cenario, meio: opcoes.meio, avatar: spec, avatarNo, reduzirMovimento, sorteio, pixelRatio: ratioAtual });
+    const info = mundo ? mundo.info : infoMobilidade(spec);
     const semModelos = params.get('modelos') === '0';
-    const usaModelo = Boolean(spec.modelo) && !semModelos && ['anda', 'cadeira', 'bengala'].includes(spec.mobilidade ?? 'anda');
+    const usaModelo = rua && Boolean(spec.modelo) && !semModelos && ['anda', 'cadeira', 'bengala'].includes(spec.mobilidade ?? 'anda');
     const dirDe = (url) => [url.slice(0, url.lastIndexOf('/') + 1), url.slice(url.lastIndexOf('/') + 1)];
     let clipe = null;
     let avatar3d = null;
@@ -704,14 +747,14 @@ async function construir(B, opcoes) {
                 console.warn(`acessorio ${arquivo} indisponivel`, erro);
             }
         }
-    } else {
+    } else if (!mundo) {
         avatar3d = criarAvatar3D({ ...spec, semModelo: true });
         espelho = espelharObjeto3D(B, cena, avatar3d.grupo, avatarNo);
     }
 
     // Som e visual do meio: motor (moto, taxi) solta fumaca escura pelo escape; os demais, poeira clara nos pes.
-    const somDoMeio = info.som ?? 'passos';
-    const fumaca = somDoMeio === 'motor';
+    const somDoMeio = mundo ? mundo.somDoMeio : (info.som ?? 'passos');
+    const fumaca = !mundo && somDoMeio === 'motor';
 
     // Animais da corrida (opcao do painel; `?animais=N` na URL liga para teste, com um animal a cada N palavras).
     const animaisUrl = params.get('animais');
@@ -719,21 +762,26 @@ async function construir(B, opcoes) {
         ? { aCada: Math.max(1, Number(animaisUrl) || 4), duracao: Number(params.get('duracao')) || undefined }
         : opcoes.animaisNaCorrida;
     const animais = animaisConfig
-        ? criarAnimaisBabylon(B, cena, { aCada: animaisConfig.aCada, duracao: animaisConfig.duracao, reduzirMovimento, somAnimal: (tipo) => sons[tipo]?.() })
+        ? criarAnimaisBabylon(B, cena, { cenario, aCada: animaisConfig.aCada, duracao: animaisConfig.duracao, reduzirMovimento, somAnimal: (tipo) => sons[tipo]?.() })
         : null;
 
     // ------------------------------------------------------------ clima
-    const luzBase = { hemi: 0.55, sol: 0.75 };
-    const climaAlvo = { ...CLIMAS.sol };
+    // Fora da rua (cenarios espelhados do three.js) mais luz ambiente e menos sol: o three.js ilumina por cima com bem mais brilho.
+    const luzBase = mundo ? { hemi: 0.72, sol: 0.55 } : { hemi: 0.55, sol: 0.75 };
+    const climaInicial = CLIMAS[cenario === 'espaco' ? 'espaco' : 'sol'];
+    const climaAlvo = { ...climaInicial };
     const climaAtual = {
-        ...CLIMAS.sol,
-        ceuTopo: cor3(CLIMAS.sol.ceuTopo),
-        ceuBase: cor3(CLIMAS.sol.ceuBase),
-        nevoa: cor3(CLIMAS.sol.nevoa),
-        nuvemCor: cor3(CLIMAS.sol.nuvemCor),
-        asfalto: cor3(CLIMAS.sol.asfalto),
+        ...climaInicial,
+        ceuTopo: cor3(climaInicial.ceuTopo),
+        ceuBase: cor3(climaInicial.ceuBase),
+        nevoa: cor3(climaInicial.nevoa),
+        nuvemCor: cor3(climaInicial.nuvemCor),
+        asfalto: cor3(climaInicial.asfalto),
+        agua: cor3(climaInicial.agua),
+        solo: cor3(climaInicial.solo),
+        neve: cor3(climaInicial.neve),
     };
-    let nomeClima = 'sol';
+    let nomeClima = cenario === 'espaco' ? 'espaco' : 'sol';
     let portoesPassados = 0;
     let ultimoCeu = '';
 
@@ -795,6 +843,10 @@ async function construir(B, opcoes) {
     }
 
     function proximoClima() {
+        if (cenario === 'espaco') {
+            return; // no espaco o clima nunca muda
+        }
+
         const outros = Object.keys(CLIMAS).filter((c) => c !== nomeClima);
         escolherClima(outros[Math.floor(sorteio() * outros.length)]);
     }
@@ -806,7 +858,7 @@ async function construir(B, opcoes) {
             climaAtual[chave] += (climaAlvo[chave] - climaAtual[chave]) * k;
         }
 
-        for (const chave of ['ceuTopo', 'ceuBase', 'nevoa', 'nuvemCor', 'asfalto']) {
+        for (const chave of ['ceuTopo', 'ceuBase', 'nevoa', 'nuvemCor', 'asfalto', 'agua', 'solo', 'neve']) {
             climaAtual[chave] = B.Color3.Lerp(climaAtual[chave], cor3(climaAlvo[chave]), k);
         }
 
@@ -825,6 +877,7 @@ async function construir(B, opcoes) {
         luzCeu.groundColor = new B.Color3(0.55, 0.62, 0.72);
         luzSol.intensity = luzBase.sol * (climaAtual.direta / 1.35);
         asfalto.diffuseColor = climaAtual.asfalto;
+        mundo?.aplicarClima(climaAtual);
         solCeu.m.emissiveColor = new B.Color3(climaAtual.sol, climaAtual.sol, climaAtual.sol);
         solCeu.plano.isVisible = climaAtual.sol > 0.02;
 
@@ -834,7 +887,7 @@ async function construir(B, opcoes) {
         }
 
         // Chuva e folhas ao vento: as particulas "andam para tras" junto com a rua.
-        chuva.emitRate = reduzirMovimento ? 0 : 520 * climaAtual.chuva;
+        chuva.emitRate = reduzirMovimento || cenario === 'neve' ? 0 : 520 * climaAtual.chuva; // na neve cai neve, nao chuva
         chuva.direction1 = chuva.direction2 = new B.Vector3(0, -26, -velocidadeMundo);
         folhas.emitRate = reduzirMovimento || climaAtual.vento < 0.08 ? 0 : 55 * climaAtual.vento;
         folhas.direction1 = new B.Vector3(14 * climaAtual.vento, -0.4, -velocidadeMundo);
@@ -861,7 +914,7 @@ async function construir(B, opcoes) {
     const hudBarraPreenchimento = hudBarra.querySelector('i');
     hudClimaEl.className = 'rua-hud-clima-item';
     hud.querySelector('.rua-hud-clima').appendChild(hudClimaEl);
-    escolherClima('sol');
+    escolherClima(nomeClima);
 
     const linhas = document.createElement('div');
     linhas.className = 'rua-linhas rua-linhas--3d';
@@ -869,7 +922,7 @@ async function construir(B, opcoes) {
     parent.appendChild(linhas);
 
     // Velocimetro: so para quem se desloca sobre rodas (moto, taxi, cadeiras).
-    const velocimetro = info.rodas ? criarVelocimetro(parent, info) : null;
+    const velocimetro = rua && info.rodas ? criarVelocimetro(parent, info) : null;
 
     // Selo discreto, para quem testa saber qual motor esta desenhando.
     const selo = document.createElement('div');
@@ -1047,7 +1100,7 @@ async function construir(B, opcoes) {
         // Faixa de pedestres sob o portao.
         const riscoMaterial = material('#f6f1e0');
 
-        for (let i = -4; i <= 4; i++) {
+        for (let i = -4; rua && i <= 4; i++) {
             const risco = B.MeshBuilder.CreateBox('risco', { width: 0.55, height: 0.03, depth: 3.2 }, cena);
             risco.material = riscoMaterial;
             risco.parent = grupo;
@@ -1055,9 +1108,11 @@ async function construir(B, opcoes) {
             risco.isPickable = false;
         }
 
+        const base = mundo ? mundo.basePortao(grupo) : null; // boias, nuvens, bandeiras... do cenario
+
         grupo.position.z = PORTAO_Z_INICIAL;
 
-        return { grupo, placas, dados, escolhivel: false, escolhido: false, passou: false, inicioMs: 0, riscoMaterial };
+        return { grupo, placas, dados, escolhivel: false, escolhido: false, passou: false, inicioMs: 0, riscoMaterial, base };
     }
 
     function dadosDoPortao(i) {
@@ -1102,6 +1157,7 @@ async function construir(B, opcoes) {
         }
 
         portao.riscoMaterial.dispose();
+        portao.base?.destruir();
         portao.grupo.getChildMeshes().forEach((m) => m.dispose());
         portao.grupo.dispose();
         portao = null;
@@ -1143,8 +1199,8 @@ async function construir(B, opcoes) {
     poeira.emitter = new B.Vector3(0, 0.15, -0.3);
     poeira.minEmitBox = new B.Vector3(-0.3, 0, 0);
     poeira.maxEmitBox = new B.Vector3(0.3, 0, 0);
-    poeira.color1 = fumaca ? new B.Color4(0.35, 0.38, 0.42, 0.45) : new B.Color4(0.91, 0.87, 0.8, 0.3);
-    poeira.color2 = fumaca ? new B.Color4(0.25, 0.27, 0.3, 0.35) : new B.Color4(0.8, 0.8, 0.8, 0.2);
+    poeira.color1 = fumaca ? new B.Color4(0.35, 0.38, 0.42, 0.45) : (mundo ? new B.Color4(0.92, 0.96, 1, 0.3) : new B.Color4(0.91, 0.87, 0.8, 0.3));
+    poeira.color2 = fumaca ? new B.Color4(0.25, 0.27, 0.3, 0.35) : (mundo ? new B.Color4(0.85, 0.92, 1, 0.2) : new B.Color4(0.8, 0.8, 0.8, 0.2));
     poeira.colorDead = new B.Color4(1, 1, 1, 0);
     poeira.minSize = 0.14;
     poeira.maxSize = 0.34;
@@ -1390,12 +1446,14 @@ async function construir(B, opcoes) {
             clipe.speedRatio = Math.min(Math.max(ritmo, 0), 2.2);
         }
 
-        if (avatar3d) {
+        if (mundo) {
+            mundo.atualizar(dt, dz, ritmo, fase, climaAtual.vento, agoraSeg);
+        } else if (avatar3d) {
             avatar3d.animar(fase, ritmo);
             espelho.atualizar();
         }
 
-        if (velocidade / velocidadeBase > 0.3 && Math.floor(fase / Math.PI) !== faseDoUltimoPasso) {
+        if (!mundo && velocidade / velocidadeBase > 0.3 && Math.floor(fase / Math.PI) !== faseDoUltimoPasso) {
             faseDoUltimoPasso = Math.floor(fase / Math.PI);
             opcoes.aoPasso?.();
         }
@@ -1414,35 +1472,40 @@ async function construir(B, opcoes) {
 
         if (!reduzirMovimento) {
             giroY = desvio * 0.1;
-            giroZ = -desvio * (info.rodas ? 0.14 : 0.07);
+            giroZ = -desvio * (info.rodas ? 0.14 : 0.07) + (mundo ? mundo.balanco(agoraSeg) : 0);
         }
 
-        let alturaY = 0;
+        // No rio o barco flutua e no ar a aeronave sobe e desce de leve.
+        const alturaBase = mundo ? mundo.alturaBase(agoraSeg) : 0;
+        let alturaY = alturaBase;
         let escalaY = 1;
         let escalaXZ = 1;
 
         if (comemoracao > 0) {
             comemoracao = Math.max(0, comemoracao - dt);
             const p = 1 - comemoracao / COMEMORAR_DURACAO;
-            alturaY = Math.sin(p * Math.PI) * 0.95;
+            alturaY = alturaBase + Math.sin(p * Math.PI) * (mundo ? 0.45 : 0.95);
             saltoRestante = 0;
-            // O corpo se abaixa, estica no ar e gira uma volta inteira.
-            escalaY = p < 0.15 ? 1 - 0.12 * Math.sin((p / 0.15) * Math.PI) : 1 + 0.07 * Math.sin(((p - 0.15) / 0.85) * Math.PI);
-            escalaXZ = 1 / Math.sqrt(escalaY);
 
-            if (!info.rodas) {
+            // A pe (ou de cadeira/veiculo em terra) o corpo se abaixa, estica no ar e gira uma volta inteira.
+            if (!mundo) {
+                escalaY = p < 0.15 ? 1 - 0.12 * Math.sin((p / 0.15) * Math.PI) : 1 + 0.07 * Math.sin(((p - 0.15) / 0.85) * Math.PI);
+                escalaXZ = 1 / Math.sqrt(escalaY);
+            }
+
+            if (!mundo && !info.rodas) {
                 giroY += p * p * (3 - 2 * p) * Math.PI * 2; // sobre rodas o veiculo nao gira
             }
         } else if (saltoRestante > 0) {
             saltoRestante = Math.max(0, saltoRestante - dt);
-            alturaY = Math.sin((1 - saltoRestante / 0.34) * Math.PI) * 0.55;
+            alturaY = alturaBase + Math.sin((1 - saltoRestante / 0.34) * Math.PI) * 0.55;
         }
 
         avatarNo.position.y = alturaY;
         avatarNo.rotation.y = giroY;
         avatarNo.rotation.z = giroZ;
         avatarNo.scaling.set(escalaXZ, escalaY, escalaXZ);
-        sombraAvatar.scaling.setAll(Math.max(0.5, 1 - alturaY * 0.45));
+        sombraAvatar.scaling.setAll(Math.max(0.5, 1 - (alturaY - alturaBase) * 0.45));
 
         // Portao.
         if (portao) {
@@ -1530,7 +1593,7 @@ async function construir(B, opcoes) {
     }
 
     posicionarCamera(1);
-    desenharCeu(CLIMAS.sol.ceuTopo, CLIMAS.sol.ceuBase);
+    desenharCeu(climaInicial.ceuTopo, climaInicial.ceuBase);
     atualizarClima(0.016, 0);
 
     if (!modoTeste) {
@@ -1568,6 +1631,7 @@ async function construir(B, opcoes) {
             animais?.destruir();
             velocimetro?.remover();
             espelho?.destruir();
+            mundo?.destruir();
             continuos.motor.parar();
             continuos.clima.parar();
             motor.stopRenderLoop();
