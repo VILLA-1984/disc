@@ -372,6 +372,18 @@ export default function Admin({ configInicial, catalogo, textos, escolhaLogo, ve
                 </div>
             </section>
 
+            <section className="admin-secao" aria-labelledby="secao-reacoes">
+                <h2 id="secao-reacoes">Reações do avatar</h2>
+                <p>Ao pegar uma palavra o avatar comemora (salto com giro) e, ao atravessar o portão, cai confete e o celular vibra. Não muda nada no resultado; desligue se preferir um jogo mais calmo.</p>
+
+                <div className="admin-grade">
+                    <label className={`admin-opcao${config.reacoes ? ' marcada' : ''}`}>
+                        <input type="checkbox" checked={config.reacoes} onChange={(e) => definir('reacoes', e.target.checked)} />
+                        <span><strong>Comemoração, confete e vibração</strong><small>vale também no treino; quem usa “reduzir movimento” no aparelho nunca vê o pulo, o giro nem o confete</small></span>
+                    </label>
+                </div>
+            </section>
+
             <section className="admin-secao" aria-labelledby="secao-placas">
                 <h2 id="secao-placas">Placas dos portões</h2>
                 <p>Como as palavras aparecem em cada portão. A mudança vale para as próximas partidas.</p>

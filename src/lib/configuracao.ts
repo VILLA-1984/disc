@@ -189,6 +189,8 @@ export type Configuracao = {
     animaisDuracao: number;
     /** Treino antes de valer: 2 etapas de 4 portoes com palavras de exemplo, que nao entram no resultado. */
     demoInicial: boolean;
+    /** Reacoes do avatar: comemora ao pegar uma palavra (salto e giro) e confete no portao. */
+    reacoes: boolean;
     textos: Partial<Record<ChaveTexto, TextoPersonalizado>>;
 };
 

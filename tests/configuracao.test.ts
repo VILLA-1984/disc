@@ -189,6 +189,19 @@ describe('validacao', () => {
         expect(lixo.ok && lixo.config.demoInicial).toBe(false);
     });
 
+    it('as reacoes do avatar vem ligadas, configuracoes antigas tambem, e so aceitam verdadeiro ou falso', () => {
+        expect(configuracaoPadrao().reacoes).toBe(true);
+
+        const { reacoes: _r, ...antiga } = base();
+        const velha = validar(antiga);
+        const desligado = validar({ ...base(), reacoes: false });
+        const lixo = validar({ ...base(), reacoes: 'nao' });
+
+        expect(velha.ok && velha.config.reacoes).toBe(true);
+        expect(desligado.ok && desligado.config.reacoes).toBe(false);
+        expect(lixo.ok && lixo.config.reacoes).toBe(true);
+    });
+
     it('os textos do treino existem para os dois modos de placas', () => {
         const chaves = TEXTOS.map((t) => `${t.chave}:${t.modo ?? 'todos'}`);
 

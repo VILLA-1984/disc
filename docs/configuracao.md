@@ -28,6 +28,7 @@ Salva no banco e vale para a instalação onde foi feita (feira e Vercel **não*
 - Ranking, minimapa, barra de progresso e painel de totais.
 - Palavras por etapa (6 a 36, padrão 15) e modo das placas (ciclo ou pares; padrão pares).
 - **Força do turbo** (1 a 3 vezes a velocidade normal, padrão 2,5): quanto mais rápido o avatar chega ao próximo portão enquanto se segura acelerar. Com 1 o turbo não acelera. Parâmetro de teste: `?turbo=2.5` na URL.
+- **Reações do avatar** (liga e desliga, ligado por padrão): comemoração ao pegar uma palavra (salto com giro), confete e vibração do celular ao atravessar o portão. Não muda o resultado.
 - **Treino antes do jogo** (liga e desliga, desligado por padrão): ao ligar, a pessoa faz um treino de 8 portões (duas etapas de 4) com palavras de exemplo, e só depois o jogo valendo. Textos editáveis em "Títulos e textos". Parâmetro de teste: `?treino=1` liga e `?treino=0` desliga, qualquer que seja o painel.
 - Animais na corrida (liga e desliga, ligados por padrão) e de quantas em quantas palavras pegas eles aparecem (3 a 8, padrão 3) e por quantos segundos ficam na tela (2 a 8, padrão 4,5).
 - Títulos e textos de explicação (15 itens).

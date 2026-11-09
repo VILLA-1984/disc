@@ -111,6 +111,7 @@ export function configuracaoPadrao(): Configuracao {
         animaisACada: LIMITES.animaisACadaPadrao,
         animaisDuracao: LIMITES.animaisDuracaoPadrao,
         demoInicial: false,
+        reacoes: true,
         textos: {},
     };
 }
@@ -279,6 +280,7 @@ export function validar(entrada: unknown): Validacao {
             animaisACada,
             animaisDuracao,
             demoInicial: booleano(bruta.demoInicial, padrao.demoInicial),
+            reacoes: booleano(bruta.reacoes, padrao.reacoes),
             textos,
         },
     };

@@ -289,6 +289,7 @@ function desenharPlaca(canvas, palavra, estado, dica) {
  * @param {Function} [opcoes.proximoPortao] modo ciclo: ({etapa, indice}) => {cima, baixo} | null (null encerra a etapa)
  * @param {Function} [opcoes.aoPortao] portao legivel: {etapa, indice, total, cima, baixo}
  * @param {Function} [opcoes.aoEscolher] {etapa, indice, lado, escolhida, outra, combinacao, tempoMs}
+ * @param {boolean} [opcoes.reacoes] false desliga a comemoracao do avatar, o confete e o aviso de vibracao (padrao: ligado)
  * @param {Function} [opcoes.aoPassarPortao] o avatar atravessa o portao escolhido (confete): {etapa, indice}
  * @param {Function} [opcoes.aoConcluirEtapa] {etapa, escolhas}
  * @param {Function} [opcoes.aoPasso] a cada passada do avatar (para o som)
@@ -808,6 +809,7 @@ export function criarJogo3D(opcoes) {
     const faiscas = [];
 
     // Comemoracao ao pegar uma palavra: salto alto com giro e "esticada" do corpo. Confete quando o portao passa.
+    const reacoes = opcoes.reacoes !== false && !reduzirMovimento;
     const COMEMORAR_DURACAO = 0.7;
     let comemoracao = 0;
     const escalaBaseAvatar = avatar.grupo.scale.x;
@@ -1015,7 +1017,7 @@ export function criarJogo3D(opcoes) {
     // ------------------------------------------------------------------ escolha
     /** Chuva de confete na frente da placa, quando o avatar esta prestes a atravessar o portao escolhido. */
     function soltarConfete() {
-        if (reduzirMovimento) {
+        if (!reacoes) {
             return;
         }
 
@@ -1130,7 +1132,7 @@ export function criarJogo3D(opcoes) {
 
         alvoX = lado === 'cima' ? -PISTA_X : PISTA_X;
         saltoRestante = reduzirMovimento ? 0 : 0.34;
-        comemoracao = !reduzirMovimento && portao.dados[lado].id !== 0 ? COMEMORAR_DURACAO : 0;
+        comemoracao = reacoes && portao.dados[lado].id !== 0 ? COMEMORAR_DURACAO : 0;
         atualizarHud();
         soltarFaiscas();
 
@@ -1475,7 +1477,10 @@ export function criarJogo3D(opcoes) {
             if (portao.escolhido && !portao.passou && portao.grupo.position.z > -2.5) {
                 portao.passou = true;
                 soltarConfete();
-                opcoes.aoPassarPortao?.({ etapa: etapaAtual, indice });
+
+                if (opcoes.reacoes !== false) {
+                    opcoes.aoPassarPortao?.({ etapa: etapaAtual, indice });
+                }
             }
 
             if (portao.grupo.position.z > PORTAO_Z_FIM) {
