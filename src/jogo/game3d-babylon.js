@@ -226,7 +226,7 @@ function criarAnimaisBabylon(B, cena, { aCada = 4, duracao = 3.6, reduzirMovimen
 
     function esconder() {
         for (const m of Object.values(prontos)) {
-            m.clipe?.pause();
+            m.clipe?.stop(); // parar (e nao pausar): um grupo pausado ainda conta como iniciado e o start() seguinte nao faria nada
             m.no.setEnabled(false);
         }
     }
